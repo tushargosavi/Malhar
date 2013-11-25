@@ -15,7 +15,7 @@
 */
 var _ = require('underscore'), Backbone = require('backbone');
 var BaseView = require('./base');
-var Tabled = require('tabled');
+var Tabled = require('../../../tabled');
 var Table = BaseView.extend({
     
     render: function() {
