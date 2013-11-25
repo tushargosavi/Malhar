@@ -18,7 +18,7 @@
  * 
 */
 var ListWidget = DT.widgets.ListWidget;
-var Tabled = require("tabled"); 
+var Tabled = DT.lib.Tabled; 
 var Palette = require("./AppListPalette");
 var ApplistWidget = ListWidget.extend({
     
