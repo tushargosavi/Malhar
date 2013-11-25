@@ -1,0 +1,6 @@
+.logical-dag .node rect {
+  fill: #fafafa;
+}
+.logical-dag .node-metric-label {
+  fill: blue;
+}
