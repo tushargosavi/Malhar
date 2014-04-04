@@ -38,19 +38,19 @@ import java.util.Set;
  * <br></br>
  *
  * @param <K>Type of Key objects</K>
+ * @param <V>Type of Value objects</V>
  * @since 0.3.5
  */
-public class UniqueValueCount<K> extends BaseOperator {
+public class UniqueValueCount<K,V> extends BaseOperator {
 
-    private final Map<K,Set<Object>>  interimUniqueValues;
-
+    private final Map<K,Set<V>>  interimUniqueValues;
 
     @InputPortFieldAnnotation(name="inputPort")
-    public transient DefaultInputPort<KeyValPair<K,Object>> inputPort = new DefaultInputPort<KeyValPair<K,Object>>() {
+    public transient DefaultInputPort<KeyValPair<K,V>> inputPort = new DefaultInputPort<KeyValPair<K,V>>() {
 
         @Override
-        public void process(KeyValPair<K, Object> pair) {
-            Set<Object> values= interimUniqueValues.get(pair.getKey());
+        public void process(KeyValPair<K,V> pair) {
+            Set<V> values= interimUniqueValues.get(pair.getKey());
             if(values==null){
                 values=Sets.newHashSet();
                 interimUniqueValues.put(pair.getKey(),values);
@@ -65,7 +65,7 @@ public class UniqueValueCount<K> extends BaseOperator {
         @Override
         @SuppressWarnings({"rawtypes","unchecked"})
         public Unifier<KeyValPair<K, Integer>> getUnifier() {
-            return (Unifier)new UniqueCountUnifier<K>();
+            return (Unifier)new UniqueCountUnifier<K,V>();
         }
     };
 
@@ -77,8 +77,8 @@ public class UniqueValueCount<K> extends BaseOperator {
     @Override
     public void endWindow() {
         for (K key : interimUniqueValues.keySet()) {
-            Set<Object> values= interimUniqueValues.get(key);
-            outputPort.emit(new InternalCountOutput<K>(key, values.size(),values));
+            Set<V> values= interimUniqueValues.get(key);
+            outputPort.emit(new InternalCountOutput<K,V>(key, values.size(),values));
         }
         interimUniqueValues.clear();
     }
@@ -87,21 +87,22 @@ public class UniqueValueCount<K> extends BaseOperator {
      * State which contains a key, a set of values of that key, and a count of unique values of that key.<br></br>
      *
      * @param <K>Type of key objects</K>
+     * @param <V>Type of value objects</V>
      */
-    public static class InternalCountOutput<K> extends KeyValPair<K,Integer> {
+    public static class InternalCountOutput<K,V> extends KeyValPair<K,Integer> {
 
-        private final Set<Object> interimUniqueValues;
+        private final Set<V> interimUniqueValues;
 
         private InternalCountOutput(){
             this(null,null,null);
         }
 
-        private InternalCountOutput(K k, Integer count, Set<Object> interimUniqueValues){
+        private InternalCountOutput(K k, Integer count, Set<V> interimUniqueValues){
             super(k,count);
             this.interimUniqueValues=interimUniqueValues;
         }
 
-        public Set<Object> getInternalSet(){
+        public Set<V> getInternalSet(){
             return interimUniqueValues;
         }
     }
@@ -112,21 +113,21 @@ public class UniqueValueCount<K> extends BaseOperator {
      * emits {@link KeyValPair} of the key and its unique count.<br></br>
      *
      * @param <K>Type of Key objects</K>
-     *
+     * @param <V>Type of Value objects</V>
      */
-     static class UniqueCountUnifier<K> implements Unifier<InternalCountOutput<K>> {
+     static class UniqueCountUnifier<K,V> implements Unifier<InternalCountOutput<K,V>> {
 
-        public final transient DefaultOutputPort<InternalCountOutput<K>> outputPort = new DefaultOutputPort<InternalCountOutput<K>>();
+        public final transient DefaultOutputPort<InternalCountOutput<K,V>> outputPort = new DefaultOutputPort<InternalCountOutput<K,V>>();
 
-        private final Map<K,Set<Object>> finalUniqueValues;
+        private final Map<K,Set<V>> finalUniqueValues;
 
         public UniqueCountUnifier(){
             this.finalUniqueValues=Maps.newHashMap();
         }
 
         @Override
-        public void process(InternalCountOutput<K> tuple) {
-            Set<Object> values = finalUniqueValues.get(tuple.getKey());
+        public void process(InternalCountOutput<K,V> tuple) {
+            Set<V> values = finalUniqueValues.get(tuple.getKey());
             if (values == null) {
                 values = Sets.newHashSet();
                 finalUniqueValues.put(tuple.getKey(), values);
@@ -141,7 +142,7 @@ public class UniqueValueCount<K> extends BaseOperator {
         @Override
         public void endWindow() {
             for(K key: finalUniqueValues.keySet()){
-                outputPort.emit(new InternalCountOutput<K>(key,finalUniqueValues.get(key).size(),finalUniqueValues.get(key)));
+                outputPort.emit(new InternalCountOutput<K,V>(key,finalUniqueValues.get(key).size(),finalUniqueValues.get(key)));
             }
             finalUniqueValues.clear();
         }

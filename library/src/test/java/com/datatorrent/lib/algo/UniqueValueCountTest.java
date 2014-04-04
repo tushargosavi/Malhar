@@ -36,15 +36,15 @@ public class UniqueValueCountTest {
 
     @Test
     @SuppressWarnings("rawtypes")
-    public void uniqueCountTest(){
-        UniqueValueCount<String> uniqueCountOper= new UniqueValueCount<String>();
+    public void uniqueCountTest() {
+        UniqueValueCount<String, Integer> uniqueCountOper= new UniqueValueCount<String, Integer>();
         CollectorTestSink outputSink = new CollectorTestSink();
         uniqueCountOper.outputPort.setSink(outputSink);
 
         uniqueCountOper.beginWindow(0);
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test1",1));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test1",2));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test1",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",1));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",2));
         uniqueCountOper.endWindow();
 
         Assert.assertEquals("number emitted tuples", 1, outputSink.collectedTuples.size());
@@ -54,12 +54,12 @@ public class UniqueValueCountTest {
 
         outputSink.clear();
         uniqueCountOper.beginWindow(1);
-        uniqueCountOper.inputPort.process(new KeyValPair<String,Object>("test1",1));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test1",2));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test1",2));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test2",1));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test2",2));
-        uniqueCountOper.inputPort.process(new KeyValPair<String, Object>("test2",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",1));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test1",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test2",1));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test2",2));
+        uniqueCountOper.inputPort.process(new KeyValPair<String, Integer>("test2",2));
         uniqueCountOper.endWindow();
 
         ImmutableMap<String,Integer> answers=ImmutableMap.of("test1",2,"test2",2);
