@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import javax.validation.constraints.NotNull;
 
+import com.datatorrent.common.util.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
