@@ -222,14 +222,58 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
     if (partitionCount == partitions.size()) {
       return partitions;
     }
-    List<DirectoryScanner> scanners = scanner.partition(partitionCount);
+
+    /*
+    Build collective state from all instances of the operator.
+     */
+    Set<String> totalProcessedFiles = new HashSet<String>();
+    List<Pair<String, Integer>> currentFiles = new ArrayList<Pair<String, Integer>>();
+    List<DirectoryScanner> oldscanners = new LinkedList<DirectoryScanner>();
+    for(Partition<AbstractFSDirectoryInputOperator<T>> partition : partitions) {
+      AbstractFSDirectoryInputOperator<T> oper = partition.getPartitionedInstance();
+      totalProcessedFiles.addAll(oper.processedFiles);
+      if (oper.currentFile != null)
+        currentFiles.add(new Pair(oper.currentFile, oper.offset));
+      oldscanners.add(oper.getScanner());
+    }
+
+    List<DirectoryScanner> scanners = scanner.partition(partitionCount, oldscanners);
     Kryo kryo = new Kryo();
     Collection<Partition<AbstractFSDirectoryInputOperator<T>>> newPartitions = Lists.newArrayListWithExpectedSize(partitionCount);
     for (int i=0; i<scanners.size(); i++) {
       AbstractFSDirectoryInputOperator<T> oper = kryo.copy(this);
-      oper.setScanner(scanners.get(i));
+      DirectoryScanner scn = scanners.get(i);
+      oper.setScanner(scn);
+
+      // Do state transfer
+      oper.processedFiles.clear();
+      Iterator<String> iter = totalProcessedFiles.iterator();
+      while (iter.hasNext()) {
+        String path = iter.next();
+        /* If current operator instance accepts the path, then add it to
+         * it's processed files set, and remove it from global list, so
+         * that next instance we won't consider the path.
+         */
+        if (scn.acceptFile(path)) {
+          oper.processedFiles.add(path);
+          iter.remove();
+        }
+      }
+
+      /* set current scanning directory and offset */
+      oper.currentFile = null;
+      oper.offset = 0;
+      for(Pair<String, Integer> current : currentFiles) {
+        if (scn.acceptFile(current.getFirst())) {
+          oper.currentFile = current.getFirst();
+          oper.offset = current.getSecond();
+          break;
+        }
+      }
+
       newPartitions.add(new DefaultPartition<AbstractFSDirectoryInputOperator<T>>(oper));
     }
+
     return newPartitions;
   }
 
@@ -335,6 +379,10 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
         partitions.add(this.createPartition(i, count));
       }
       return partitions;
+    }
+
+    public List<DirectoryScanner>  partition(int count , Collection<DirectoryScanner> scanners) {
+      return partition(count);
     }
 
     protected DirectoryScanner createPartition(int partitionIndex, int partitionCount)
