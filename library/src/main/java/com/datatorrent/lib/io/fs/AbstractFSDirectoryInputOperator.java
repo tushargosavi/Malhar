@@ -51,7 +51,7 @@ import com.datatorrent.api.Partitioner;
  */
 public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperator, Partitioner<AbstractFSDirectoryInputOperator<T>>
 {
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractFSDirectoryInputOperator.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(AbstractFSDirectoryInputOperator.class);
 
   @NotNull
   private String directory;
@@ -219,13 +219,14 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
   @Override
   public Collection<Partition<AbstractFSDirectoryInputOperator<T>>> definePartitions(Collection<Partition<AbstractFSDirectoryInputOperator<T>>> partitions, int incrementalCapacity)
   {
+    LOG.info("definePartitions called with num {} capacity {}", partitions.size(), incrementalCapacity);
     int partitionCount = partitions.size() + incrementalCapacity;
     if (partitionCount == partitions.size()) {
       return partitions;
     }
 
     /*
-    Build collective state from all instances of the operator.
+     * Build collective state from all instances of the operator.
      */
     Set<String> totalProcessedFiles = new HashSet<String>();
     List<Pair<String, Integer>> currentFiles = new ArrayList<Pair<String, Integer>>();
@@ -238,7 +239,12 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
       oldscanners.add(oper.getScanner());
     }
 
+    /*
+     * Create partitions of scanners, scanner's partition method will do state
+     * transfer for DirectoryScanner objects.
+     */
     List<DirectoryScanner> scanners = scanner.partition(partitionCount, oldscanners);
+
     Kryo kryo = new Kryo();
     Collection<Partition<AbstractFSDirectoryInputOperator<T>>> newPartitions = Lists.newArrayListWithExpectedSize(partitionCount);
     for (int i=0; i<scanners.size(); i++) {
@@ -252,7 +258,7 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
       while (iter.hasNext()) {
         String path = iter.next();
         /* If current operator instance accepts the path, then add it to
-         * it's processed files set, and remove it from global list, so
+         * it's processed files set, and remove it from global set, so
          * that next instance we won't consider the path.
          */
         if (scn.acceptFile(path)) {
@@ -275,6 +281,7 @@ public abstract class AbstractFSDirectoryInputOperator<T> implements InputOperat
       newPartitions.add(new DefaultPartition<AbstractFSDirectoryInputOperator<T>>(oper));
     }
 
+    LOG.info("definePartitions called returning {} partitions", newPartitions.size());
     return newPartitions;
   }
 
