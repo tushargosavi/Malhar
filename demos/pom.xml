@@ -17,23 +17,6 @@
     <skipTests>true</skipTests>
   </properties>
 
-  <!-- Settings for scala -->
-  <!--repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-  </pluginRepositories-->
-
   <dependencies>
     <dependency>
       <!-- required by twitter demo -->

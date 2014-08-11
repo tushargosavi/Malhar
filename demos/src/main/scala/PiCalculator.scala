@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Tushar R. Gosavi. ALL Rights Reserved.
+ * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.tugo.datatorrent.demo.pi
+package com.datatorrent.demos.scala.pi
 
 import com.datatorrent.api.annotation.ApplicationAnnotation
 import com.datatorrent.api.Context.OperatorContext
