@@ -59,7 +59,6 @@ class RandomIntGenerator extends InputOperator {
 
   @transient
   val out : DefaultOutputPort[Point] = new DefaultOutputPort[Point]();
-``
 
   var tupleBlast = 100
   var sleepTime = 10
