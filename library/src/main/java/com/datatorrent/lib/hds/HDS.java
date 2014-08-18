@@ -24,4 +24,14 @@ public interface HDS
     void put(long bucketKey, byte[] key, byte[] value) throws IOException;
     byte[] get(long bucketKey, byte[] key) throws IOException;
   }
+
+  interface WalSerializer<ENTRY> {
+    public byte[] toBytes(ENTRY data);
+    public ENTRY fromBytes(byte[] arr);
+  }
+
+  interface BucketKey {
+    public long getBucketKey();
+  }
+
 }
