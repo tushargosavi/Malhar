@@ -22,6 +22,18 @@ public class DefaultWalManager
   Map<Long, BucketWalWriter> writers = Maps.newTreeMap();
   HDS.BucketManager store;
 
+  long maxWalFileSize = 5 * 1024 * 1024;
+
+  public long getMaxWalFileSize()
+  {
+    return maxWalFileSize;
+  }
+
+  public void setMaxWalFileSize(long maxWalFileSize)
+  {
+    this.maxWalFileSize = maxWalFileSize;
+  }
+
   public DefaultWalManager(HDSFileAccess bfs, HDS.BucketManager store ) {
     this.bfs = bfs;
     this.store = store;
@@ -34,10 +46,14 @@ public class DefaultWalManager
     if (writer == null) {
       // Initiate a new WAL for bucket, and run recovery if needed.
       BucketWalWriter w = new BucketWalWriter<BaseKeyVal>(bfs, bucketKey);
+      w.setMaxWalFileSize(maxWalFileSize);
       w.setup();
 
       // TODO get last committed LSN from store, and use that for recovery.
-      w.runRecovery(store, 0);
+      if (store != null) {
+        w.runRecovery(store, store.getRecoveryLSN(bucketKey));
+      }
+
       writer = w;
       writers.put(bucketKey, writer);
     }

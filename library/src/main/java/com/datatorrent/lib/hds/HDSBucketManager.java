@@ -425,4 +425,10 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
     private final transient HashMap<String, TreeMap<byte[], byte[]>> fileDataCache = Maps.newHashMap();
   }
 
+  // TODO: return LSN of last tuple which was written to data
+  // file.
+  @Override public long getRecoveryLSN(long bucketKey)
+  {
+    return 0;
+  }
 }
