@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.lib.hds;
+package com.datatorrent.contrib.hds;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.TreeMap;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Options.Rename;
 import org.apache.hadoop.fs.Path;
 
+import com.datatorrent.common.util.DTThrowable;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -36,13 +39,22 @@ import com.esotericsoftware.kryo.io.Output;
  */
 public class HDSFileAccessFSImpl implements HDSFileAccess
 {
-  private final FileSystem fs;
-  private final String basePath;
+  @NotNull
+  private String basePath;
+  private transient FileSystem fs;
 
-  public HDSFileAccessFSImpl(FileSystem fs, String basePath)
+  public HDSFileAccessFSImpl()
   {
-    this.fs = fs;
-    this.basePath = basePath;
+  }
+
+  public String getBasePath()
+  {
+    return basePath;
+  }
+
+  public void setBasePath(String path)
+  {
+    this.basePath = path;
   }
 
   protected Path getBucketPath(long bucketKey)
@@ -53,11 +65,20 @@ public class HDSFileAccessFSImpl implements HDSFileAccess
   @Override
   public void close() throws IOException
   {
+    fs.close();
   }
 
   @Override
   public void init()
   {
+    if (fs == null) {
+      Path dataFilePath = new Path(basePath);
+      try {
+        fs = FileSystem.newInstance(dataFilePath.toUri(), new Configuration());
+      } catch (IOException e) {
+        DTThrowable.rethrow(e);
+      }
+    }
   }
 
   @Override
@@ -95,22 +116,48 @@ public class HDSFileAccessFSImpl implements HDSFileAccess
   @Override
   public HDSFileReader getReader(final long bucketKey, final String fileName) throws IOException
   {
+    final DataInputStream is = getInputStream(bucketKey, fileName);
     return new HDSFileReader() {
-      @Override
-      public void close() throws IOException
-      {
-      }
 
       @Override
       public void readFully(TreeMap<byte[], byte[]> data) throws IOException
       {
-        InputStream is = getInputStream(bucketKey, fileName);
         Input input = new Input(is);
         while (!input.eof()) {
           byte[] key = kryo.readObject(input, byte[].class);
           byte[] value = kryo.readObject(input, byte[].class);
           data.put(key, value);
         }
+      }
+
+      @Override
+      public byte[] getValue(byte[] key) throws IOException {
+        throw new UnsupportedOperationException("Operation not implemented");
+      }
+
+      @Override
+      public void reset() throws IOException {
+        is.reset();
+      }
+
+      @Override
+      public void seek(byte[] key) throws IOException {
+        throw new UnsupportedOperationException("Operation not implemented");
+      }
+
+      @Override
+      public boolean next() throws IOException {
+        throw new UnsupportedOperationException("Operation not implemented");
+      }
+
+      @Override
+      public void get(MutableKeyValue mutableKeyValue) throws IOException {
+        throw new UnsupportedOperationException("Operation not implemented");
+      }
+
+      @Override
+      public void close() throws IOException {
+        is.close();
       }
     };
   }
@@ -146,6 +193,12 @@ public class HDSFileAccessFSImpl implements HDSFileAccess
 
     };
 
+  }
+
+  @Override
+  public String toString()
+  {
+    return "HDSFileAccessFSImpl [basePath=" + basePath + "]";
   }
 
 }
