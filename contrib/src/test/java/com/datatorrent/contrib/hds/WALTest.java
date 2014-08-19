@@ -1,21 +1,25 @@
-package com.datatorrent.lib.hds;
+package com.datatorrent.contrib.hds;
 
 import junit.framework.Assert;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.codehaus.jackson.map.deser.ValueInstantiators;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
 public class WALTest
 {
 
+
   final String APP_BASE_PATH = "file:///home/tushar/work/hds/data/";
   final String DEFAULT_PATH_STR = "file:///home/tushar/work/hds/data/testwal";
   static final Random rand = new Random();
+
+  File file = new File("target/hds");
 
   static byte[] genRandomByteArray(int len) {
     byte[] val = new byte[len];
@@ -23,26 +27,23 @@ public class WALTest
     return val;
   }
 
-  static BaseKeyVal genRandomTuple(int keyLen, int valLen) {
+  static MutableKeyValue genRandomTuple(int keyLen, int valLen) {
     byte[] key = genRandomByteArray(keyLen);
     byte[] val = genRandomByteArray(valLen);
 
-    BaseKeyVal tuple = new BaseKeyVal(key, val);
+    MutableKeyValue tuple = new MutableKeyValue(key, val);
     return tuple;
   }
 
   @Test
   public void testWalWriteAndRead() throws IOException
   {
-    Configuration conf = new Configuration();
-    conf.setBoolean("dfs.support.append", true);
-    //fs = new org.apache.hadoop.fs.RawLocalFileSystem();
-    FileSystem fs = FileSystem.get(new Path(DEFAULT_PATH_STR).toUri(), conf);
-    fs.setVerifyChecksum(false);
-    HDSFileAccess bfs = new HDSFileAccessFSImpl(fs, APP_BASE_PATH);
-    fs.delete(new Path(APP_BASE_PATH), true);
+    FileUtils.deleteDirectory(file);
+    HDSFileAccessFSImpl bfs = new HDSFileAccessFSImpl();
+    bfs.setBasePath(file.getAbsolutePath());
+    bfs.init();
 
-    HDFSWalWritter<BaseKeyVal> wWriter = new HDFSWalWritter<BaseKeyVal>(bfs, 1, 0, BaseKeyVal.DEFAULT_SERIALIZER);
+    HDFSWalWritter<MutableKeyValue> wWriter = new HDFSWalWritter<MutableKeyValue>(bfs, 1, 0, MutableKeyValue.DEFAULT_SERIALIZER);
     int wrote = 40;
     for (int i = 0; i < wrote; i++) {
       wWriter.append(genRandomTuple(100, 100));
@@ -50,7 +51,7 @@ public class WALTest
     wWriter.close();
 
 
-    HDFSWalReader<BaseKeyVal> wReader = new HDFSWalReader<BaseKeyVal>(bfs, 1, 0, BaseKeyVal.DEFAULT_SERIALIZER);
+    HDFSWalReader<MutableKeyValue> wReader = new HDFSWalReader<MutableKeyValue>(bfs, 1, 0, MutableKeyValue.DEFAULT_SERIALIZER);
     int read = 0;
     while (wReader.hasNext()) {
       read++;
@@ -63,17 +64,14 @@ public class WALTest
   @Test
   public void testWalSkip() throws IOException
   {
-    Configuration conf = new Configuration();
-    conf.setBoolean("dfs.support.append", true);
-    //fs = new org.apache.hadoop.fs.RawLocalFileSystem();
-    FileSystem fs = FileSystem.get(new Path(DEFAULT_PATH_STR).toUri(), conf);
-    fs.setVerifyChecksum(false);
-    HDSFileAccess bfs = new HDSFileAccessFSImpl(fs, APP_BASE_PATH);
-    fs.delete(new Path(APP_BASE_PATH), true);
+    FileUtils.deleteDirectory(file);
+    HDSFileAccessFSImpl bfs = new HDSFileAccessFSImpl();
+    bfs.setBasePath(file.getAbsolutePath());
+    bfs.init();
 
     long offset = 0;
 
-    HDFSWalWritter<BaseKeyVal> wWriter = new HDFSWalWritter<BaseKeyVal>(bfs, 1, 0, BaseKeyVal.DEFAULT_SERIALIZER);
+    HDFSWalWritter<MutableKeyValue> wWriter = new HDFSWalWritter<MutableKeyValue>(bfs, 1, 0, MutableKeyValue.DEFAULT_SERIALIZER);
     int wrote = 40;
     for (int i = 0; i < wrote; i++) {
       wWriter.append(genRandomTuple(100, 100));
@@ -83,7 +81,7 @@ public class WALTest
     wWriter.close();
 
 
-    HDFSWalReader<BaseKeyVal> wReader = new HDFSWalReader<BaseKeyVal>(bfs, 1, 0, BaseKeyVal.DEFAULT_SERIALIZER);
+    HDFSWalReader<MutableKeyValue> wReader = new HDFSWalReader<MutableKeyValue>(bfs, 1, 0, MutableKeyValue.DEFAULT_SERIALIZER);
     wReader.seek(offset);
     int read = 0;
     while (wReader.hasNext()) {
@@ -97,13 +95,11 @@ public class WALTest
   @Test
   public void testWalRolling() throws IOException
   {
-    Configuration conf = new Configuration();
-    conf.setBoolean("dfs.support.append", true);
-    //fs = new org.apache.hadoop.fs.RawLocalFileSystem();
-    FileSystem fs = FileSystem.get(new Path(DEFAULT_PATH_STR).toUri(), conf);
-    fs.setVerifyChecksum(false);
-    HDSFileAccess bfs = new HDSFileAccessFSImpl(fs, APP_BASE_PATH);
-    fs.delete(new Path(APP_BASE_PATH), true);
+    FileUtils.deleteDirectory(file);
+    HDSFileAccessFSImpl bfs = new HDSFileAccessFSImpl();
+    bfs.setBasePath(file.getAbsolutePath());
+    bfs.init();
+
 
     DefaultWalManager mgr = new DefaultWalManager(bfs, null);
     mgr.setMaxWalFileSize(1024);
@@ -117,7 +113,8 @@ public class WALTest
     mgr.writeData(1, genRandomTuple(500, 500));
     mgr.endWindow(1);
 
-    boolean exists = fs.exists(new Path(APP_BASE_PATH + "1/WAL-1"));
+    File walFile = new File(file.getAbsoluteFile().toString() + "/1/WAL-1");
+    boolean exists = walFile.exists();
     Assert.assertEquals("New Wal created ", exists, true);
   }
 
@@ -126,7 +123,6 @@ public class WALTest
 
     @Override public void put(long bucketKey, byte[] key, byte[] value) throws IOException
     {
-      System.out.println("Adding key in store");
       count ++;
     }
 
@@ -148,17 +144,13 @@ public class WALTest
   @Test
   public void testWalRecovery() throws IOException
   {
-    Configuration conf = new Configuration();
-    conf.setBoolean("dfs.support.append", true);
-    //fs = new org.apache.hadoop.fs.RawLocalFileSystem();
-    FileSystem fs = FileSystem.get(new Path(DEFAULT_PATH_STR).toUri(), conf);
-    fs.setVerifyChecksum(false);
-    HDSFileAccess bfs = new HDSFileAccessFSImpl(fs, APP_BASE_PATH);
-    fs.delete(new Path(APP_BASE_PATH), true);
+    FileUtils.deleteDirectory(file);
+    HDSFileAccessFSImpl bfs = new HDSFileAccessFSImpl();
+    bfs.setBasePath(file.getAbsolutePath());
+    bfs.init();
 
     DefaultWalManager mgr = new DefaultWalManager(bfs, null);
     mgr.setMaxWalFileSize(1024 * 1024);
-
 
     mgr.writeData(1, genRandomTuple(500, 500));
     mgr.writeData(1, genRandomTuple(500, 500));
@@ -173,6 +165,7 @@ public class WALTest
 
     mgr.writeData(1, genRandomTuple(500, 500));
     mgr.writeData(1, genRandomTuple(500, 500));
+    mgr.teardown();
 
     MyBucketManager myStore = new MyBucketManager();
 
@@ -180,7 +173,6 @@ public class WALTest
     // This should run recovery, as first tuple is added in bucket
     mgr.writeData(1, genRandomTuple(100, 100));
 
-    System.out.println("number of tuples in store is " + myStore.getCount());
-
+    Assert.assertEquals("Number of tuples in store ", 2, myStore.getCount());
   }
 }

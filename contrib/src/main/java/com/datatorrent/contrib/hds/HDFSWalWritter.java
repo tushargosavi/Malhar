@@ -1,4 +1,4 @@
-package com.datatorrent.lib.hds;
+package com.datatorrent.contrib.hds;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
 
 
 public class HDFSWalWritter<Entry> implements WALWriter<Entry>
@@ -55,8 +54,6 @@ public class HDFSWalWritter<Entry> implements WALWriter<Entry>
     kryo.writeObject(kout, bytes);
     unflushed += bytes.length;
     offset += bytes.length;
-    System.out.println("kryo " + kout.total());
-
   }
 
   @Override public void flush() throws IOException

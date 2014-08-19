@@ -1,9 +1,8 @@
-package com.datatorrent.lib.hds;
+package com.datatorrent.contrib.hds;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.google.common.io.CountingInputStream;
-import org.apache.hadoop.fs.Seekable;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -29,7 +28,6 @@ public class HDFSWalReader<ENTRY> implements WALReader<ENTRY>
     totalSize = cin.available();
     offset = 0;
     this.codec = serde;
-    System.out.println("file size of wal " + walId + " is " + totalSize);
   }
 
   @Override public void close() throws IOException
@@ -43,9 +41,8 @@ public class HDFSWalReader<ENTRY> implements WALReader<ENTRY>
 
   @Override public void seek(long offset) throws IOException
   {
-    // Throws exception.
-    // kin.reset();
     kin.skip(offset);
+
   }
 
   @Override public boolean hasNext()
@@ -60,7 +57,6 @@ public class HDFSWalReader<ENTRY> implements WALReader<ENTRY>
     byte[] bytes = kryo.readObject(kin, byte[].class);
     ENTRY e = codec.fromBytes(bytes);
     offset = kin.total();
-    System.out.println("New position is " + offset);
     return e;
   }
 }
