@@ -77,6 +77,7 @@ public class HDSFileAccessFSImpl implements HDSFileAccess
       Path dataFilePath = new Path(basePath);
       try {
         fs = FileSystem.newInstance(dataFilePath.toUri(), new Configuration());
+        fs.setVerifyChecksum(false);
       } catch (IOException e) {
         DTThrowable.rethrow(e);
       }

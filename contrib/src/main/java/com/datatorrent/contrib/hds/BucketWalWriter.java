@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.datatorrent.contrib.hds;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -14,7 +29,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /* Manages WAL for a bucket */
-public class BucketWalWriter<T extends MutableKeyValue>
+public class BucketWalWriter
 {
   private static final String WAL_FILE_PREFIX = "WAL-";
   private static final String WALMETA_FILE_PREFIX = "WALMETA";
@@ -76,7 +91,7 @@ public class BucketWalWriter<T extends MutableKeyValue>
 
 
   /* The class responsible writing WAL entry to file */
-  transient WALWriter<T> writer;
+  transient WALWriter writer;
 
   transient private long bucketKey;
 
@@ -134,12 +149,12 @@ public class BucketWalWriter<T extends MutableKeyValue>
     long walid = startWalFile.walId;
     logger.info("Recovering starting from file " + walid + " offset " + offset);
     for (long i = walid; i < walFileId; i++) {
-      WALReader<MutableKeyValue> wReader = new HDFSWalReader<MutableKeyValue>(bfs, bucketKey, i, MutableKeyValue.DEFAULT_SERIALIZER);
+      WALReader wReader = new HDFSWalReader(bfs, bucketKey, i);
       wReader.seek(offset);
       offset = 0;
 
-      while (wReader.hasNext()) {
-        MutableKeyValue o = wReader.readNext();
+      while (wReader.advance()) {
+        MutableKeyValue o = wReader.get();
         store.put(bucketKey, o.getKey(), o.getValue());
       }
 
@@ -192,13 +207,13 @@ public class BucketWalWriter<T extends MutableKeyValue>
         "." + WAL_FILE_PREFIX + fileMeta.walId + ".crc");
   }
 
-  public void writeData(T data ) throws IOException
+  public void writeData(byte[] key, byte[] value) throws IOException
   {
     if (writer == null)
-      writer = new HDFSWalWritter<T>(bfs, bucketKey, walFileId, MutableKeyValue.DEFAULT_SERIALIZER);
+      writer = new HDFSWalWriter(bfs, bucketKey, walFileId);
 
-    writer.append(data);
-    if (maxUnflushedBytes > 0 && writer.unflushedCount() > maxUnflushedBytes)
+    writer.append(key, value);
+    if (maxUnflushedBytes > 0 && writer.getUnflushedCount() > maxUnflushedBytes)
       writer.flush();
   }
 
@@ -241,7 +256,6 @@ public class BucketWalWriter<T extends MutableKeyValue>
       logger.info("Rolling over log {}", writer);
       writer.close();
       walFileId++;
-      // writer = new HDFSWalWritter(bfs, bucketKey, walFileId, MutableKeyValue.DEFAULT_SERIALIZER);
       writer = null;
       commitedLength = 0;
     }
@@ -354,7 +368,6 @@ public class BucketWalWriter<T extends MutableKeyValue>
 
     /* Use new file for fresh restart */
     walFileId++;
-
   }
 
   public void teardown() throws IOException
