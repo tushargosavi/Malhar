@@ -25,16 +25,15 @@ import java.io.IOException;
 
 public class HDFSWalReader implements WALReader
 {
-  HDSFileAccess bfs;
-  private long totalSize;
   FSDataInputStream in;
   private boolean eof = false;
   MutableKeyValue pair = null;
+  String name;
 
-  public HDFSWalReader(HDSFileAccess bfs, long bucketKey, long walId) throws IOException
+  public HDFSWalReader(HDSFileAccess bfs, long bucketKey, String name) throws IOException
   {
-    this.bfs = bfs;
-    in = (FSDataInputStream)bfs.getInputStream(bucketKey, "WAL-" + walId);
+    this.name = name;
+    in = (FSDataInputStream)bfs.getInputStream(bucketKey, name);
   }
 
   @Override public void close() throws IOException
@@ -67,6 +66,7 @@ public class HDFSWalReader implements WALReader
       return true;
     } catch (EOFException ex) {
       eof = true;
+      pair = null;
       return false;
     }
   }

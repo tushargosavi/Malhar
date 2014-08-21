@@ -15,8 +15,10 @@
  */
 package com.datatorrent.contrib.hds;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ public class WALTest
     int valSize = 100;
     int numTuples = 100;
 
-    HDFSWalWriter wWriter = new HDFSWalWriter(bfs, 1, 0);
+    HDFSWalWriter wWriter = new HDFSWalWriter(bfs, 1, "WAL-0");
     for (int i = 0; i < numTuples; i++) {
       wWriter.append(genRandomByteArray(keySize), genRandomByteArray(valSize));
     }
@@ -58,7 +60,7 @@ public class WALTest
     File wal0 = new File(file.getAbsoluteFile().toString() + "/1/WAL-0");
     Assert.assertEquals("WAL file created ", true, wal0.exists());
 
-    HDFSWalReader wReader = new HDFSWalReader(bfs, 1, 0);
+    HDFSWalReader wReader = new HDFSWalReader(bfs, 1, "WAL-0");
     int read = 0;
     while (wReader.advance()) {
       read++;
@@ -80,7 +82,7 @@ public class WALTest
 
     long offset = 0;
 
-    HDFSWalWriter wWriter = new HDFSWalWriter(bfs, 1, 0);
+    HDFSWalWriter wWriter = new HDFSWalWriter(bfs, 1, "WAL-0");
     int totalTuples = 100;
     int recoveryTuples = 30;
     for (int i = 0; i < totalTuples; i++) {
@@ -91,7 +93,7 @@ public class WALTest
     logger.info("total file size is " + wWriter.logSize() + " recovery offset is " + offset);
     wWriter.close();
 
-    HDFSWalReader wReader = new HDFSWalReader(bfs, 1, 0);
+    HDFSWalReader wReader = new HDFSWalReader(bfs, 1, "WAL-0");
     wReader.seek(offset);
     int read = 0;
     while (wReader.advance()) {
@@ -123,10 +125,10 @@ public class WALTest
     mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
     mgr.endWindow(1);
 
-    File wal0 = new File(file.getAbsoluteFile().toString() + "/1/WAL-1");
+    File wal0 = new File(file.getAbsoluteFile().toString() + "/1/_WAL-1");
     Assert.assertEquals("New Wal-0 created ", wal0.exists(), true);
 
-    File wal1 = new File(file.getAbsoluteFile().toString() + "/1/WAL-2");
+    File wal1 = new File(file.getAbsoluteFile().toString() + "/1/_WAL-2");
     Assert.assertEquals("New Wal-1 created ", wal1.exists(), true);
   }
 
@@ -146,46 +148,57 @@ public class WALTest
     public int getCount() {
       return count;
     }
-
-    @Override public long getRecoveryLSN(long bucketKey)
-    {
-      return 1;
-    }
   }
 
   @Test
   public void testWalRecovery() throws IOException
   {
+    File file = new File("target/hds");
+    FileUtils.deleteDirectory(file);
+    System.out.println("directory is " + file.getAbsolutePath());
+    final long BUCKET1 = 1L;
+
+    File bucket1Dir = new File(file, Long.toString(BUCKET1));
+    File bucket1WalFile = new File(bucket1Dir, BucketWalWriter.WAL_FILE_PREFIX + 1);
+    RegexFileFilter dataFileFilter = new RegexFileFilter("\\d+.*");
+
     FileUtils.deleteDirectory(file);
     HDSFileAccessFSImpl bfs = new HDSFileAccessFSImpl();
     bfs.setBasePath(file.getAbsolutePath());
     bfs.init();
 
-    DefaultWalManager mgr = new DefaultWalManager(bfs, null);
-    mgr.setMaxWalFileSize(1024 * 1024);
+    HDSBucketManager hds = new HDSBucketManager();
+    hds.setFileStore(bfs);
+    hds.setKeyComparator(new HDSTest.MyDataKey.SequenceComparator());
+    hds.setFlushIntervalCount(1);
+    hds.setFlushSize(3);
+    hds.setup(null);
+    hds.writeExecutor = MoreExecutors.sameThreadExecutor();
 
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.endWindow(0);
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.endWindow();
 
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.endWindow(1);
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.endWindow();
 
-    // Checkpoint WAL state.
-    mgr.saveMeta();
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.endWindow();
+    hds.saveWalMeta();
+    //hds.forceWal();
 
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
-    mgr.teardown();
+    hds.teardown();
 
-    MyBucketManager myStore = new MyBucketManager();
+    hds = new HDSBucketManager();
+    hds.setFileStore(bfs);
 
-    mgr = new DefaultWalManager(bfs, myStore);
     // This should run recovery, as first tuple is added in bucket
-    mgr.append(1, genRandomByteArray(500), genRandomByteArray(500));
+    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
 
-    Assert.assertEquals("Number of tuples in store ", 2, myStore.getCount());
+    System.out.println("Unflushed data for bucket 1 is " + hds.unflushedData(1));
+    //Assert.assertEquals("Number of tuples in store ", 2, mgr.buckets.get(1));getCount());
   }
 
   private static transient final Logger logger = LoggerFactory.getLogger(DefaultWalManager.class);

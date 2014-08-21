@@ -58,7 +58,9 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   private final HashMap<Long, BucketMeta> metaCache = Maps.newHashMap();
   private transient long windowId;
   private transient long lastFlushWindowId;
-  private final HashMap<Long, Bucket> buckets = Maps.newHashMap();
+  @VisibleForTesting
+  protected long maxLsn;
+  protected final HashMap<Long, Bucket> buckets = Maps.newHashMap();
   private final transient Kryo kryo = new Kryo();
   @VisibleForTesting
   protected transient ExecutorService writeExecutor;
@@ -70,6 +72,7 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   @NotNull
   private HDSFileAccess fileStore;
   private int maxFileSize = 64000;
+  private int maxWalFileSize = 64 * 1024 * 1024;
   private int flushSize = 1000000;
   private int flushIntervalCount = 30;
 
@@ -196,7 +199,6 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
       bucket.fileDataCache.remove(fileMeta.name);
       fileStore.rename(bucket.bucketKey, fileMeta.name + ".tmp", fileMeta.name);
     }
-
   }
 
   private Bucket getBucket(long bucketKey)
@@ -249,14 +251,31 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   @Override
   public void put(long bucketKey, byte[] key, byte[] value) throws IOException
   {
+    System.out.println("putting key in buket " + bucketKey);
     Bucket bucket = getBucket(bucketKey);
     if (bucket.wal == null) {
-      bucket.wal = fileStore.getOutputStream(bucket.bucketKey, FNAME_WAL);
-      bucket.wal.write(key);
-      bucket.wal.write(value);
+      bucket.recoveryInProgress = true;
+      // Initiate a new WAL for bucket, and run recovery if needed.
+      BucketWalWriter w = new BucketWalWriter(fileStore, bucketKey);
+      bucket.wal = w;
+      w.setMaxWalFileSize(maxWalFileSize);
+      w.setup();
+
+      // get last committed LSN from store, and use that for recovery.
+      BucketMeta meta = getMeta(bucketKey);
+      w.runRecovery(this, meta.committedLSN);
+
+      bucket.recoveryInProgress = false;
+    }
+    if (!bucket.recoveryInProgress) {
+      long lsn = bucket.wal.append(key, value);
+      System.out.println("putting key in buket " + bucketKey + " lsn " + lsn);
+      if (lsn >= maxLsn)
+        maxLsn = lsn;
     }
     bucket.writeCache.put(key, value);
   }
+
 
   /**
    * Flush changes from write cache to disk.
@@ -331,6 +350,7 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
     try {
       OutputStream os = fileStore.getOutputStream(bucket.bucketKey, FNAME_META + ".new");
       Output output = new Output(os);
+      bucketMetaCopy.committedLSN = bucket.lsn;
       kryo.writeClassAndObject(output, bucketMetaCopy);
       output.close();
       os.close();
@@ -379,10 +399,11 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   @Override
   public void endWindow()
   {
+    System.out.println("endWindow called in MAnager");
     for (final Bucket bucket : this.buckets.values()) {
       try {
         if (bucket.wal != null)
-          bucket.wal.flush();
+          bucket.wal.endWindow();
       } catch (IOException e) {
         throw new RuntimeException("Failed to flush WAL", e);
       }
@@ -390,7 +411,9 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
       if ((bucket.writeCache.size() > this.flushSize || windowId - lastFlushWindowId > flushIntervalCount) && !bucket.writeCache.isEmpty()) {
         // ensure previous flush completed
         if (bucket.frozenWriteCache.isEmpty()) {
+          System.out.println("Flushing data to disk  called in MAnager committedLSN " + maxLsn);
           bucket.frozenWriteCache = bucket.writeCache;
+          bucket.lsn = maxLsn;
           bucket.writeCache = Maps.newHashMap();
 
           Runnable flushRunnable = new Runnable() {
@@ -499,23 +522,44 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
     }
 
     int fileSeq;
+    long committedLSN;
     final TreeMap<byte[], BucketFileMeta> files;
   }
 
-  private static class Bucket
+  protected static class Bucket
   {
     private long bucketKey;
     // keys that were modified and written to WAL, but not yet persisted
-    private HashMap<byte[], byte[]> writeCache = Maps.newHashMap();
+    protected HashMap<byte[], byte[]> writeCache = Maps.newHashMap();
     private HashMap<byte[], byte[]> frozenWriteCache = Maps.newHashMap();
-    private transient DataOutputStream wal;
     private final transient HashMap<String, TreeMap<byte[], byte[]>> fileDataCache = Maps.newHashMap();
+    private transient BucketWalWriter wal;
+    private long lsn;
+    private boolean recoveryInProgress;
   }
 
-  // TODO: return LSN of last tuple which was written to data
-  // file.
-  @Override public long getRecoveryLSN(long bucketKey)
+  @VisibleForTesting
+  protected void saveWalMeta() throws IOException
   {
-    return 0;
+    for(Bucket bucket : buckets.values())
+    {
+      bucket.wal.saveMeta();
+    }
+  }
+
+  @VisibleForTesting
+  protected void forceWal() throws IOException
+  {
+    for(Bucket bucket : buckets.values())
+    {
+      bucket.wal.close();
+    }
+  }
+
+  @VisibleForTesting
+  protected int unflushedData(long bucketKey)
+  {
+    Bucket b = getBucket(bucketKey);
+    return b.writeCache.size();
   }
 }

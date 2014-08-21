@@ -15,8 +15,7 @@
  */
 package com.datatorrent.contrib.hds;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.DataOutputStream;
@@ -25,20 +24,18 @@ import java.io.IOException;
 
 public class HDFSWalWriter implements WALWriter
 {
-  transient HDSFileAccess bfs;
   transient DataOutputStream out;
   long commitedOffset;
   long offset;
   long unflushed;
   long bucketKey;
-  long walId;
+  String name;
 
-  public HDFSWalWriter(HDSFileAccess bfs, long bucketKey, long walId) throws IOException
+  public HDFSWalWriter(HDSFileAccess bfs, long bucketKey, String name) throws IOException
   {
-    this.bfs = bfs;
     this.bucketKey = bucketKey;
-    this.walId = walId;
-    out = bfs.getOutputStream(bucketKey, "WAL-" + walId);
+    this.name = name;
+    out = bfs.getOutputStream(bucketKey, name);
     unflushed = 0;
     commitedOffset = 0;
   }
@@ -64,6 +61,11 @@ public class HDFSWalWriter implements WALWriter
   @Override public void flush() throws IOException
   {
     out.flush();
+    if (out instanceof FSDataOutputStream) {
+      logger.info("calling hflush on file " + name);
+      ((FSDataOutputStream) out).hflush();
+      ((FSDataOutputStream) out).hsync();
+    }
     commitedOffset = out.size();
     unflushed = 0;
     logger.info("flushing file new offset {}", commitedOffset);
@@ -86,7 +88,7 @@ public class HDFSWalWriter implements WALWriter
 
   @Override
   public String toString() {
-    return "HDFSWalWritter Bucket " + bucketKey + " fileId " + walId;
+    return "HDFSWalWritter Bucket " + bucketKey + " fileId " + name ;
   }
 
   private static Logger logger = LoggerFactory.getLogger(HDFSWalWriter.class);

@@ -67,35 +67,4 @@ public class MutableKeyValue {
     return result;
   }
 
-  private static class MutableKeyValSerializer implements HDS.WalSerializer<MutableKeyValue> {
-
-    @Override public byte[] toBytes(MutableKeyValue data)
-    {
-      byte[] key = data.getKey();
-      byte[] val = data.getValue();
-      int keyLen = key.length;
-      int valLen = val.length;
-
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      out.write(keyLen);
-      out.write(key, 0, keyLen);
-      out.write(valLen);
-      out.write(val, 0, valLen);
-      return out.toByteArray();
-    }
-
-    @Override public MutableKeyValue fromBytes(byte[] arr)
-    {
-      ByteArrayInputStream bin = new ByteArrayInputStream(arr);
-      int keyLen = bin.read();
-      byte[] key = new byte[keyLen];
-      bin.read(key, 0, keyLen);
-      int valLen = bin.read();
-      byte[] val = new byte[valLen];
-      bin.read(val, 0, valLen);
-      return new MutableKeyValue(key, val);
-    }
-  }
-
-  public static final HDS.WalSerializer<MutableKeyValue> DEFAULT_SERIALIZER = new MutableKeyValSerializer();
 }

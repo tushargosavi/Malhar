@@ -60,20 +60,20 @@ public class DefaultWalManager
 
       // get last committed LSN from store, and use that for recovery.
       if (store != null) {
-        w.runRecovery(store, store.getRecoveryLSN(bucketKey));
+        w.runRecovery(store, 1);
       }
 
       writer = w;
       writers.put(bucketKey, writer);
     }
-    writer.writeData(key, value);
+    writer.append(key, value);
   }
 
   public void endWindow(long wid) throws IOException
   {
     logger.info("======= EndWindow called {}", wid);
     for(BucketWalWriter writer : writers.values())
-      writer.endWindow(wid);
+      writer.endWindow();
   }
 
   /* Save metadata for each writter */
