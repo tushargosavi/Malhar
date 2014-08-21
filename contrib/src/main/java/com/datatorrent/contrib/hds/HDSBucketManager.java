@@ -57,7 +57,7 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
 
   private final HashMap<Long, BucketMeta> metaCache = Maps.newHashMap();
   private transient long windowId;
-  private transient long lastFlushWindowId;
+  private long lastFlushWindowId;
   @VisibleForTesting
   protected long maxLsn;
   protected final HashMap<Long, Bucket> buckets = Maps.newHashMap();
@@ -253,25 +253,27 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   {
     System.out.println("putting key in buket " + bucketKey);
     Bucket bucket = getBucket(bucketKey);
-    if (bucket.wal == null) {
+    if (bucket.wal == null || bucket.recoveryNeeded) {
       bucket.recoveryInProgress = true;
-      // Initiate a new WAL for bucket, and run recovery if needed.
-      BucketWalWriter w = new BucketWalWriter(fileStore, bucketKey);
-      bucket.wal = w;
-      w.setMaxWalFileSize(maxWalFileSize);
-      w.setup();
+      if (bucket.wal == null) {
+        // Initiate a new WAL for bucket, and run recovery if needed.
+        BucketWalWriter w = new BucketWalWriter(fileStore, bucketKey);
+        bucket.wal = w;
+        w.setMaxWalFileSize(maxWalFileSize);
+        w.setup();
+        w.setLSN(windowId);
+      }
 
       // get last committed LSN from store, and use that for recovery.
       BucketMeta meta = getMeta(bucketKey);
-      w.runRecovery(this, meta.committedLSN);
-
+      bucket.wal.runRecovery(this, meta.committedLSN);
       bucket.recoveryInProgress = false;
     }
     if (!bucket.recoveryInProgress) {
       long lsn = bucket.wal.append(key, value);
       System.out.println("putting key in buket " + bucketKey + " lsn " + lsn);
-      if (lsn >= maxLsn)
-        maxLsn = lsn;
+      if (lsn >= bucket.maxLsn)
+        bucket.maxLsn = lsn;
     }
     bucket.writeCache.put(key, value);
   }
@@ -350,7 +352,7 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
     try {
       OutputStream os = fileStore.getOutputStream(bucket.bucketKey, FNAME_META + ".new");
       Output output = new Output(os);
-      bucketMetaCopy.committedLSN = bucket.lsn;
+      bucketMetaCopy.committedLSN = bucket.committedLSN;
       kryo.writeClassAndObject(output, bucketMetaCopy);
       output.close();
       os.close();
@@ -377,6 +379,14 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   {
     fileStore.init();
     writeExecutor = Executors.newSingleThreadScheduledExecutor(new NameableThreadFactory(this.getClass().getSimpleName()+"-Writer"));
+
+    for(Bucket bucket : buckets.values())
+    {
+      if (bucket.wal == null)
+        continue;
+      bucket.recoveryNeeded = true;
+      bucket.wal.setFileStore(fileStore);
+    }
   }
 
   @Override
@@ -394,6 +404,10 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
   public void beginWindow(long windowId)
   {
     this.windowId = windowId;
+    for(Bucket b : buckets.values())
+    {
+      b.wal.setLSN(windowId);
+    }
   }
 
   @Override
@@ -413,7 +427,7 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
         if (bucket.frozenWriteCache.isEmpty()) {
           System.out.println("Flushing data to disk  called in MAnager committedLSN " + maxLsn);
           bucket.frozenWriteCache = bucket.writeCache;
-          bucket.lsn = maxLsn;
+          bucket.committedLSN = bucket.maxLsn;
           bucket.writeCache = Maps.newHashMap();
 
           Runnable flushRunnable = new Runnable() {
@@ -533,9 +547,12 @@ public class HDSBucketManager implements HDS.BucketManager, CheckpointListener, 
     protected HashMap<byte[], byte[]> writeCache = Maps.newHashMap();
     private HashMap<byte[], byte[]> frozenWriteCache = Maps.newHashMap();
     private final transient HashMap<String, TreeMap<byte[], byte[]>> fileDataCache = Maps.newHashMap();
-    private transient BucketWalWriter wal;
-    private long lsn;
+
+    private BucketWalWriter wal;
+    private long committedLSN;
+    private long maxLsn;
     private boolean recoveryInProgress;
+    private boolean recoveryNeeded;
   }
 
   @VisibleForTesting

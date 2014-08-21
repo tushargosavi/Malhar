@@ -71,7 +71,7 @@ public class BucketWalWriter
     }
   }
 
-  transient public TreeMap<Long, WalFileMeta> files = Maps.newTreeMap();
+  public TreeMap<Long, WalFileMeta> files = Maps.newTreeMap();
 
   /* Backend Filesystem managing WAL */
   transient HDSFileAccess bfs;
@@ -107,13 +107,19 @@ public class BucketWalWriter
   /* Current WAL size */
   private long commitedLength = 0;
 
+  private BucketWalWriter() { }
+
   public BucketWalWriter(HDSFileAccess bfs, long bucketKey) {
     this.bfs = bfs;
     this.bucketKey = bucketKey;
   }
 
+  public void setFileStore(HDSFileAccess bfs) {
+    this.bfs = bfs;
+  }
+
   /* Run recovery for bucket,
-   * reads WAL and populate store uncommitedState.
+   * reads WAL and populate store uncommittedState.
    */
   public void runRecovery(HDS.BucketManager store, long id) throws IOException
   {
@@ -177,7 +183,6 @@ public class BucketWalWriter
     /* no data to commit */
     if (fileMeta.committedBytes == 0)
       return;
-
 
     bfs.truncate(bucketKey, WAL_FILE_PREFIX + fileMeta.walId, fileMeta.committedBytes);
   }
@@ -334,10 +339,8 @@ public class BucketWalWriter
     logger.info("Read metadata walFileId {} committedLsn {}", walFileId, committedLsn);
   }
 
-  void setup() throws IOException
+  void init() throws IOException
   {
-    /* Restore stored metadata */
-    readMeta();
     /* Restore last WAL file */
     restoreLastWal();
     /* open current WAL for writting, If file is present then WAL is opened in append mode,
@@ -347,6 +350,21 @@ public class BucketWalWriter
     /* Use new file for fresh restart */
     walFileId++;
   }
+
+  void setup() throws IOException
+  {
+    printMeta(1);
+
+    /* Restore last WAL file */
+    restoreLastWal();
+    /* open current WAL for writting, If file is present then WAL is opened in append mode,
+     * else it is created. */
+    writer = null;
+
+    /* Use new file for fresh restart */
+    walFileId++;
+  }
+
 
   public void teardown() throws IOException
   {

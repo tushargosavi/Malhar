@@ -15,6 +15,9 @@
  */
 package com.datatorrent.contrib.hds;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.ByteBufferInput;
+import com.esotericsoftware.kryo.io.ByteBufferOutput;
 import com.google.common.util.concurrent.MoreExecutors;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
@@ -175,29 +178,46 @@ public class WALTest
     hds.setup(null);
     hds.writeExecutor = MoreExecutors.sameThreadExecutor();
 
+    hds.beginWindow(1001);
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
     hds.endWindow();
 
+    hds.beginWindow(1002);
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    // Data files are written in this endWindow();
     hds.endWindow();
 
+    hds.beginWindow(1003);
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
     hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    // Wal state is saved in this window.
     hds.endWindow();
-    hds.saveWalMeta();
-    //hds.forceWal();
+
+    hds.forceWal();
 
     hds.teardown();
 
-    hds = new HDSBucketManager();
-    hds.setFileStore(bfs);
+    Kryo kryo = new Kryo();
+    com.esotericsoftware.kryo.io.ByteBufferOutput oo = new ByteBufferOutput(100000);
+    kryo.writeObject(oo, hds);
+    oo.flush();
+    com.esotericsoftware.kryo.io.ByteBufferInput oi = new ByteBufferInput(oo.getByteBuffer());
+    HDSBucketManager newOperator = kryo.readObject(oi, HDSBucketManager.class);
+    newOperator.setFileStore(bfs);
+    newOperator.setKeyComparator(new HDSTest.MyDataKey.SequenceComparator());
+    newOperator.setFlushIntervalCount(1);
+    newOperator.setFlushSize(3);
+    newOperator.setup(null);
+    newOperator.writeExecutor = MoreExecutors.sameThreadExecutor();
 
     // This should run recovery, as first tuple is added in bucket
-    hds.put(1, genRandomByteArray(500), genRandomByteArray(500));
+    newOperator.put(1, genRandomByteArray(500), genRandomByteArray(500));
 
     System.out.println("Unflushed data for bucket 1 is " + hds.unflushedData(1));
+    Assert.assertEquals("Number of tuples in cache", 3, hds.unflushedData(1));
+
     //Assert.assertEquals("Number of tuples in store ", 2, mgr.buckets.get(1));getCount());
   }
 
