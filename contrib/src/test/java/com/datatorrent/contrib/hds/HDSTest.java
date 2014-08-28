@@ -45,7 +45,7 @@ public class HDSTest
   @Rule
   public final TestUtils.TestInfo testInfo = new TestUtils.TestInfo();
 
-  private long getBucketKey(Slice key)
+  public static long getBucketKey(Slice key)
   {
     return readLong(key.buffer, 8);
   }
