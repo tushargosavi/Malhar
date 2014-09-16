@@ -54,6 +54,17 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
   protected int partitionMask;
 
   protected Set<Integer> partitions;
+  protected EventDescription eventDesc;
+
+  public GenericEventSerializer getSerialiser()
+  {
+    return serialiser;
+  }
+
+  public void setSerialiser(GenericEventSerializer serialiser)
+  {
+    this.serialiser = serialiser;
+  }
 
   protected transient GenericEventSerializer serialiser;
   private transient StreamCodec<MapAggregateEvent> streamCodec;
@@ -85,7 +96,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
         MapAggregateEvent ai = en.getValue();
 
         try {
-          put(getBucketKey(ai), serialiser.getKey(ai.fields), serialiser.getValue(ai.fields));
+          put(getBucketKey(ai), serialiser.getKey(ai.keys), serialiser.getValue(ai.fields));
         } catch (IOException e) {
           LOG.warn("Error putting the value", e);
         }
@@ -104,17 +115,21 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     @Override
     public void process(MapAggregateEvent adInfo)
     {
+      System.out.println("Processing event " + adInfo.toString());
       Map<MapAggregateEvent, MapAggregateEvent> valMap = cache.get(adInfo.getTimestamp());
       if (valMap == null) {
         valMap = new HashMap<MapAggregateEvent, MapAggregateEvent>();
         valMap.put(adInfo, adInfo);
+        System.out.println("Map not found ");
         cache.put(adInfo.getTimestamp(), valMap);
       } else {
         MapAggregateEvent val = valMap.get(adInfo);
         if (val == null) {
+          System.out.println("Value not found " + val + "  adInfo " + adInfo);
           valMap.put(adInfo, adInfo);
           return;
         } else {
+          System.out.println("Calling aggregate function " + val + "  adInfo " + adInfo);
           aggregator.aggregate(val, adInfo);
         }
       }
@@ -131,6 +146,16 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
   public long getBucketKey(MapAggregateEvent aie)
   {
     return (streamCodec.getPartition(aie) & partitionMask);
+  }
+
+  public void setEventDescriptor(EventDescription eventDesc)
+  {
+    this.eventDesc = eventDesc;
+  }
+
+  public EventDescription getEventDescriptor()
+  {
+    return eventDesc;
   }
 
   public static class BucketKeyStreamCodec extends KryoSerializableStreamCodec<MapAggregateEvent>

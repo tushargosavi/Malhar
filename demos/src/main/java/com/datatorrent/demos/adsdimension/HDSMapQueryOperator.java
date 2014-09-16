@@ -40,6 +40,8 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         LOG.debug("registering query {}", s);
         registerQuery(s);
       } catch(Exception ex) {
+        System.out.println(ex.getMessage());
+        ex.printStackTrace();
         LOG.error("Unable to register query {}", s);
       }
     }
@@ -90,7 +92,6 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
   private transient ObjectMapper mapper = null;
   private long defaultTimeWindow = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
 
-
   public long getDefaultTimeWindow()
   {
     return defaultTimeWindow;
@@ -99,6 +100,23 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
   public void setDefaultTimeWindow(long defaultTimeWindow)
   {
     this.defaultTimeWindow = defaultTimeWindow;
+  }
+
+  protected Map<String, Object> converQueryKey(Map<String, String> key)
+  {
+    Map<String, Object> map = Maps.newHashMap();
+    for(String param : key.keySet()) {
+      Class c = eventDesc.getType(param);
+      if (c.equals(Integer.class))
+        map.put(param, new Integer(Integer.valueOf(key.get(param))));
+      else if (c.equals(Long.class))
+        map.put(param, new Long(Long.valueOf(key.get(param))));
+      else if (c.equals(Float.class))
+        map.put(param, new Float(Float.valueOf(key.get(param))));
+      else if (c.equals(Double.class))
+        map.put(param, new Double(Double.valueOf(key.get(param))));
+    }
+    return map;
   }
 
   public void registerQuery(String queryString) throws Exception
@@ -115,7 +133,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     }
 
     MapAggregateEvent ae = new MapAggregateEvent(0);
-    ae.fields = mapper.convertValue(queryParams.keys, Map.class);
+    ae.keys = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
     if (!(super.partitions == null || super.partitions.contains((int)bucketKey))) {
@@ -145,7 +163,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     // set query for each point in series
     query.prototype.setTimestamp(query.startTime);
     while (query.prototype.getTimestamp() <= query.endTime) {
-      Slice key = HDSBucketManager.toSlice(serialiser.getKey(query.prototype.fields));
+      Slice key = HDSBucketManager.toSlice(serialiser.getKey(query.prototype));
       HDSQuery q = super.queries.get(key);
       if (q == null) {
         q = new HDSQuery();
@@ -201,8 +219,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          MapAggregateEvent ae = new MapAggregateEvent(0);
-          ae.fields = serialiser.fromBytes(query.key, query.result);
+          MapAggregateEvent ae = serialiser.fromBytes(query.key, query.result);
           if (ae.fields != null)
             res.data.add(ae);
         }

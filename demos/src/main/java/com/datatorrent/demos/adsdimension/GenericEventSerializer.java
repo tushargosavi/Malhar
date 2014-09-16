@@ -94,6 +94,11 @@ public class GenericEventSerializer {
     return null;
   }
 
+  byte[] getKey(MapAggregateEvent event)
+  {
+    return getKey(event.keys);
+  }
+
   byte[] getKey(Map<String, Object> tuple)
   {
     ByteBuffer bb = ByteBuffer.allocate(eventDescription.getKeyLen());
@@ -113,6 +118,11 @@ public class GenericEventSerializer {
     return bb.array();
   }
 
+  byte[] getValue(MapAggregateEvent event)
+  {
+    return getValue(event.fields);
+  }
+
   byte[] getValue(Map<String, Object> tuple)
   {
     ByteBuffer bb = ByteBuffer.allocate(eventDescription.getValLen());
@@ -130,7 +140,30 @@ public class GenericEventSerializer {
     return bb.array();
   }
 
-  public Map<String, Object> fromBytes(byte[] keyBytes, byte[] valBytes)
+  public MapAggregateEvent fromBytes(byte[] keyBytes, byte[] valBytes)
+  {
+    MapAggregateEvent event = new MapAggregateEvent(0);
+
+    ByteBuffer bb = ByteBuffer.wrap(keyBytes);
+
+    // Deserialise keys.
+    for (java.lang.String key : eventDescription.keys) {
+      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(key)));
+      event.keys.put(key, o);
+    }
+
+    // Deserialize metrics
+    bb = ByteBuffer.wrap(valBytes);
+    for(java.lang.String metric : eventDescription.metrices)
+    {
+      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(metric)));
+      event.fields.put(metric, o);
+    }
+
+    return event;
+  }
+
+  public Map<String, Object> fromBytes1(byte[] keyBytes, byte[] valBytes)
   {
     Map<java.lang.String, java.lang.Object> tuple = Maps.newHashMapWithExpectedSize(eventDescription.keys.size() + eventDescription.metrices.size());
 

@@ -55,18 +55,20 @@ public class GenericEventSerializerTest
     System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
 
     /* prepare a object */
-    Map<String, Object> event = Maps.newHashMap();
-    event.put("timestamp", System.currentTimeMillis());
-    event.put("pubId", 1);
-    event.put("adUnit", 2);
-    event.put("adId", 3);
-    event.put("clicks", new Long(10));
+    MapAggregateEvent event = new MapAggregateEvent(0);
+    event.keys.put("timestamp", System.currentTimeMillis());
+    event.keys.put("pubId", 1);
+    event.keys.put("adUnit", 2);
+    event.keys.put("adId", 3);
+    event.fields.put("clicks", new Long(10));
 
     /* serialize and deserialize object */
     byte[] keyBytes = ser.getKey(event);
     byte[] valBytes = ser.getValue(event);
 
-    Map<String, Object> o = ser.fromBytes(keyBytes, valBytes);
+    MapAggregateEvent o = ser.fromBytes(keyBytes, valBytes);
+
+    org.junit.Assert.assertNotSame("deserialized", event, o);
 
     Assert.assertEquals(o, event);
     Assert.assertEquals("pubId", o.get("pubId"), event.get("pubId"));
@@ -91,17 +93,17 @@ public class GenericEventSerializerTest
     System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
 
     /* prepare a object */
-    Map<String, Object> event = Maps.newHashMap();
-    event.put("timestamp", System.currentTimeMillis());
-    event.put("pubId", 1);
-    event.put("adUnit", 2);
-    event.put("clicks", new Long(10));
+    MapAggregateEvent event = new MapAggregateEvent(0);
+    event.keys.put("timestamp", System.currentTimeMillis());
+    event.keys.put("pubId", 1);
+    event.keys.put("adUnit", 2);
+    event.fields.put("clicks", new Long(10));
 
     /* serialize and deserialize object */
     byte[] keyBytes = ser.getKey(event);
     byte[] valBytes = ser.getValue(event);
 
-    Map<String, Object> o = ser.fromBytes(keyBytes, valBytes);
+    MapAggregateEvent o = ser.fromBytes(keyBytes, valBytes);
 
     //Assert.assertEquals(o, event);
     Assert.assertEquals("pubId", o.get("pubId"), event.get("pubId"));
