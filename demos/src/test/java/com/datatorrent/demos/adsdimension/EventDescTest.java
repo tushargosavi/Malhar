@@ -4,9 +4,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-/**
- * Created by tushar on 15/9/14.
- */
+
 public class EventDescTest
 {
   @Test
