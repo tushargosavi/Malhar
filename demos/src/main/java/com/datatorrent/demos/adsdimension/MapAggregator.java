@@ -12,6 +12,7 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 {
   protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
+  Map<String, Object> keys = Maps.newHashMap();
   Map<String, Object> fields = Maps.newHashMap();
   int aggregatorIndex;
 
@@ -27,7 +28,7 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 
   public Long getTimestamp()
   {
-    Object o = fields.get(TIMESTAMP_KEY_STR);
+    Object o = keys.get(TIMESTAMP_KEY_STR);
     if (o == null)
       return 0L;
 
@@ -36,7 +37,48 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 
   public void setTimestamp(long timestamp)
   {
-    fields.put(TIMESTAMP_KEY_STR, timestamp);
+    keys.put(TIMESTAMP_KEY_STR, timestamp);
+  }
+
+  public Object get(String field)
+  {
+    if (keys.containsKey(field))
+      return keys.get(field);
+    if (fields.containsKey(field))
+      return fields.get(field);
+    return null;
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof MapAggregateEvent)) {
+      return false;
+    }
+
+    MapAggregateEvent that = (MapAggregateEvent) o;
+
+    if (aggregatorIndex != that.aggregatorIndex) {
+      return false;
+    }
+    if (keys == null && that.keys == null)
+      return true;
+
+    if (keys == null)
+      return false;
+
+    return keys.equals(that.keys);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    int result = keys != null ? keys.hashCode() : 0;
+    result = 31 * result + aggregatorIndex;
+    return result;
   }
 }
 
@@ -72,13 +114,13 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   {
     MapAggregateEvent aggr = new MapAggregateEvent(aggregatorIndex);
     for(String key : keys) {
-      aggr.fields.put(key, src.get(key));
+      aggr.keys.put(key, src.get(key));
     }
     /* Add converted timestamp */
     if (time != null) {
       long timestamp = src.get(MapAggregateEvent.TIMESTAMP_KEY_STR) != null? ((Long)src.get(MapAggregateEvent.TIMESTAMP_KEY_STR)).longValue() : 0;
       timestamp = TimeUnit.MILLISECONDS.convert(time.convert(timestamp, TimeUnit.MILLISECONDS), time);
-      aggr.fields.put("timestamp", new Long(timestamp));
+      aggr.keys.put("timestamp", new Long(timestamp));
     }
     return aggr;
   }

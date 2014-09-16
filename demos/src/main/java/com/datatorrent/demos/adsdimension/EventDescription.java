@@ -103,4 +103,9 @@ public class EventDescription
     EventDescription e = mapper.readValue(desc, EventDescription.class);
     return e;
   }
+
+  public Class getType(String param)
+  {
+    return dataDesc.get(param);
+  }
 }
