@@ -81,4 +81,41 @@ public class GenericEventSerializerTest
     Assert.assertEquals("click type ", o.get("clicks").getClass(), Long.class);
   }
 
+  /* Test with missing fields, serialized with default values */
+  @Test
+  public void test1()
+  {
+    EventDescription eDesc = getDataDesc();
+    GenericEventSerializer ser = new GenericEventSerializer(eDesc);
+
+    System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
+
+    /* prepare a object */
+    Map<String, Object> event = Maps.newHashMap();
+    event.put("timestamp", System.currentTimeMillis());
+    event.put("pubId", 1);
+    event.put("adUnit", 2);
+    event.put("clicks", new Long(10));
+
+    /* serialize and deserialize object */
+    byte[] keyBytes = ser.getKey(event);
+    byte[] valBytes = ser.getValue(event);
+
+    Map<String, Object> o = ser.fromBytes(keyBytes, valBytes);
+
+    //Assert.assertEquals(o, event);
+    Assert.assertEquals("pubId", o.get("pubId"), event.get("pubId"));
+    Assert.assertEquals("pubId", o.get("adUnit"), event.get("adUnit"));
+    Assert.assertEquals("pubId", event.get("adId"), null);
+    Assert.assertEquals("pubId", o.get("adId"), 0);
+    Assert.assertEquals("pubId", o.get("clicks"), event.get("clicks"));
+
+    Assert.assertEquals("timestamp type ", o.get("timestamp").getClass(), Long.class);
+    Assert.assertEquals("pubId type ", o.get("pubId").getClass(), Integer.class);
+    Assert.assertEquals("adId type ", o.get("adId").getClass(), Integer.class);
+    Assert.assertEquals("adUnit type ", o.get("adUnit").getClass(), Integer.class);
+    Assert.assertEquals("click type ", o.get("clicks").getClass(), Long.class);
+  }
+
+
 }

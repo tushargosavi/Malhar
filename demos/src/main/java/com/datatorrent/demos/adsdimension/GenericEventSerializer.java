@@ -15,17 +15,6 @@ public class GenericEventSerializer {
     this.eventDescription = eventDescription;
   }
 
-  static Class stringToType(String type)
-  {
-    if (type.equals("int"))
-      return Integer.class;
-    else if (type.equals("float"))
-      return Float.class;
-    else if (type.equals("long"))
-      return Long.class;
-    return null;
-  }
-
   static Class stringToType(Class klass)
   {
     return klass;
@@ -34,7 +23,6 @@ public class GenericEventSerializer {
   static int putSimpleField(ByteBuffer bb, Object o)
   {
     Class klass = o.getClass();
-    System.out.println("Object " + o + " klass " + klass + " type " + Integer.class);
     if (klass.equals(Integer.class)) {
       bb.putInt(((Integer) o).intValue());
       return 4;

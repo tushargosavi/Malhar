@@ -98,7 +98,6 @@ public class EventDescription
 
   public static EventDescription create(String desc) throws IOException
   {
-
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     EventDescription e = mapper.readValue(desc, EventDescription.class);
