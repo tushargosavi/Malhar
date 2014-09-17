@@ -84,7 +84,6 @@ public class GenericAppTest
     KafkaTestProducer kafkaQuery = new KafkaTestProducer(kafkaQueryTopic);
     String testQuery="{\n" +
         " \"id\": \"query1\",\n" +
-        " \"dimensionSelector\": \"time=MINUTES:pubId\",\n" +
         " \"keys\": {\n" +
         "  \"pubId\": 1\n" +
         " }\n" +

@@ -84,7 +84,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
   {
     public String id;
     public long countDown;
-    public List<MapAggregateEvent> data;
+    public List<Map<String, Object>> data;
   }
 
   @VisibleForTesting
@@ -212,7 +212,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
           MapAggregateEvent ae = buffered.get(rangeQuery.prototype);
           if (ae != null) {
             LOG.debug("Adding from aggregation buffer {}" + ae);
-            res.data.add(ae);
+            res.data.add(combineMaps(ae.fields, ae.keys));
             rangeQuery.prototype.setTimestamp(rangeQuery.prototype.getTimestamp() + rangeQuery.intervalTimeUnit.toMillis(1));
             continue;
           }
@@ -221,7 +221,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         if (query.processed && query.result != null) {
           MapAggregateEvent ae = serialiser.fromBytes(query.key, query.result);
           if (ae.fields != null)
-            res.data.add(ae);
+            res.data.add(combineMaps(ae.fields, ae.keys));
         }
         rangeQuery.prototype.setTimestamp(rangeQuery.prototype.getTimestamp() + rangeQuery.intervalTimeUnit.toMillis(1));
       }
@@ -230,6 +230,14 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         queryResult.emit(res);
       }
     }
+  }
+
+  private Map<String, Object> combineMaps(Map<String, Object> fields, Map<String, Object> keys)
+  {
+    Map<String, Object> combMap = Maps.newHashMap();
+    combMap.putAll(fields);
+    combMap.putAll(keys);
+    return combMap;
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDSQueryOperator.class);

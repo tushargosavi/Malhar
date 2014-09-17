@@ -84,7 +84,7 @@ public class EventDescription
     int len = 0;
     for(String field : fields) {
       Class k = dataDesc.get(field);
-      len += GenericEventSerializer.fieldSerialisers.get(k).dataLength();
+      len += GenericEventSerializer.fieldSerializers.get(k).dataLength();
     }
     return len;
   }
@@ -92,5 +92,36 @@ public class EventDescription
   public Class getType(String param)
   {
     return dataDesc.get(param);
+  }
+
+  public static EventDescription getDefault() {
+    EventDescription eDesc = new EventDescription();
+
+    Map<String, Class> dataDesc  = Maps.newHashMap();
+    dataDesc.put("timestamp", Long.class);
+    dataDesc.put("pubId", Integer.class);
+    dataDesc.put("adId", Integer.class);
+    dataDesc.put("adUnit", Integer.class);
+
+    dataDesc.put("clicks", Long.class);
+    eDesc.setDataDesc(dataDesc);
+
+    String[] keys = { "timestamp", "pubId", "adId", "adUnit" };
+    List<String> keyDesc = Lists.newArrayList(keys);
+    eDesc.setKeys(keyDesc);
+
+    String[] vals = { "clicks" };
+    List<String> valDesc = Lists.newArrayList(vals);
+    eDesc.setMetrices(valDesc);
+
+    Map<String, String> aggrDesc = Maps.newHashMapWithExpectedSize(vals.length);
+    aggrDesc.put("clicks", "sum");
+    eDesc.setAggrDesc(aggrDesc);
+
+    String[] partitionDesc = { "pubId" };
+    List<String> partDesc = Lists.newArrayList(partitionDesc);
+    eDesc.setPartitionKeys(partDesc);
+
+    return eDesc;
   }
 }
