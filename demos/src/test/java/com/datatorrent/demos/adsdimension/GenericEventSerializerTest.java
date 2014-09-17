@@ -119,5 +119,4 @@ public class GenericEventSerializerTest
     Assert.assertEquals("click type ", o.get("clicks").getClass(), Long.class);
   }
 
-
 }
