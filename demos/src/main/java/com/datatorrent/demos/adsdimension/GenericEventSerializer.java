@@ -110,12 +110,12 @@ public class GenericEventSerializer {
     return klass;
   }
 
-  static Map<Class, FieldSerializer> fieldSerialisers = Maps.newHashMapWithExpectedSize(4);
+  static Map<Class, FieldSerializer> fieldSerializers = Maps.newHashMapWithExpectedSize(4);
   static {
-    fieldSerialisers.put(Integer.class, new IntSerializer());
-    fieldSerialisers.put(Float.class, new FloatSerializer());
-    fieldSerialisers.put(Long.class, new LongSerializer());
-    fieldSerialisers.put(Double.class, new DoubleSerializer());
+    fieldSerializers.put(Integer.class, new IntSerializer());
+    fieldSerializers.put(Float.class, new FloatSerializer());
+    fieldSerializers.put(Long.class, new LongSerializer());
+    fieldSerializers.put(Double.class, new DoubleSerializer());
   }
 
   byte[] getKey(MapAggregateEvent event)
@@ -130,7 +130,7 @@ public class GenericEventSerializer {
     bb.rewind();
     for (String key : eventDescription.keys) {
       Object o = tuple.get(key);
-      fieldSerialisers.get(eventDescription.getClass(key)).putField(bb, o);
+      fieldSerializers.get(eventDescription.getClass(key)).putField(bb, o);
     }
     bb.rewind();
     System.out.println(Arrays.toString(bb.array()));
@@ -148,7 +148,7 @@ public class GenericEventSerializer {
     for(String metric : eventDescription.metrices)
     {
       Object o = tuple.get(metric);
-      fieldSerialisers.get(eventDescription.getClass(metric)).putField(bb, o);
+      fieldSerializers.get(eventDescription.getClass(metric)).putField(bb, o);
     }
     System.out.println(Arrays.toString(bb.array()));
     return bb.array();
@@ -160,9 +160,9 @@ public class GenericEventSerializer {
 
     ByteBuffer bb = ByteBuffer.wrap(keyBytes);
 
-    // Deserialise keys.
+    // Deserialize keys.
     for (java.lang.String key : eventDescription.keys) {
-      java.lang.Object o = fieldSerialisers.get(eventDescription.getClass(key)).readField(bb);
+      java.lang.Object o = fieldSerializers.get(eventDescription.getClass(key)).readField(bb);
       event.keys.put(key, o);
     }
 
@@ -170,7 +170,7 @@ public class GenericEventSerializer {
     bb = ByteBuffer.wrap(valBytes);
     for(java.lang.String metric : eventDescription.metrices)
     {
-      java.lang.Object o = fieldSerialisers.get(eventDescription.getClass(metric)).readField(bb);
+      java.lang.Object o = fieldSerializers.get(eventDescription.getClass(metric)).readField(bb);
       event.fields.put(metric, o);
     }
 

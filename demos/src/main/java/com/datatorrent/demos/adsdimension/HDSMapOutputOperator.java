@@ -55,6 +55,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
 
   protected Set<Integer> partitions;
   protected EventDescription eventDesc;
+  transient protected GenericEventSerializer serialiser;
 
   public GenericEventSerializer getSerialiser()
   {
@@ -66,7 +67,6 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     this.serialiser = serialiser;
   }
 
-  protected transient GenericEventSerializer serialiser;
   private transient StreamCodec<MapAggregateEvent> streamCodec;
   protected final SortedMap<Long, Map<MapAggregateEvent, MapAggregateEvent>> cache = Maps.newTreeMap();
 
@@ -96,6 +96,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
         MapAggregateEvent ai = en.getValue();
 
         try {
+          LOG.debug("Putting values in store key {} val {}", ai.keys, ai.fields);
           put(getBucketKey(ai), serialiser.getKey(ai.keys), serialiser.getValue(ai.fields));
         } catch (IOException e) {
           LOG.warn("Error putting the value", e);
@@ -115,21 +116,17 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     @Override
     public void process(MapAggregateEvent adInfo)
     {
-      System.out.println("Processing event " + adInfo.toString());
       Map<MapAggregateEvent, MapAggregateEvent> valMap = cache.get(adInfo.getTimestamp());
       if (valMap == null) {
         valMap = new HashMap<MapAggregateEvent, MapAggregateEvent>();
         valMap.put(adInfo, adInfo);
-        System.out.println("Map not found ");
         cache.put(adInfo.getTimestamp(), valMap);
       } else {
         MapAggregateEvent val = valMap.get(adInfo);
         if (val == null) {
-          System.out.println("Value not found " + val + "  adInfo " + adInfo);
           valMap.put(adInfo, adInfo);
           return;
         } else {
-          System.out.println("Calling aggregate function " + val + "  adInfo " + adInfo);
           aggregator.aggregate(val, adInfo);
         }
       }
@@ -182,6 +179,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     super.setup(arg0);
     try {
       this.streamCodec = getBucketKeyStreamCodec().newInstance();
+      serialiser = new GenericEventSerializer(eventDesc);
     } catch (Exception e) {
       throw new RuntimeException("Failed to create streamCodec", e);
     }
