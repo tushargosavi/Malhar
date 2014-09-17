@@ -3,6 +3,7 @@ package com.datatorrent.demos.adsdimension;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.velocity.runtime.parser.node.MapGetExecutor;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,8 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
   Map<String, Object> fields = Maps.newHashMap();
   int aggregatorIndex;
 
-  MapAggregateEvent(int aggregatorIndex)
+  protected MapAggregateEvent() {}
+  public MapAggregateEvent(int aggregatorIndex)
   {
     this.aggregatorIndex = aggregatorIndex;
   }
@@ -85,10 +87,12 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 
 public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregateEvent>
 {
-  EventDescription eDesc;
-  String dimension;
-  TimeUnit time;
-  List<String> keys = Lists.newArrayList();
+  public EventDescription eDesc;
+  protected String dimension;
+  protected TimeUnit time;
+  protected List<String> keys = Lists.newArrayList();
+
+  public MapAggregator() {}
 
   public MapAggregator(EventDescription eDesc)
   {

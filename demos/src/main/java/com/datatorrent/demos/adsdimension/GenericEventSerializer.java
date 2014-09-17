@@ -8,6 +8,96 @@ import java.util.Map;
 
 public class GenericEventSerializer {
 
+  static interface FieldSerializer {
+    public void putField(ByteBuffer bb, Object o);
+    public Object readField(ByteBuffer bb);
+    public int dataLength();
+  }
+
+  static class IntSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putInt(0);
+      else
+        bb.putInt(((Integer) o).intValue());
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      int data = bb.getInt();
+      return data;
+    }
+
+    @Override public int dataLength()
+    {
+      return 4;
+    }
+  }
+
+  static class LongSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putLong(0);
+      else
+        bb.putLong(((Long) o).longValue());
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      long data = bb.getLong();
+      return data;
+    }
+
+    @Override public int dataLength()
+    {
+      return 8;
+    }
+  }
+
+  static class FloatSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putFloat(0.0f);
+      else
+        bb.putFloat(((Float) o).floatValue());
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      float data = bb.getFloat();
+      return data;
+    }
+
+    @Override public int dataLength()
+    {
+      return 4;
+    }
+  }
+
+  static class DoubleSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putDouble(0.0d);
+      else
+        bb.putDouble(((Double) o).doubleValue());
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      double data = bb.getDouble();
+      return data;
+    }
+
+    @Override public int dataLength()
+    {
+      return 8;
+    }
+  }
+
   EventDescription eventDescription;
 
   public GenericEventSerializer(EventDescription eventDescription)
@@ -20,78 +110,12 @@ public class GenericEventSerializer {
     return klass;
   }
 
-  static int putSimpleField(ByteBuffer bb, Object o)
-  {
-    Class klass = o.getClass();
-    if (klass.equals(Integer.class)) {
-      bb.putInt(((Integer) o).intValue());
-      return 4;
-    } else if (klass.equals(Long.class)) {
-      bb.putLong(((Long) o).longValue());
-      return 8;
-    } else if (klass.equals(Float.class)) {
-      bb.putFloat(((Float)o).floatValue());
-      return 4;
-    } else if (klass.equals(Double.class)) {
-      bb.putDouble(((Double)o).doubleValue());
-      return 8;
-    } else if (klass.equals(Short.class)) {
-      bb.putShort(((Short)o).shortValue());
-      return 2;
-    } else if (klass.equals(Character.class)) {
-      bb.putChar(((Character)o).charValue());
-      return 2;
-    } else if (klass.equals(String.class)) {
-      // TODO add string.
-    }
-    return 0;
-  }
-
-  /* Write default values for a data type */
-  static int putSimpleFieldDefault(ByteBuffer bb, Class klass)
-  {
-    if (klass.equals(Integer.class)) {
-      bb.putInt(0);
-      return 4;
-    } else if (klass.equals(Long.class)) {
-      bb.putLong(0L);
-      return 8;
-    } else if (klass.equals(Float.class)) {
-      bb.putFloat(0.0f);
-      return 4;
-    } else if (klass.equals(Double.class)) {
-      bb.putDouble(0.0);
-      return 8;
-    } else if (klass.equals(Short.class)) {
-      bb.putShort((short)0);
-      return 2;
-    } else if (klass.equals(Character.class)) {
-      bb.putChar((char)0);
-      return 2;
-    } else if (klass.equals(String.class)) {
-      // TODO add string.
-    }
-    return 0;
-  }
-
-  static java.lang.Object readSimpleField(ByteBuffer bb, Class klass)
-  {
-    if (klass.equals(Integer.class)) {
-      return new Integer(bb.getInt());
-    } else if (klass.equals(Long.class)) {
-      return new Long(bb.getLong());
-    } else if (klass.equals(Float.class)) {
-      return new Float(bb.getFloat());
-    } else if (klass.equals(Double.class)) {
-      return new Double(bb.getDouble());
-    } else if (klass.equals(Short.class)) {
-      return new Short(bb.getShort());
-    } else if (klass.equals(Character.class)) {
-      return new Character(bb.getChar());
-    } else if (klass.equals(String.class)) {
-      // TODO add string.
-    }
-    return null;
+  static Map<Class, FieldSerializer> fieldSerialisers = Maps.newHashMapWithExpectedSize(4);
+  static {
+    fieldSerialisers.put(Integer.class, new IntSerializer());
+    fieldSerialisers.put(Float.class, new FloatSerializer());
+    fieldSerialisers.put(Long.class, new LongSerializer());
+    fieldSerialisers.put(Double.class, new DoubleSerializer());
   }
 
   byte[] getKey(MapAggregateEvent event)
@@ -104,14 +128,9 @@ public class GenericEventSerializer {
     ByteBuffer bb = ByteBuffer.allocate(eventDescription.getKeyLen());
 
     bb.rewind();
-
     for (String key : eventDescription.keys) {
       Object o = tuple.get(key);
-      if (o == null) {
-        putSimpleFieldDefault(bb, stringToType(eventDescription.dataDesc.get(key)));
-        continue;
-      }
-      putSimpleField(bb, o);
+      fieldSerialisers.get(eventDescription.getClass(key)).putField(bb, o);
     }
     bb.rewind();
     System.out.println(Arrays.toString(bb.array()));
@@ -129,12 +148,7 @@ public class GenericEventSerializer {
     for(String metric : eventDescription.metrices)
     {
       Object o = tuple.get(metric);
-      /* If metric is not defined, then write default values */
-      if (o == null) {
-        putSimpleFieldDefault(bb, stringToType(eventDescription.dataDesc.get(metric)));
-        continue;
-      }
-      putSimpleField(bb, o);
+      fieldSerialisers.get(eventDescription.getClass(metric)).putField(bb, o);
     }
     System.out.println(Arrays.toString(bb.array()));
     return bb.array();
@@ -148,7 +162,7 @@ public class GenericEventSerializer {
 
     // Deserialise keys.
     for (java.lang.String key : eventDescription.keys) {
-      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(key)));
+      java.lang.Object o = fieldSerialisers.get(eventDescription.getClass(key)).readField(bb);
       event.keys.put(key, o);
     }
 
@@ -156,35 +170,11 @@ public class GenericEventSerializer {
     bb = ByteBuffer.wrap(valBytes);
     for(java.lang.String metric : eventDescription.metrices)
     {
-      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(metric)));
+      java.lang.Object o = fieldSerialisers.get(eventDescription.getClass(metric)).readField(bb);
       event.fields.put(metric, o);
     }
 
     return event;
   }
-
-  public Map<String, Object> fromBytes1(byte[] keyBytes, byte[] valBytes)
-  {
-    Map<java.lang.String, java.lang.Object> tuple = Maps.newHashMapWithExpectedSize(eventDescription.keys.size() + eventDescription.metrices.size());
-
-    ByteBuffer bb = ByteBuffer.wrap(keyBytes);
-
-    // Deserialise keys.
-    for (java.lang.String key : eventDescription.keys) {
-      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(key)));
-      tuple.put(key, o);
-    }
-
-    // Deserialize metrics
-    bb = ByteBuffer.wrap(valBytes);
-    for(java.lang.String metric : eventDescription.metrices)
-    {
-      java.lang.Object o = readSimpleField(bb, stringToType(eventDescription.dataDesc.get(metric)));
-      tuple.put(metric, o);
-    }
-
-    return tuple;
-  }
-
 }
 

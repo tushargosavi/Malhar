@@ -18,7 +18,7 @@ public class EventDescTest
       "\"partitionKeys\" : [\"publisherId\"]" +
     "}";
 
-    EventDescription e = EventDescription.create(desc);
+    EventDescription e = null;
     System.out.println(e);
   }
 }
