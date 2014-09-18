@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
  *
@@ -33,7 +32,6 @@ import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.contrib.kafka.KafkaSinglePortStringInputOperator;
 import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
-import com.datatorrent.demos.adsdimension.AdInfo.AdInfoAggregator;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 
 /**
