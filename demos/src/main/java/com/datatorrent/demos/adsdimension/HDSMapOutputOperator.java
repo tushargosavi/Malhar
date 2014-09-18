@@ -14,7 +14,6 @@ package com.datatorrent.demos.adsdimension;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
@@ -24,7 +23,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 
-import com.datatorrent.lib.statistics.DimensionsComputation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,6 @@ import com.datatorrent.api.Partitioner;
 import com.datatorrent.api.StreamCodec;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.contrib.hds.HDSBucketManager;
-import com.datatorrent.demos.adsdimension.MapAggregateEvent;
 import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;

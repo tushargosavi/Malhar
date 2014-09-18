@@ -18,7 +18,6 @@ import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
 import com.datatorrent.contrib.hds.HDS;
-import com.datatorrent.contrib.hds.HDSBucketManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
