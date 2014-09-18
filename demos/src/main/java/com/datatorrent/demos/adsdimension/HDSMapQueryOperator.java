@@ -17,6 +17,7 @@ package com.datatorrent.demos.adsdimension;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
+import com.datatorrent.contrib.hds.HDS;
 import com.datatorrent.contrib.hds.HDSBucketManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -163,12 +164,12 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     // set query for each point in series
     query.prototype.setTimestamp(query.startTime);
     while (query.prototype.getTimestamp() <= query.endTime) {
-      Slice key = HDSBucketManager.toSlice(serialiser.getKey(query.prototype));
+      Slice key = HDS.SliceExt.toSlice(serialiser.getKey(query.prototype));
       HDSQuery q = super.queries.get(key);
       if (q == null) {
         q = new HDSQuery();
         q.bucketKey = bucketKey;
-        q.key = key.buffer;
+        q.key = key;
         super.addQuery(q);
       } else {
         // TODO: find out why we got null in first place
@@ -219,7 +220,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          MapAggregateEvent ae = serialiser.fromBytes(query.key, query.result);
+          MapAggregateEvent ae = serialiser.fromBytes(query.key.buffer, query.result);
           if (ae.fields != null)
             res.data.add(combineMaps(ae.fields, ae.keys));
         }
