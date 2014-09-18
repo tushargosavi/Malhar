@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -58,7 +59,7 @@ public class HDSReader implements Operator
   public static class HDSQuery
   {
     public long bucketKey;
-    public byte[] key;
+    public Slice key;
     public int keepAliveCount;
     public volatile byte[] result;
     public volatile boolean processed;
@@ -67,7 +68,7 @@ public class HDSReader implements Operator
     {
       return "HDSQuery{" +
           "bucketKey=" + bucketKey +
-          ", key=" + Arrays.toString(key) +
+          ", key=" + key +
           ", keepAliveCount=" + keepAliveCount +
           ", result=" + Arrays.toString(result) +
           ", processed=" + processed +
@@ -210,30 +211,34 @@ public class HDSReader implements Operator
   {
     BucketReader br = this.buckets.get(bucketKey);
     if (br == null) {
+      this.buckets.put(bucketKey, br = new BucketReader());
+    }
+    // meta data can be invalidated on write without removing unaffected readers
+    if (br.bucketMeta == null) {
       LOG.debug("Reading bucket meta {}", bucketKey);
-      br = new BucketReader();
       br.bucketMeta = loadBucketMeta(bucketKey);
-      this.buckets.put(bucketKey, br);
     }
     return br;
   }
 
-  protected void invalidateReader(long bucketKey, String name)
+  protected void invalidateReader(long bucketKey, Set<String> fileNames)
   {
     BucketReader bucket = this.buckets.get(bucketKey);
     if (bucket != null) {
-      LOG.debug("Closing reader {}", name);
-      IOUtils.closeQuietly(bucket.readers.remove(name));
+      bucket.bucketMeta = null; // force index reload
+      for (String name : fileNames) {
+        LOG.debug("Closing reader {}", name);
+        IOUtils.closeQuietly(bucket.readers.remove(name));
+      }
     }
   }
 
-  protected byte[] get(long bucketKey, byte[] key) throws IOException
+  protected byte[] get(long bucketKey, Slice key) throws IOException
   {
-    Slice keyWrapper = new Slice(key, 0, key.length);
 
     BucketReader bucket = getReader(bucketKey);
     for (int i=0; i<10; i++) {
-      Map.Entry<Slice, BucketFileMeta> floorEntry = bucket.bucketMeta.files.floorEntry(keyWrapper);
+      Map.Entry<Slice, BucketFileMeta> floorEntry = bucket.bucketMeta.files.floorEntry(key);
       if (floorEntry == null) {
         // no file for this key
         return null;
@@ -254,7 +259,7 @@ public class HDSReader implements Operator
         this.buckets.remove(bucketKey);
         bucket.close();
         bucket = getReader(bucketKey);
-        Map.Entry<Slice, BucketFileMeta> newEntry = bucket.bucketMeta.files.floorEntry(keyWrapper);
+        Map.Entry<Slice, BucketFileMeta> newEntry = bucket.bucketMeta.files.floorEntry(key);
         if (newEntry != null && newEntry.getValue().name.compareTo(floorEntry.getValue().name) == 0) {
           // file still the same - error unrelated to rewrite
           throw e;
@@ -269,12 +274,11 @@ public class HDSReader implements Operator
 
   protected void addQuery(HDSQuery query)
   {
-    Slice key = HDSBucketManager.toSlice(query.key);
-    HDSQuery existingQuery = this.queries.get(key);
+    HDSQuery existingQuery = this.queries.get(query.key);
     if (existingQuery != null) {
       query.keepAliveCount = Math.max(query.keepAliveCount, existingQuery.keepAliveCount);
     }
-    this.queries.put(key, query);
+    this.queries.put(query.key, query);
   }
 
   protected void emitQueryResult(HDSQuery query)

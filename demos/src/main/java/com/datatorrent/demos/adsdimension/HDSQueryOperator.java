@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
-import com.datatorrent.contrib.hds.HDSBucketManager;
+import com.datatorrent.contrib.hds.HDS;
 import com.datatorrent.demos.adsdimension.AdInfo.AdInfoAggregateEvent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -155,12 +155,12 @@ public class HDSQueryOperator extends HDSOutputOperator
     // set query for each point in series
     query.prototype.timestamp = query.startTime;
     while (query.prototype.timestamp <= query.endTime) {
-      Slice key = HDSBucketManager.toSlice(getKey(query.prototype));
+      Slice key = HDS.SliceExt.toSlice(getKey(query.prototype));
       HDSQuery q = super.queries.get(key);
       if (q == null) {
         q = new HDSQuery();
         q.bucketKey = bucketKey;
-        q.key = key.buffer;
+        q.key = key;
         super.addQuery(q);
       } else {
         // TODO: find out why we got null in first place
@@ -261,7 +261,7 @@ public class HDSQueryOperator extends HDSOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          AdInfo.AdInfoAggregateEvent ae = getAggregatesFromBytes(query.key, query.result);
+          AdInfo.AdInfoAggregateEvent ae = getAggregatesFromBytes(query.key.buffer, query.result);
           if (ae != null)
             res.data.add(ae);
         }

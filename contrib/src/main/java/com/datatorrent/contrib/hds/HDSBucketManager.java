@@ -17,7 +17,6 @@ package com.datatorrent.contrib.hds;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -55,7 +54,7 @@ import com.google.common.collect.Sets;
  * Note that currently changes are not flushed at a committed window boundary, hence uncommitted changes may be read
  * from data files after recovery, making the operator non-idempotent.
  */
-public class HDSBucketManager extends HDSReader implements HDS.BucketManager, CheckpointListener, Operator
+public class HDSBucketManager extends HDSReader implements CheckpointListener, Operator
 {
 
   private final transient HashMap<Long, BucketMeta> metaCache = Maps.newHashMap();
@@ -137,16 +136,6 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
     this.flushIntervalCount = flushIntervalCount;
   }
 
-  public static byte[] asArray(Slice slice)
-  {
-    return Arrays.copyOfRange(slice.buffer, slice.offset, slice.offset + slice.length);
-  }
-
-  public static Slice toSlice(byte[] bytes)
-  {
-    return new Slice(bytes, 0, bytes.length);
-  }
-
   /**
    * Write data to size based rolling files
    *
@@ -167,7 +156,7 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
         fw = this.store.getWriter(bucket.bucketKey, fileMeta.name + ".tmp");
       }
 
-      fw.append(asArray(dataEntry.getKey()), dataEntry.getValue());
+      fw.append(HDS.SliceExt.asArray(dataEntry.getKey()), dataEntry.getValue());
       if (fw.getBytesWritten() > this.maxFileSize) {
 
         // roll file
@@ -203,16 +192,12 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
       // wmeta.windowId windowId till which data is available in WAL.
       if (bmeta.committedWid < wmeta.windowId) {
         LOG.debug("Recovery for bucket {}", bucketKey);
-        bucket.recoveryInProgress = true;
         // Get last committed LSN from store, and use that for recovery.
-        bucket.wal.runRecovery(this, wmeta.tailId, wmeta.tailOffset);
-        bucket.recoveryInProgress = false;
+        bucket.wal.runRecovery(bucket.writeCache, wmeta.tailId, wmeta.tailOffset);
       }
     }
     return bucket;
   }
-
-  private transient Slice keyWrapper = new Slice(null, 0, 0);
 
   /**
    * Intercept query processing to incorporate unwritten changes.
@@ -220,21 +205,17 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
   @Override
   protected void processQuery(HDSQuery query)
   {
-    byte[] key = query.key;
-    keyWrapper.buffer = key;
-    keyWrapper.length = key.length;
-
     Bucket bucket = this.buckets.get(query.bucketKey);
     if (bucket != null) {
       // check unwritten changes first
-      byte[] v = bucket.writeCache.get(keyWrapper);
+      byte[] v = bucket.writeCache.get(query.key);
       if (v != null) {
         query.result = v;
         query.processed = true;
         return;
       }
       // check changes currently being flushed
-      v = bucket.frozenWriteCache.get(keyWrapper);
+      v = bucket.frozenWriteCache.get(query.key);
       if (v != null) {
         query.result = v;
         query.processed = true;
@@ -244,21 +225,11 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
     super.processQuery(query);
   }
 
-  @Override
-  public byte[] get(long bucketKey, byte[] key) throws IOException
-  {
-    return super.get(bucketKey, key);
-  }
-
-  @Override
   public void put(long bucketKey, byte[] key, byte[] value) throws IOException
   {
     Bucket bucket = getBucket(bucketKey);
-    /* Do not update WAL, if tuple being added is coming through recovery */
-    if (!bucket.recoveryInProgress) {
-      bucket.wal.append(key, value);
-    }
-    bucket.writeCache.put(toSlice(key), value);
+    bucket.wal.append(key, value);
+    bucket.writeCache.put(HDS.SliceExt.toSlice(key), value);
   }
 
   /**
@@ -269,9 +240,11 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
    */
   private void writeDataFiles(Bucket bucket) throws IOException
   {
+    // copy meta data on write
+    BucketMeta bucketMetaCopy = kryo.copy(getMeta(bucket.bucketKey));
+
     // bucket keys by file
-    BucketMeta bm = getMeta(bucket.bucketKey);
-    TreeMap<Slice, BucketFileMeta> bucketSeqStarts = bm.files;
+    TreeMap<Slice, BucketFileMeta> bucketSeqStarts = bucketMetaCopy.files;
     Map<BucketFileMeta, Map<Slice, byte[]>> modifiedFiles = Maps.newHashMap();
 
     for (Map.Entry<Slice, byte[]> entry : bucket.frozenWriteCache.entrySet()) {
@@ -288,6 +261,7 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
         } else {
           // placeholder for new keys, move start key
           floorFile = floorEntry.getValue();
+          bucketSeqStarts.remove(floorEntry.getKey());
         }
         floorFile.startKey = entry.getKey();
         bucketSeqStarts.put(floorFile.startKey, floorFile);
@@ -300,8 +274,6 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
       fileUpdates.put(entry.getKey(), entry.getValue());
     }
 
-    // copy meta data on write
-    BucketMeta bucketMetaCopy = kryo.copy(getMeta(bucket.bucketKey));
     HashSet<String> filesToDelete = Sets.newHashSet();
 
     // write modified files
@@ -344,8 +316,8 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
     // delete old files
     for (String fileName : filesToDelete) {
       store.delete(bucket.bucketKey, fileName);
-      invalidateReader(bucket.bucketKey, fileName);
     }
+    invalidateReader(bucket.bucketKey, filesToDelete);
 
     WalMeta walMeta = getWalMeta(bucket.bucketKey);
     walMeta.tailId = bucket.tailId;
@@ -475,7 +447,6 @@ public class HDSBucketManager extends HDSReader implements HDS.BucketManager, Ch
     private HashMap<Slice, byte[]> frozenWriteCache = Maps.newHashMap();
     private HDSWalManager wal;
     private long committedLSN;
-    private boolean recoveryInProgress;
     private long tailId;
     private long tailOffset;
   }
