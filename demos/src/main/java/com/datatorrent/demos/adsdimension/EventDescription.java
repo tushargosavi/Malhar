@@ -4,9 +4,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Class contains description about input.
+ */
 public class EventDescription implements Serializable
 {
 
@@ -15,12 +19,6 @@ public class EventDescription implements Serializable
 
   /* The fields in object which forms keys */
   public List<String> keys = Lists.newArrayList();
-
-  /* fields in event which forms metrics */
-  public List<String> metrices = Lists.newArrayList();
-
-  /* fields in event which forms partition keys */
-  public List<String> partitionKeys = Lists.newArrayList();
 
   /* how metrices should be aggregated */
   public Map<String, String> aggrDesc = Maps.newHashMap();
@@ -35,9 +33,7 @@ public class EventDescription implements Serializable
      {
        "fields": [ {"publisherId": "int", "advertiserId": "int", "adUnit" : "int", "clicks":"long"],
        "keys": ["publisherId", "advertiserId", "adUnit"],
-       "metrices": [ "clicks"],
        "aggrDesc" : [ "clicks":"sum"],
-       "partitionKeys" : ["publisherId"]
      }
    */
 
@@ -51,14 +47,8 @@ public class EventDescription implements Serializable
     this.keys = keys;
   }
 
-  public void setMetrices(List<String> metrices)
-  {
-    this.metrices = metrices;
-  }
-
-  public void setPartitionKeys(List<String> partitionKeys)
-  {
-    this.partitionKeys = partitionKeys;
+  public Collection<String> getMetrices() {
+    return aggrDesc.keySet();
   }
 
   public void setAggrDesc(Map<String, String> aggrDesc)
@@ -78,11 +68,11 @@ public class EventDescription implements Serializable
 
   public int getValLen() {
     if (valLen == 0)
-      valLen = getSerializedLength(metrices);
+      valLen = getSerializedLength(getMetrices());
     return valLen;
   }
 
-  public int getSerializedLength(List<String> fields) {
+  public int getSerializedLength(Collection<String> fields) {
     int len = 0;
     for(String field : fields) {
       Class k = dataDesc.get(field);
@@ -94,36 +84,5 @@ public class EventDescription implements Serializable
   public Class getType(String param)
   {
     return dataDesc.get(param);
-  }
-
-  public static EventDescription getDefault() {
-    EventDescription eDesc = new EventDescription();
-
-    Map<String, Class> dataDesc  = Maps.newHashMap();
-    dataDesc.put("timestamp", Long.class);
-    dataDesc.put("pubId", Integer.class);
-    dataDesc.put("adId", Integer.class);
-    dataDesc.put("adUnit", Integer.class);
-
-    dataDesc.put("clicks", Long.class);
-    eDesc.setDataDesc(dataDesc);
-
-    String[] keys = { "timestamp", "pubId", "adId", "adUnit" };
-    List<String> keyDesc = Lists.newArrayList(keys);
-    eDesc.setKeys(keyDesc);
-
-    String[] vals = { "clicks" };
-    List<String> valDesc = Lists.newArrayList(vals);
-    eDesc.setMetrices(valDesc);
-
-    Map<String, String> aggrDesc = Maps.newHashMapWithExpectedSize(vals.length);
-    aggrDesc.put("clicks", "sum");
-    eDesc.setAggrDesc(aggrDesc);
-
-    String[] partitionDesc = { "pubId" };
-    List<String> partDesc = Lists.newArrayList(partitionDesc);
-    eDesc.setPartitionKeys(partDesc);
-
-    return eDesc;
   }
 }

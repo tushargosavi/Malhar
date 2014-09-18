@@ -13,9 +13,9 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 {
   protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
-  Map<String, Object> keys = Maps.newHashMap();
-  Map<String, Object> fields = Maps.newHashMap();
-  int aggregatorIndex;
+  public Map<String, Object> keys = Maps.newHashMap();
+  public Map<String, Object> fields = Maps.newHashMap();
+  private int aggregatorIndex;
 
   protected MapAggregateEvent() {}
   public MapAggregateEvent(int aggregatorIndex)
@@ -83,10 +83,10 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 
 public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregateEvent>
 {
-  protected EventDescription eDesc;
-  protected String dimension;
-  protected TimeUnit time;
-  protected List<String> keys = Lists.newArrayList();
+  private EventDescription eDesc;
+  private String dimension;
+  private TimeUnit time;
+  private List<String> keys = Lists.newArrayList();
 
   public MapAggregator() {}
 
@@ -110,6 +110,12 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     this.dimension = dimension;
   }
 
+  /**
+   * Return an MapAggregateEvent with only dimension keys and converted timestamp.
+   * @param src
+   * @param aggregatorIndex
+   * @return
+   */
   @Override public MapAggregateEvent getGroup(Map<String, Object> src, int aggregatorIndex)
   {
     MapAggregateEvent aggr = new MapAggregateEvent(aggregatorIndex);
@@ -127,7 +133,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
   @Override public void aggregate(MapAggregateEvent dest, Map<String, Object> src)
   {
-    for(String metric : eDesc.metrices) {
+    for(String metric : eDesc.getMetrices()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.get(metric)));
     }
   }
@@ -135,6 +141,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   /* Apply operator between multiple objects */
   private Object apply(String metric, Object o, Object o1)
   {
+    //TODO define a class for each type of aggregation and
+    // avoid if/else.
     if (eDesc.aggrDesc.get(metric).equals("sum"))
     {
       if (eDesc.dataDesc.get(metric).equals(Integer.class)) {
@@ -156,7 +164,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
   @Override public void aggregate(MapAggregateEvent dest, MapAggregateEvent src)
   {
-    for(String metric : eDesc.metrices) {
+    for(String metric : eDesc.getMetrices()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.fields.get(metric)));
     }
   }
@@ -204,4 +212,23 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return true;
   }
 
+  public EventDescription geteDesc()
+  {
+    return eDesc;
+  }
+
+  public String getDimension()
+  {
+    return dimension;
+  }
+
+  public TimeUnit getTime()
+  {
+    return time;
+  }
+
+  public List<String> getKeys()
+  {
+    return keys;
+  }
 }

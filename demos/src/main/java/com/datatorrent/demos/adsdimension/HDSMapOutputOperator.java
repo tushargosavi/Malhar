@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 
+import com.datatorrent.lib.statistics.DimensionsComputation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,9 +162,14 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     public int getPartition(MapAggregateEvent t)
     {
       final int prime = 31;
-      int result = 1;
-      /* check how can we do generic stream codec */
-      return result;
+      int hashCode = 1;
+      Map<String, Object> dimensionKeys = t.keys;
+      for(String key : dimensionKeys.keySet())
+      {
+        if (!key.equals(MapAggregateEvent.TIMESTAMP_KEY_STR))
+          hashCode = hashCode * prime + t.get(key).hashCode();
+      }
+      return hashCode;
     }
   }
 
