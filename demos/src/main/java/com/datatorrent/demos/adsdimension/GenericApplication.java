@@ -170,7 +170,7 @@ public class GenericApplication implements StreamingApplication
 
     MapAggregator[] aggregators = new MapAggregator[dimensionSpecs.length];
     for (int i = dimensionSpecs.length; i-- > 0;) {
-      MapAggregator aggregator = new MapAggregator();
+      MapAggregator aggregator = new MapAggregator(dataDesc);
       aggregator.init(dimensionSpecs[i]);
       aggregators[i] = aggregator;
     }

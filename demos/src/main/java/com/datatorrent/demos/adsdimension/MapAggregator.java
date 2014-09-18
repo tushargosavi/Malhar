@@ -83,7 +83,7 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 
 public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregateEvent>
 {
-  transient protected EventDescription eDesc;
+  protected EventDescription eDesc;
   protected String dimension;
   protected TimeUnit time;
   protected List<String> keys = Lists.newArrayList();
@@ -112,8 +112,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
   @Override public MapAggregateEvent getGroup(Map<String, Object> src, int aggregatorIndex)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     MapAggregateEvent aggr = new MapAggregateEvent(aggregatorIndex);
     for(String key : keys) {
       aggr.keys.put(key, src.get(key));
@@ -129,8 +127,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
   @Override public void aggregate(MapAggregateEvent dest, Map<String, Object> src)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     for(String metric : eDesc.metrices) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.get(metric)));
     }
@@ -139,8 +135,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   /* Apply operator between multiple objects */
   private Object apply(String metric, Object o, Object o1)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     if (eDesc.aggrDesc.get(metric).equals("sum"))
     {
       if (eDesc.dataDesc.get(metric).equals(Integer.class)) {
@@ -162,8 +156,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
   @Override public void aggregate(MapAggregateEvent dest, MapAggregateEvent src)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     for(String metric : eDesc.metrices) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.fields.get(metric)));
     }
@@ -173,8 +165,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   @Override
   public int computeHashCode(Map<String, Object> tuple)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     int hash = 0;
     for(String key : keys)
       if (tuple.get(key) != null)
@@ -193,8 +183,6 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   @Override
   public boolean equals(Map<String, Object> event1, Map<String, Object> event2)
   {
-    if (eDesc == null)
-      eDesc = EventDescription.getDefault();
     for(String key : keys) {
       Object o1 = event1.get(key);
       Object o2 = event2.get(key);

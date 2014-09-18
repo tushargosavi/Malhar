@@ -1,6 +1,7 @@
 package com.datatorrent.demos.adsdimension;
 
 import com.google.common.collect.Maps;
+import com.sun.tools.javac.jvm.Gen;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -100,6 +101,8 @@ public class GenericEventSerializer {
 
   EventDescription eventDescription;
 
+  // For kryo
+  protected GenericEventSerializer() {}
   public GenericEventSerializer(EventDescription eventDescription)
   {
     this.eventDescription = eventDescription;

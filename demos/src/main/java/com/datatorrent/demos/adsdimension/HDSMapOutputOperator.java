@@ -55,7 +55,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
 
   protected Set<Integer> partitions;
   protected EventDescription eventDesc;
-  transient protected GenericEventSerializer serialiser;
+  protected GenericEventSerializer serialiser;
 
   public GenericEventSerializer getSerialiser()
   {

@@ -17,7 +17,6 @@ package com.datatorrent.demos.adsdimension;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Assert;
@@ -138,7 +137,7 @@ public class HDSMapQueryOperatorTest
 
 
   @Test
-  public void testQueryFromCache() throws Exception {
+  public void testQueryLessKeys() throws Exception {
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
@@ -181,7 +180,6 @@ public class HDSMapQueryOperatorTest
     ae1.setTimestamp(baseMinute);
     ae1.keys.put("pubId", 1);
     ae1.keys.put("adId", 2);
-    ae1.keys.put("adUnit", 3);
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
@@ -189,7 +187,6 @@ public class HDSMapQueryOperatorTest
     ae2.setTimestamp(baseMinute);
     ae2.keys.put("pubId", 1);
     ae2.keys.put("adId", 2);
-    ae2.keys.put("adUnit", 3);
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
@@ -197,7 +194,6 @@ public class HDSMapQueryOperatorTest
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
     ae3.keys.put("pubId", 1);
     ae3.keys.put("adId", 2);
-    ae3.keys.put("adUnit", 3);
     ae3.fields.put("clicks", 10L);
     hdsOut.input.process(ae3);
 
@@ -208,7 +204,6 @@ public class HDSMapQueryOperatorTest
     JSONObject keys = new JSONObject();
     keys.put("pubId", 1);
     keys.put("adId", 2);
-    keys.put("adUnit", 3);
 
     JSONObject query = new JSONObject();
     query.put("numResults", "20");
