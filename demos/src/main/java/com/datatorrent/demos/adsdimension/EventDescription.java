@@ -2,10 +2,12 @@ package com.datatorrent.demos.adsdimension;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class EventDescription
+public class EventDescription implements Serializable
 {
 
   /* What are fields in event */
