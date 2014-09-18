@@ -136,7 +136,6 @@ public class GenericEventSerializer {
       fieldSerializers.get(eventDescription.getClass(key)).putField(bb, o);
     }
     bb.rewind();
-    System.out.println(Arrays.toString(bb.array()));
     return bb.array();
   }
 
@@ -153,7 +152,6 @@ public class GenericEventSerializer {
       Object o = tuple.get(metric);
       fieldSerializers.get(eventDescription.getClass(metric)).putField(bb, o);
     }
-    System.out.println(Arrays.toString(bb.array()));
     return bb.array();
   }
 
