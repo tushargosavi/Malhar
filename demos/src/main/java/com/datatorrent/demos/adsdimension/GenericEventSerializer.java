@@ -147,7 +147,7 @@ public class GenericEventSerializer {
   byte[] getValue(Map<String, Object> tuple)
   {
     ByteBuffer bb = ByteBuffer.allocate(eventDescription.getValLen());
-    for(String metric : eventDescription.metrices)
+    for(String metric : eventDescription.getMetrices())
     {
       Object o = tuple.get(metric);
       fieldSerializers.get(eventDescription.getClass(metric)).putField(bb, o);
@@ -169,7 +169,7 @@ public class GenericEventSerializer {
 
     // Deserialize metrics
     bb = ByteBuffer.wrap(valBytes);
-    for(java.lang.String metric : eventDescription.metrices)
+    for(java.lang.String metric : eventDescription.getMetrices())
     {
       java.lang.Object o = fieldSerializers.get(eventDescription.getClass(metric)).readField(bb);
       event.fields.put(metric, o);

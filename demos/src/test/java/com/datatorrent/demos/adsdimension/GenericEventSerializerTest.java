@@ -31,17 +31,9 @@ public class GenericEventSerializerTest
     List<String> keyDesc = Lists.newArrayList(keys);
     eDesc.setKeys(keyDesc);
 
-    String[] vals = { "clicks" };
-    List<String> valDesc = Lists.newArrayList(vals);
-    eDesc.setMetrices(valDesc);
-
-    Map<String, String> aggrDesc = Maps.newHashMapWithExpectedSize(vals.length);
+    Map<String, String> aggrDesc = Maps.newHashMap();
     aggrDesc.put("clicks", "sum");
     eDesc.setAggrDesc(aggrDesc);
-
-    String[] partitionDesc = { "pubId" };
-    List<String> partDesc = Lists.newArrayList(partitionDesc);
-    eDesc.setPartitionKeys(partDesc);
 
     return eDesc;
   }
