@@ -111,11 +111,11 @@ public class GenericEventSerializer {
     }
   }
 
-  EventDescription eventDescription;
+  EventSchema eventDescription;
 
   // For kryo
   protected GenericEventSerializer() {}
-  public GenericEventSerializer(EventDescription eventDescription)
+  public GenericEventSerializer(EventSchema eventDescription)
   {
     this.eventDescription = eventDescription;
   }
@@ -133,7 +133,7 @@ public class GenericEventSerializer {
     fieldSerializers.put(Double.class, new DoubleSerializer());
   }
 
-  byte[] getKey(MapAggregateEvent event)
+  byte[] getKey(MapAggregate event)
   {
     return getKey(event.keys);
   }
@@ -151,7 +151,7 @@ public class GenericEventSerializer {
     return bb.array();
   }
 
-  byte[] getValue(MapAggregateEvent event)
+  byte[] getValue(MapAggregate event)
   {
     return getValue(event.fields);
   }
@@ -167,9 +167,9 @@ public class GenericEventSerializer {
     return bb.array();
   }
 
-  public MapAggregateEvent fromBytes(byte[] keyBytes, byte[] valBytes)
+  public MapAggregate fromBytes(byte[] keyBytes, byte[] valBytes)
   {
-    MapAggregateEvent event = new MapAggregateEvent(0);
+    MapAggregate event = new MapAggregate(0);
 
     ByteBuffer bb = ByteBuffer.wrap(keyBytes);
 

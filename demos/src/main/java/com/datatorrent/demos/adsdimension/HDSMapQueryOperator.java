@@ -51,7 +51,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
   {
     public String id;
     public int windowCountdown;
-    public  MapAggregateEvent prototype;
+    public MapAggregate prototype;
     public long startTime;
     public long endTime;
     public TimeUnit intervalTimeUnit = TimeUnit.MINUTES;
@@ -132,7 +132,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
       return;
     }
 
-    MapAggregateEvent ae = new MapAggregateEvent(0);
+    MapAggregate ae = new MapAggregate(0);
     ae.keys = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
@@ -207,9 +207,9 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
       rangeQuery.prototype.setTimestamp(rangeQuery.startTime);
       for (HDSQuery query : rangeQuery.points) {
         // check in-flight memory store first
-        Map<MapAggregateEvent, MapAggregateEvent> buffered = super.cache.get(rangeQuery.prototype.getTimestamp());
+        Map<MapAggregate, MapAggregate> buffered = super.cache.get(rangeQuery.prototype.getTimestamp());
         if (buffered != null) {
-          MapAggregateEvent ae = buffered.get(rangeQuery.prototype);
+          MapAggregate ae = buffered.get(rangeQuery.prototype);
           if (ae != null) {
             LOG.debug("Adding from aggregation buffer {}" + ae);
             res.data.add(combineMaps(ae.fields, ae.keys));
@@ -219,7 +219,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          MapAggregateEvent ae = serialiser.fromBytes(query.key.buffer, query.result);
+          MapAggregate ae = serialiser.fromBytes(query.key.buffer, query.result);
           if (ae.fields != null)
             res.data.add(combineMaps(ae.fields, ae.keys));
         }

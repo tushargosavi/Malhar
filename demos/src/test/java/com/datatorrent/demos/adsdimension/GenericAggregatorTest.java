@@ -37,7 +37,7 @@ public class GenericAggregatorTest
     event.put("adId", 3);
     event.put("clicks", new Long(10));
 
-    MapAggregateEvent aggr = aggregator.getGroup(event, 0);
+    MapAggregate aggr = aggregator.getGroup(event, 0);
     aggregator.aggregate(aggr, event);
 
     /* prepare a object */
@@ -66,7 +66,7 @@ public class GenericAggregatorTest
     event.put("adId", 3);
     event.put("clicks", new Long(10));
 
-    MapAggregateEvent aggr = aggregator.getGroup(event, 0);
+    MapAggregate aggr = aggregator.getGroup(event, 0);
     aggregator.aggregate(aggr, event);
 
     /* prepare a object */
@@ -99,7 +99,7 @@ public class GenericAggregatorTest
     event.put("adId", 3);
     event.put("clicks", new Long(10));
 
-    MapAggregateEvent aggr = aggregator.getGroup(event, 0);
+    MapAggregate aggr = aggregator.getGroup(event, 0);
     aggregator.aggregate(aggr, event);
 
     /* prepare a object */

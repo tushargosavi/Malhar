@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-class MapAggregateEvent implements DimensionsComputation.AggregateEvent
+class MapAggregate implements DimensionsComputation.AggregateEvent
 {
   protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
@@ -30,8 +30,8 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
   public Map<String, Object> fields = Maps.newHashMap();
   private int aggregatorIndex;
 
-  protected MapAggregateEvent() {}
-  public MapAggregateEvent(int aggregatorIndex)
+  protected MapAggregate() {}
+  public MapAggregate(int aggregatorIndex)
   {
     this.aggregatorIndex = aggregatorIndex;
   }
@@ -70,11 +70,11 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
     if (this == o) {
       return true;
     }
-    if (!(o instanceof MapAggregateEvent)) {
+    if (!(o instanceof MapAggregate)) {
       return false;
     }
 
-    MapAggregateEvent that = (MapAggregateEvent) o;
+    MapAggregate that = (MapAggregate) o;
 
     if (keys == null && that.keys == null)
       return true;
@@ -94,16 +94,16 @@ class MapAggregateEvent implements DimensionsComputation.AggregateEvent
 }
 
 
-public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregateEvent>
+public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregate>
 {
-  private EventDescription eDesc;
+  private EventSchema eDesc;
   private String dimension;
   private TimeUnit time;
   private List<String> keys = Lists.newArrayList();
 
   public MapAggregator() {}
 
-  public MapAggregator(EventDescription eDesc)
+  public MapAggregator(EventSchema eDesc)
   {
     this.eDesc = eDesc;
   }
@@ -129,22 +129,22 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
    * @param aggregatorIndex
    * @return
    */
-  @Override public MapAggregateEvent getGroup(Map<String, Object> src, int aggregatorIndex)
+  @Override public MapAggregate getGroup(Map<String, Object> src, int aggregatorIndex)
   {
-    MapAggregateEvent aggr = new MapAggregateEvent(aggregatorIndex);
+    MapAggregate aggr = new MapAggregate(aggregatorIndex);
     for(String key : keys) {
       aggr.keys.put(key, src.get(key));
     }
     /* Add converted timestamp */
     if (time != null) {
-      long timestamp = src.get(MapAggregateEvent.TIMESTAMP_KEY_STR) != null? ((Long)src.get(MapAggregateEvent.TIMESTAMP_KEY_STR)).longValue() : 0;
+      long timestamp = src.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)src.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
       timestamp = TimeUnit.MILLISECONDS.convert(time.convert(timestamp, TimeUnit.MILLISECONDS), time);
       aggr.keys.put("timestamp", new Long(timestamp));
     }
     return aggr;
   }
 
-  @Override public void aggregate(MapAggregateEvent dest, Map<String, Object> src)
+  @Override public void aggregate(MapAggregate dest, Map<String, Object> src)
   {
     for(String metric : eDesc.getMetrices()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.get(metric)));
@@ -175,7 +175,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return null;
   }
 
-  @Override public void aggregate(MapAggregateEvent dest, MapAggregateEvent src)
+  @Override public void aggregate(MapAggregate dest, MapAggregate src)
   {
     for(String metric : eDesc.getMetrices()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.fields.get(metric)));
@@ -193,7 +193,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
     /* TODO: special handling for timestamp */
     if (time != null) {
-        long timestamp = tuple.get(MapAggregateEvent.TIMESTAMP_KEY_STR) != null? ((Long)tuple.get(MapAggregateEvent.TIMESTAMP_KEY_STR)).longValue() : 0;
+        long timestamp = tuple.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)tuple.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
         long ltime = time.convert(timestamp, TimeUnit.MILLISECONDS);
         hash = 71 * hash + (int) (ltime ^ (ltime >>> 32));
     }
@@ -216,8 +216,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     // Special handling for timestamp
     if (time != null)
     {
-      long t1 = event1.get(MapAggregateEvent.TIMESTAMP_KEY_STR) != null? ((Long)event1.get(MapAggregateEvent.TIMESTAMP_KEY_STR)).longValue() : 0;
-      long t2 = event2.get(MapAggregateEvent.TIMESTAMP_KEY_STR) != null? ((Long)event2.get(MapAggregateEvent.TIMESTAMP_KEY_STR)).longValue() : 0;
+      long t1 = event1.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)event1.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
+      long t2 = event2.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)event2.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
 
       if (time.convert(t1, TimeUnit.MILLISECONDS) != time.convert(t2, TimeUnit.MILLISECONDS))
         return false;
@@ -225,7 +225,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return true;
   }
 
-  public EventDescription geteDesc()
+  public EventSchema geteDesc()
   {
     return eDesc;
   }

@@ -52,7 +52,7 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
   protected int partitionMask;
 
   protected Set<Integer> partitions;
-  protected EventDescription eventDesc;
+  protected EventSchema eventDesc;
   protected GenericEventSerializer serialiser;
 
   public GenericEventSerializer getSerialiser()
@@ -65,8 +65,8 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     this.serialiser = serialiser;
   }
 
-  private transient StreamCodec<MapAggregateEvent> streamCodec;
-  protected final SortedMap<Long, Map<MapAggregateEvent, MapAggregateEvent>> cache = Maps.newTreeMap();
+  private transient StreamCodec<MapAggregate> streamCodec;
+  protected final SortedMap<Long, Map<MapAggregate, MapAggregate>> cache = Maps.newTreeMap();
 
   // TODO: should be aggregation interval count
   private int maxCacheSize = 5;
@@ -89,9 +89,9 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     int expiredEntries = cache.size() - maxCacheSize;
     while(expiredEntries-- > 0){
 
-      Map<MapAggregateEvent, MapAggregateEvent> vals = cache.remove(cache.firstKey());
-      for (Entry<MapAggregateEvent, MapAggregateEvent> en : vals.entrySet()) {
-        MapAggregateEvent ai = en.getValue();
+      Map<MapAggregate, MapAggregate> vals = cache.remove(cache.firstKey());
+      for (Entry<MapAggregate, MapAggregate> en : vals.entrySet()) {
+        MapAggregate ai = en.getValue();
 
         try {
           LOG.debug("Putting values in store key {} val {}", ai.keys, ai.fields);
@@ -109,18 +109,18 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
    * The input port
    */
   @InputPortFieldAnnotation(name = "in", optional = true)
-  public final transient DefaultInputPort<MapAggregateEvent> input = new DefaultInputPort<MapAggregateEvent>()
+  public final transient DefaultInputPort<MapAggregate> input = new DefaultInputPort<MapAggregate>()
   {
     @Override
-    public void process(MapAggregateEvent adInfo)
+    public void process(MapAggregate adInfo)
     {
-      Map<MapAggregateEvent, MapAggregateEvent> valMap = cache.get(adInfo.getTimestamp());
+      Map<MapAggregate, MapAggregate> valMap = cache.get(adInfo.getTimestamp());
       if (valMap == null) {
-        valMap = new HashMap<MapAggregateEvent, MapAggregateEvent>();
+        valMap = new HashMap<MapAggregate, MapAggregate>();
         valMap.put(adInfo, adInfo);
         cache.put(adInfo.getTimestamp(), valMap);
       } else {
-        MapAggregateEvent val = valMap.get(adInfo);
+        MapAggregate val = valMap.get(adInfo);
         if (val == null) {
           valMap.put(adInfo, adInfo);
           return;
@@ -131,46 +131,46 @@ public class HDSMapOutputOperator extends HDSBucketManager implements Partitione
     }
 
     @Override
-    public Class<? extends StreamCodec<MapAggregateEvent>> getStreamCodec()
+    public Class<? extends StreamCodec<MapAggregate>> getStreamCodec()
     {
       return getBucketKeyStreamCodec();
     }
 
   };
 
-  public long getBucketKey(MapAggregateEvent aie)
+  public long getBucketKey(MapAggregate aie)
   {
     return (streamCodec.getPartition(aie) & partitionMask);
   }
 
-  public void setEventDescriptor(EventDescription eventDesc)
+  public void setEventDescriptor(EventSchema eventDesc)
   {
     this.eventDesc = eventDesc;
   }
 
-  public EventDescription getEventDescriptor()
+  public EventSchema getEventDescriptor()
   {
     return eventDesc;
   }
 
-  public static class BucketKeyStreamCodec extends KryoSerializableStreamCodec<MapAggregateEvent>
+  public static class BucketKeyStreamCodec extends KryoSerializableStreamCodec<MapAggregate>
   {
     @Override
-    public int getPartition(MapAggregateEvent t)
+    public int getPartition(MapAggregate t)
     {
       final int prime = 31;
       int hashCode = 1;
       Map<String, Object> dimensionKeys = t.keys;
       for(String key : dimensionKeys.keySet())
       {
-        if (!key.equals(MapAggregateEvent.TIMESTAMP_KEY_STR))
+        if (!key.equals(MapAggregate.TIMESTAMP_KEY_STR))
           hashCode = hashCode * prime + t.get(key).hashCode();
       }
       return hashCode;
     }
   }
 
-  protected Class<? extends StreamCodec<MapAggregateEvent>> getBucketKeyStreamCodec()
+  protected Class<? extends StreamCodec<MapAggregate>> getBucketKeyStreamCodec()
   {
     return BucketKeyStreamCodec.class;
   }

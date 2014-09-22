@@ -113,8 +113,8 @@ import com.datatorrent.lib.statistics.DimensionsComputation;
 public class GenericApplication implements StreamingApplication
 {
 
-  public static EventDescription getDataDesc() {
-    EventDescription eDesc = new EventDescription();
+  public static EventSchema getDataDesc() {
+    EventSchema eDesc = new EventSchema();
 
     Map<String, Class> dataDesc  = Maps.newHashMap();
     dataDesc.put("timestamp", Long.class);
@@ -139,13 +139,13 @@ public class GenericApplication implements StreamingApplication
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    EventDescription dataDesc = getDataDesc();
+    EventSchema dataDesc = getDataDesc();
     dag.setAttribute(DAG.APPLICATION_NAME, "AdsDimensionsGeneric");
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
 
     AdEventToMapConverter converter = dag.addOperator("Converter", new AdEventToMapConverter());
 
-    DimensionsComputation<Map<String, Object>, MapAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<Map<String, Object>, MapAggregateEvent>());
+    DimensionsComputation<Map<String, Object>, MapAggregate> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<Map<String, Object>, MapAggregate>());
     dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
     String[] dimensionSpecs = new String[] {
         "time=" + TimeUnit.MINUTES,

@@ -51,7 +51,7 @@ public class HDSMapQueryOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    EventDescription eventDesc = GenericEventSerializerTest.getDataDesc();
+    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
     GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
@@ -75,7 +75,7 @@ public class HDSMapQueryOperatorTest
     long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
 
     // Check aggregation for ae1 and ae2 as they have same key.
-    MapAggregateEvent ae1 = new MapAggregateEvent(0);
+    MapAggregate ae1 = new MapAggregate(0);
     ae1.setTimestamp(baseMinute);
     ae1.keys.put("pubId", 1);
     ae1.keys.put("adId", 2);
@@ -83,7 +83,7 @@ public class HDSMapQueryOperatorTest
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
-    MapAggregateEvent ae2 = new MapAggregateEvent(0);
+    MapAggregate ae2 = new MapAggregate(0);
     ae2.setTimestamp(baseMinute);
     ae2.keys.put("pubId", 1);
     ae2.keys.put("adId", 2);
@@ -91,7 +91,7 @@ public class HDSMapQueryOperatorTest
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
-    MapAggregateEvent ae3 = new MapAggregateEvent(0);
+    MapAggregate ae3 = new MapAggregate(0);
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
     ae3.keys.put("pubId", 1);
     ae3.keys.put("adId", 2);
@@ -152,7 +152,7 @@ public class HDSMapQueryOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    EventDescription eventDesc = GenericEventSerializerTest.getDataDesc();
+    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
     GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
@@ -176,21 +176,21 @@ public class HDSMapQueryOperatorTest
     long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
 
     // Check aggregation for ae1 and ae2 as they have same key.
-    MapAggregateEvent ae1 = new MapAggregateEvent(0);
+    MapAggregate ae1 = new MapAggregate(0);
     ae1.setTimestamp(baseMinute);
     ae1.keys.put("pubId", 1);
     ae1.keys.put("adId", 2);
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
-    MapAggregateEvent ae2 = new MapAggregateEvent(0);
+    MapAggregate ae2 = new MapAggregate(0);
     ae2.setTimestamp(baseMinute);
     ae2.keys.put("pubId", 1);
     ae2.keys.put("adId", 2);
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
-    MapAggregateEvent ae3 = new MapAggregateEvent(0);
+    MapAggregate ae3 = new MapAggregate(0);
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
     ae3.keys.put("pubId", 1);
     ae3.keys.put("adId", 2);

@@ -15,8 +15,8 @@ public class GenericEventSerializerTest
    * perform aggregation, serialization and deserialization.
    * @return
    */
-  public static EventDescription getDataDesc() {
-    EventDescription eDesc = new EventDescription();
+  public static EventSchema getDataDesc() {
+    EventSchema eDesc = new EventSchema();
 
     Map<String, Class> dataDesc  = Maps.newHashMap();
     dataDesc.put("timestamp", Long.class);
@@ -41,13 +41,13 @@ public class GenericEventSerializerTest
   @Test
   public void test()
   {
-    EventDescription eDesc = getDataDesc();
+    EventSchema eDesc = getDataDesc();
     GenericEventSerializer ser = new GenericEventSerializer(eDesc);
 
     System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
 
     /* prepare a object */
-    MapAggregateEvent event = new MapAggregateEvent(0);
+    MapAggregate event = new MapAggregate(0);
     event.keys.put("timestamp", System.currentTimeMillis());
     event.keys.put("pubId", 1);
     event.keys.put("adUnit", 2);
@@ -58,7 +58,7 @@ public class GenericEventSerializerTest
     byte[] keyBytes = ser.getKey(event);
     byte[] valBytes = ser.getValue(event);
 
-    MapAggregateEvent o = ser.fromBytes(keyBytes, valBytes);
+    MapAggregate o = ser.fromBytes(keyBytes, valBytes);
 
     org.junit.Assert.assertNotSame("deserialized", event, o);
 
@@ -79,13 +79,13 @@ public class GenericEventSerializerTest
   @Test
   public void test1()
   {
-    EventDescription eDesc = getDataDesc();
+    EventSchema eDesc = getDataDesc();
     GenericEventSerializer ser = new GenericEventSerializer(eDesc);
 
     System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
 
     /* prepare a object */
-    MapAggregateEvent event = new MapAggregateEvent(0);
+    MapAggregate event = new MapAggregate(0);
     event.keys.put("timestamp", System.currentTimeMillis());
     event.keys.put("pubId", 1);
     event.keys.put("adUnit", 2);
@@ -95,7 +95,7 @@ public class GenericEventSerializerTest
     byte[] keyBytes = ser.getKey(event);
     byte[] valBytes = ser.getValue(event);
 
-    MapAggregateEvent o = ser.fromBytes(keyBytes, valBytes);
+    MapAggregate o = ser.fromBytes(keyBytes, valBytes);
 
     //Assert.assertEquals(o, event);
     Assert.assertEquals("pubId", o.get("pubId"), event.get("pubId"));
