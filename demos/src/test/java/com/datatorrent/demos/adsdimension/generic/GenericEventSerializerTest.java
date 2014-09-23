@@ -1,8 +1,13 @@
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
+import com.datatorrent.demos.adsdimension.generic.EventSchema;
+import com.datatorrent.demos.adsdimension.generic.GenericEventSerializer;
+import com.datatorrent.demos.adsdimension.generic.MapAggregate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import junit.framework.Assert;
+
 import org.junit.Test;
 
 import java.util.List;
@@ -18,7 +23,7 @@ public class GenericEventSerializerTest
   public static EventSchema getDataDesc() {
     EventSchema eDesc = new EventSchema();
 
-    Map<String, Class> dataDesc  = Maps.newHashMap();
+    Map<String, Class<?>> dataDesc  = Maps.newHashMap();
     dataDesc.put("timestamp", Long.class);
     dataDesc.put("pubId", Integer.class);
     dataDesc.put("adId", Integer.class);

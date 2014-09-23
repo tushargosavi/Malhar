@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
+import com.datatorrent.demos.adsdimension.generic.MapAggregate;
+import com.datatorrent.demos.adsdimension.generic.MapAggregator;
 import com.google.common.collect.Maps;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -88,9 +92,6 @@ public class GenericAggregatorTest
     MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getDataDesc());
     aggregator.init("time=MINUTES:pubId:adUnit");
 
-    long baseTime = System.currentTimeMillis();
-    long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
-
     /* prepare a object */
     Map<String, Object> event = Maps.newHashMap();
     event.put("timestamp", System.currentTimeMillis());
@@ -127,11 +128,12 @@ public class GenericAggregatorTest
     event.put("clicks", new Long(20));
 
     ObjectMapper mapper = new ObjectMapper();
+    // TODO: replace with assertion
     System.out.println(mapper.writeValueAsString(event));
 
     String eventStr = "{\"timestamp\":1410789704559,\"adId\":5,\"pubId\":1,\"clicks\":20,\"adUnit\":2}";
-    Map<String, Object> event1 = mapper.readValue(eventStr, Map.class);
-    System.out.println(event1);
+    // TODO: replace with assertion
+    System.out.println(mapper.readValue(eventStr, Map.class));
   }
 
 }

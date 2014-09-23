@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.google.common.collect.Maps;
+
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -120,12 +121,7 @@ public class GenericEventSerializer {
     this.eventDescription = eventDescription;
   }
 
-  static Class stringToType(Class klass)
-  {
-    return klass;
-  }
-
-  static Map<Class, FieldSerializer> fieldSerializers = Maps.newHashMapWithExpectedSize(4);
+  static Map<Class<?>, FieldSerializer> fieldSerializers = Maps.newHashMapWithExpectedSize(4);
   static {
     fieldSerializers.put(Integer.class, new IntSerializer());
     fieldSerializers.put(Float.class, new FloatSerializer());

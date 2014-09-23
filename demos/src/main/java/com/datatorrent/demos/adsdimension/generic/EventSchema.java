@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,9 +28,10 @@ import java.util.Map;
  */
 public class EventSchema implements Serializable
 {
+  private static final long serialVersionUID = 4586481500190519858L;
 
   /* What are fields in event */
-  public Map<String, Class> dataDesc = Maps.newHashMap();
+  public Map<String, Class<?>> dataDesc = Maps.newHashMap();
 
   /* The fields in object which forms keys */
   public List<String> keys = Lists.newArrayList();
@@ -52,7 +53,7 @@ public class EventSchema implements Serializable
      }
    */
 
-  public void setDataDesc(Map<String, Class> dataDesc)
+  public void setDataDesc(Map<String, Class<?>> dataDesc)
   {
     this.dataDesc = dataDesc;
   }
@@ -71,7 +72,7 @@ public class EventSchema implements Serializable
     this.aggrDesc = aggrDesc;
   }
 
-  public Class getClass(String field) {
+  public Class<?> getClass(String field) {
     return dataDesc.get(field);
   }
 
@@ -90,13 +91,13 @@ public class EventSchema implements Serializable
   public int getSerializedLength(Collection<String> fields) {
     int len = 0;
     for(String field : fields) {
-      Class k = dataDesc.get(field);
+      Class<?> k = dataDesc.get(field);
       len += GenericEventSerializer.fieldSerializers.get(k).dataLength();
     }
     return len;
   }
 
-  public Class getType(String param)
+  public Class<?> getType(String param)
   {
     return dataDesc.get(param);
   }
