@@ -108,21 +108,25 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
     this.defaultTimeWindow = defaultTimeWindow;
   }
 
-  protected Map<String, Object> converQueryKey(Map<String, String> key)
+  protected MapAggregate converQueryKey(Map<String, String> key)
   {
-    Map<String, Object> map = Maps.newHashMap();
-    for(String param : key.keySet()) {
-      Class c = eventDesc.getType(param);
-      if (c.equals(Integer.class))
-        map.put(param, new Integer(Integer.valueOf(key.get(param))));
-      else if (c.equals(Long.class))
-        map.put(param, new Long(Long.valueOf(key.get(param))));
-      else if (c.equals(Float.class))
-        map.put(param, new Float(Float.valueOf(key.get(param))));
-      else if (c.equals(Double.class))
-        map.put(param, new Double(Double.valueOf(key.get(param))));
+    MapAggregate ae = new MapAggregate(0);
+    for(String keyStr : eventDesc.keys)
+    {
+      if (key.containsKey(keyStr))
+      {
+        Class c = eventDesc.getType(keyStr);
+        if (c.equals(Integer.class))
+          ae.keys.put(keyStr, new Integer(Integer.valueOf(key.get(keyStr))));
+        else if (c.equals(Long.class))
+          ae.keys.put(keyStr, new Long(Long.valueOf(key.get(keyStr))));
+        else if (c.equals(Float.class))
+          ae.keys.put(keyStr, new Float(Float.valueOf(key.get(keyStr))));
+        else if (c.equals(Double.class))
+          ae.keys.put(keyStr, new Double(Double.valueOf(key.get(keyStr))));
+      }
     }
-    return map;
+    return ae;
   }
 
   public void registerQuery(String queryString) throws Exception
@@ -138,8 +142,7 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
       return;
     }
 
-    MapAggregate ae = new MapAggregate(0);
-    ae.keys = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
+    MapAggregate ae = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
     if (!(super.partitions == null || super.partitions.contains((int)bucketKey))) {

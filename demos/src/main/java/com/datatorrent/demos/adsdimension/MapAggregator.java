@@ -26,11 +26,8 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 {
   protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
-  //public Map<String, Object> keys = Maps.newLinkedHashMap();
-  //public Map<String, Object> fields = Maps.newLinkedHashMap();
-
-  public Map<String, Object> keys = Maps.newHashMap();
-  public Map<String, Object> fields = Maps.newHashMap();
+  public Map<String, Object> keys = Maps.newLinkedHashMap();
+  public Map<String, Object> fields = Maps.newLinkedHashMap();
   private int aggregatorIndex;
 
   protected MapAggregate() {}
@@ -144,8 +141,9 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   @Override public MapAggregate getGroup(Map<String, Object> src, int aggregatorIndex)
   {
     MapAggregate aggr = new MapAggregate(aggregatorIndex);
-    for(String key : keys) {
-      aggr.keys.put(key, src.get(key));
+    for(String key : eDesc.keys) {
+      if (keys.contains(key))
+        aggr.keys.put(key, src.get(key));
     }
     /* Add converted timestamp */
     if (time != null) {
