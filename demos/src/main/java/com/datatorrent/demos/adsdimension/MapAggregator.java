@@ -26,6 +26,9 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 {
   protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
+  //public Map<String, Object> keys = Maps.newLinkedHashMap();
+  //public Map<String, Object> fields = Maps.newLinkedHashMap();
+
   public Map<String, Object> keys = Maps.newHashMap();
   public Map<String, Object> fields = Maps.newHashMap();
   private int aggregatorIndex;
