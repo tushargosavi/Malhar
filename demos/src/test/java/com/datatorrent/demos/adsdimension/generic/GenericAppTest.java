@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.api.LocalMode;
 import com.datatorrent.contrib.kafka.KafkaOperatorTestBase;
 import com.datatorrent.contrib.kafka.KafkaTestConsumer;
 import com.datatorrent.contrib.kafka.KafkaTestProducer;
+import com.datatorrent.demos.adsdimension.HDSApplicationTest;
+import com.datatorrent.demos.adsdimension.generic.GenericApplication;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.After;
@@ -67,7 +70,7 @@ public class GenericAppTest
     Configuration conf = new Configuration(false);
     conf.set("dt.operator.DimensionsComputation.attr.APPLICATION_WINDOW_COUNT", "1");
     conf.set("dt.operator.QueryResult.prop.configProperties(metadata.broker.list)", "localhost:9092");
-    conf.set("dt.operator.HDSOut.fileStore.basePath", "target/HDSApplicationTestStore");
+    conf.set("dt.operator.Store.fileStore.basePath", "target/HDSApplicationTestStore");
     conf.set("dt.operator.Query.brokerSet", "localhost:9092");
     conf.set("dt.operator.Query.topic", kafkaQueryTopic);
     conf.set("dt.operator.QueryResult.topic", kafkaQueryResultTopic);

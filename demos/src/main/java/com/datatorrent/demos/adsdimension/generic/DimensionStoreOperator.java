@@ -1,4 +1,3 @@
-package com.datatorrent.demos.adsdimension;
 /*
  * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
  *
@@ -14,40 +13,69 @@ package com.datatorrent.demos.adsdimension;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.datatorrent.demos.adsdimension.generic;
+
 import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
+import com.datatorrent.contrib.hds.AbstractSinglePortHDSWriter;
 import com.datatorrent.contrib.hds.HDS;
+import com.datatorrent.demos.adsdimension.HDSQueryOperator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class MapDimensionStoreOperator extends HDSMapOutputOperator
+public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggregate>
 {
+  protected final SortedMap<Long, Map<MapAggregate, MapAggregate>> cache = Maps.newTreeMap();
 
-  protected EventSchema eventDesc;
+  // TODO: should be aggregation interval count
+  private int maxCacheSize = 5;
+  private MapAggregator aggregator;
+  protected EventSchema eventSchema;
+  protected transient GenericEventSerializer serializer;
 
-  public transient GenericEventSerializer serializer;
+  public int getMaxCacheSize()
+  {
+    return maxCacheSize;
+  }
+
+  public void setMaxCacheSize(int maxCacheSize)
+  {
+    this.maxCacheSize = maxCacheSize;
+  }
+
+  public MapAggregator getAggregator()
+  {
+    return aggregator;
+  }
+
+  public void setAggregator(MapAggregator aggregator)
+  {
+    this.aggregator = aggregator;
+  }
 
   public final transient DefaultOutputPort<HDSRangeQueryResult> queryResult = new DefaultOutputPort<HDSRangeQueryResult>();
 
   public transient final DefaultInputPort<String> query = new DefaultInputPort<String>()
   {
-    @Override public void process(String s)
+    @Override
+    public void process(String s)
     {
       try {
         LOG.debug("registering query {}", s);
         registerQuery(s);
       } catch(Exception ex) {
-        System.out.println(ex.getMessage());
-        ex.printStackTrace();
         LOG.error("Unable to register query {}", s);
       }
     }
@@ -63,7 +91,8 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
     public TimeUnit intervalTimeUnit = TimeUnit.MINUTES;
     private transient LinkedHashSet<HDSQuery> points = Sets.newLinkedHashSet();
 
-    @Override public String toString()
+    @Override
+    public String toString()
     {
       return "HDSRangeQuery{" +
           "id='" + id + '\'' +
@@ -111,11 +140,12 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
   protected MapAggregate converQueryKey(Map<String, String> key)
   {
     MapAggregate ae = new MapAggregate(0);
-    for(String keyStr : eventDesc.keys)
+    for(String keyStr : eventSchema.keys)
     {
       if (key.containsKey(keyStr))
       {
-        Class c = eventDesc.getType(keyStr);
+        // TODO: what happens if the keys are not numeric?
+        Class<?> c = eventSchema.getType(keyStr);
         if (c.equals(Integer.class))
           ae.keys.put(keyStr, new Integer(Integer.valueOf(key.get(keyStr))));
         else if (c.equals(Long.class))
@@ -142,6 +172,7 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
       return;
     }
 
+    @SuppressWarnings("unchecked")
     MapAggregate ae = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
@@ -195,10 +226,52 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
   }
 
   @Override
+  protected Class<? extends HDSCodec<MapAggregate>> getCodecClass()
+  {
+    return MapAggregateCodec.class;
+  }
+
+  @Override
+  protected void processEvent(MapAggregate aggr) throws IOException
+  {
+    // aggregate in-memory, flush to store in endWindow
+    Map<MapAggregate, MapAggregate> valMap = cache.get(aggr.getTimestamp());
+    if (valMap == null) {
+      valMap = new HashMap<MapAggregate, MapAggregate>();
+      valMap.put(aggr, aggr);
+      cache.put(aggr.getTimestamp(), valMap);
+    } else {
+      MapAggregate val = valMap.get(aggr);
+      if (val == null) {
+        valMap.put(aggr, aggr);
+        return;
+      } else {
+        aggregator.aggregate(val, aggr);
+      }
+    }
+  }
+
+  @Override
   public void endWindow()
   {
     super.endWindow();
 
+    // flush final aggregates to HDS
+    int expiredEntries = cache.size() - maxCacheSize;
+    while(expiredEntries-- > 0){
+
+      Map<MapAggregate, MapAggregate> vals = cache.remove(cache.firstKey());
+      for (Map.Entry<MapAggregate, MapAggregate> en : vals.entrySet()) {
+        MapAggregate ai = en.getValue();
+        try {
+          super.processEvent(ai);
+        } catch (IOException e) {
+          LOG.warn("Error putting the value", e);
+        }
+      }
+    }
+
+    // process queries
     Iterator<Map.Entry<String, HDSRangeQuery>> it = this.rangeQueries.entrySet().iterator();
     while (it.hasNext()) {
       Map.Entry<String, HDSRangeQuery> e = it.next();
@@ -216,7 +289,7 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
       rangeQuery.prototype.setTimestamp(rangeQuery.startTime);
       for (HDSQuery query : rangeQuery.points) {
         // check in-flight memory store first
-        Map<MapAggregate, MapAggregate> buffered = super.cache.get(rangeQuery.prototype.getTimestamp());
+        Map<MapAggregate, MapAggregate> buffered = this.cache.get(rangeQuery.prototype.getTimestamp());
         if (buffered != null) {
           MapAggregate ae = buffered.get(rangeQuery.prototype);
           if (ae != null) {
@@ -251,18 +324,18 @@ public class MapDimensionStoreOperator extends HDSMapOutputOperator
 
   public EventSchema getEventDesc()
   {
-    return eventDesc;
+    return eventSchema;
   }
 
   public void setEventDesc(EventSchema eventDesc)
   {
-    this.eventDesc = eventDesc;
+    this.eventSchema = eventDesc;
   }
 
   @Override public void setup(Context.OperatorContext arg0)
   {
     super.setup(arg0);
-    this.serializer = new GenericEventSerializer(eventDesc);
+    this.serializer = new GenericEventSerializer(eventSchema);
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDSQueryOperator.class);

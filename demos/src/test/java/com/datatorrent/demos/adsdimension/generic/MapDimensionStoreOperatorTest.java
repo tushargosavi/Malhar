@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Maps;
+
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Assert;
@@ -28,7 +29,11 @@ import org.junit.Test;
 
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
-import com.datatorrent.demos.adsdimension.MapDimensionStoreOperator.HDSRangeQueryResult;
+import com.datatorrent.demos.adsdimension.generic.EventSchema;
+import com.datatorrent.demos.adsdimension.generic.MapAggregate;
+import com.datatorrent.demos.adsdimension.generic.MapAggregator;
+import com.datatorrent.demos.adsdimension.generic.DimensionStoreOperator;
+import com.datatorrent.demos.adsdimension.generic.DimensionStoreOperator.HDSRangeQueryResult;
 import com.datatorrent.lib.testbench.CollectorTestSink;
 import com.datatorrent.lib.util.TestUtils;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -43,7 +48,7 @@ public class MapDimensionStoreOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
+    DimensionStoreOperator hdsOut = new DimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -57,16 +62,13 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
     hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
     hdsOut.setup(null);
 
-    hdsOut.setDebug(false);
-
-    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
+    CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -120,7 +122,7 @@ public class MapDimensionStoreOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    DimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -142,7 +144,7 @@ public class MapDimensionStoreOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
+    DimensionStoreOperator hdsOut = new DimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -156,16 +158,13 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
     hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
     hdsOut.setup(null);
 
-    hdsOut.setDebug(false);
-
-    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
+    CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -215,7 +214,7 @@ public class MapDimensionStoreOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    DimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -243,7 +242,7 @@ public class MapDimensionStoreOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
+    DimensionStoreOperator hdsOut = new DimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -257,16 +256,13 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
     hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);
     hdsOut.setup(null);
 
-    hdsOut.setDebug(false);
-
-    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
+    CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -316,7 +312,7 @@ public class MapDimensionStoreOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    DimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -359,7 +355,7 @@ public class MapDimensionStoreOperatorTest
       aggregators[i] = aggregator;
     }
 
-    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
+    DimensionStoreOperator hdsOut = new DimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -370,18 +366,15 @@ public class MapDimensionStoreOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    //MapAggregator aggregator = new MapAggregator(eventDesc);
+    //MapAggregator aggregator = new MapAggregator(eventSchema);
     //aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
     hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregators[0]);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);
     hdsOut.setup(null);
 
-    hdsOut.setDebug(false);
-
-    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
+    CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<DimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);

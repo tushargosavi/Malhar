@@ -1,8 +1,9 @@
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.api.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.demos.adsdimension.AdInfo;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -22,11 +23,11 @@ public class AdEventToMapConverter extends BaseOperator
   public Map<String, Object> convert(AdInfo adInfo)
   {
     Map<String, Object> map =Maps.newHashMap();
-    map.put("pubId", new Integer(adInfo.publisherId));
-    map.put("adUnit", new Integer(adInfo.adUnit));
-    map.put("adId", new Integer(adInfo.advertiserId));
-    map.put("timestamp", new Long(adInfo.timestamp));
-    map.put("clicks", new Long(adInfo.clicks));
+    map.put("pubId", new Integer(adInfo.getPublisherId()));
+    map.put("adUnit", new Integer(adInfo.getAdUnit()));
+    map.put("adId", new Integer(adInfo.getAdvertiserId()));
+    map.put("timestamp", new Long(adInfo.getTimestamp()));
+    map.put("clicks", new Long(adInfo.getClicks()));
     return map;
   }
 }

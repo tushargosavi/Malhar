@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.lib.statistics.DimensionsComputation;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -89,7 +90,8 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
     return (keys != null)? keys.hashCode() : 0;
   }
 
-  @Override public String toString()
+  @Override
+  public String toString()
   {
     return "MapAggregate{" +
         "keys=" + keys +
@@ -102,10 +104,11 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 
 public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregate>
 {
+  private static final long serialVersionUID = 7636266873750826291L;
   private EventSchema eDesc;
   private String dimension;
   private TimeUnit time;
-  private List<String> keys = Lists.newArrayList();
+  private final List<String> keys = Lists.newArrayList();
 
   public MapAggregator() {}
 
@@ -135,7 +138,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
    * @param aggregatorIndex
    * @return
    */
-  @Override public MapAggregate getGroup(Map<String, Object> src, int aggregatorIndex)
+  @Override
+  public MapAggregate getGroup(Map<String, Object> src, int aggregatorIndex)
   {
     MapAggregate aggr = new MapAggregate(aggregatorIndex);
     for(String key : eDesc.keys) {
@@ -151,7 +155,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return aggr;
   }
 
-  @Override public void aggregate(MapAggregate dest, Map<String, Object> src)
+  @Override
+  public void aggregate(MapAggregate dest, Map<String, Object> src)
   {
     for(String metric : eDesc.getMetrices()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.get(metric)));

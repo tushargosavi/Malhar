@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.hadoop.conf.Configuration;
 
 import com.datatorrent.api.Context;
@@ -32,10 +33,12 @@ import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.contrib.kafka.KafkaSinglePortStringInputOperator;
 import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
+import com.datatorrent.demos.adsdimension.InputItemGenerator;
+import com.datatorrent.demos.adsdimension.KafkaJsonEncoder;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 
 /**
- * An AdsDimensionsDemo run with HDS
+ * DimensionsDemo run with HDS
  *
  * Example of configuration
  <pre>
@@ -76,12 +79,12 @@ import com.datatorrent.lib.statistics.DimensionsComputation;
  </property>
 
  <property>
- <name>dt.operator.HDSOut.attr.INITIAL_PARTITION_COUNT</name>
+ <name>dt.operator.Store.attr.INITIAL_PARTITION_COUNT</name>
  <value>4</value>
  </property>
 
  <property>
- <name>dt.operator.HDSOut.fileStore.basePath</name>
+ <name>dt.operator.Store.fileStore.basePath</name>
  <value>AdsDimensionWithHDS</value>
  </property>
 
@@ -116,7 +119,7 @@ public class GenericApplication implements StreamingApplication
   public static EventSchema getDataDesc() {
     EventSchema eDesc = new EventSchema();
 
-    Map<String, Class> dataDesc  = Maps.newHashMap();
+    Map<String, Class<?>> dataDesc  = Maps.newHashMap();
     dataDesc.put("timestamp", Long.class);
     dataDesc.put("pubId", Integer.class);
     dataDesc.put("adId", Integer.class);
@@ -166,7 +169,7 @@ public class GenericApplication implements StreamingApplication
     }
     dimensions.setAggregators(aggregators);
 
-    MapDimensionStoreOperator hdsOut = dag.addOperator("HDSOut", MapDimensionStoreOperator.class);
+    DimensionStoreOperator hdsOut = dag.addOperator("Store", DimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsOut.setEventDesc(dataDesc);

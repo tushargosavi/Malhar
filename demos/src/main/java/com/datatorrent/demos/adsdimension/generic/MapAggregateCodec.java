@@ -1,11 +1,11 @@
-package com.datatorrent.demos.adsdimension;
+package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.contrib.hds.AbstractSinglePortHDSWriter;
 import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 
 public class MapAggregateCodec extends KryoSerializableStreamCodec<MapAggregate> implements AbstractSinglePortHDSWriter.HDSCodec<MapAggregate>
 {
-  public MapDimensionStoreOperator operator;
+  public DimensionStoreOperator operator;
 
   @Override
   public byte[] getKeyBytes(MapAggregate aggr)
