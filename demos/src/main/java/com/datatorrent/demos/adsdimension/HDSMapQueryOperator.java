@@ -14,6 +14,7 @@ package com.datatorrent.demos.adsdimension;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
@@ -28,8 +29,13 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class HDSMapQueryOperator extends HDSMapOutputOperator
+public class HDSMapQueryOperator extends MapHDSOperator
 {
+
+  protected EventSchema eventDesc;
+
+  private transient GenericEventSerializer serializer;
+
   public final transient DefaultOutputPort<HDSRangeQueryResult> queryResult = new DefaultOutputPort<HDSRangeQueryResult>();
 
   public transient final DefaultInputPort<String> query = new DefaultInputPort<String>()
@@ -163,7 +169,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     // set query for each point in series
     query.prototype.setTimestamp(query.startTime);
     while (query.prototype.getTimestamp() <= query.endTime) {
-      Slice key = HDS.SliceExt.toSlice(serialiser.getKey(query.prototype));
+      Slice key = HDS.SliceExt.toSlice(codec.getKeyBytes(query.prototype));
       HDSQuery q = super.queries.get(key);
       if (q == null) {
         q = new HDSQuery();
@@ -219,7 +225,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          MapAggregate ae = serialiser.fromBytes(query.key.buffer, query.result);
+          MapAggregate ae = codec.fromKeyValue(query.key.buffer, query.result);
           if (ae.fields != null)
             res.data.add(combineMaps(ae.fields, ae.keys));
         }
@@ -238,6 +244,22 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     combMap.putAll(fields);
     combMap.putAll(keys);
     return combMap;
+  }
+
+  public EventSchema getEventDesc()
+  {
+    return eventDesc;
+  }
+
+  public void setEventDesc(EventSchema eventDesc)
+  {
+    this.eventDesc = eventDesc;
+  }
+
+  @Override public void setup(Context.OperatorContext arg0)
+  {
+    super.setup(arg0);
+    this.serializer = new GenericEventSerializer(eventDesc);
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDSQueryOperator.class);

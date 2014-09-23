@@ -169,9 +169,7 @@ public class GenericApplication implements StreamingApplication
     HDSMapQueryOperator hdsOut = dag.addOperator("HDSOut", HDSMapQueryOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
-    hdsOut.setEventDescriptor(dataDesc);
-    GenericEventSerializer serializer = new GenericEventSerializer(dataDesc);
-    hdsOut.setSerialiser(serializer);
+    hdsOut.setEventDesc(dataDesc);
     hdsOut.setAggregator(new MapAggregator(dataDesc));
 
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());

@@ -91,6 +91,15 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
     int result = keys != null ? keys.hashCode() : 0;
     return result;
   }
+
+  @Override public String toString()
+  {
+    return "MapAggregate{" +
+        "keys=" + keys +
+        ", fields=" + fields +
+        ", aggregatorIndex=" + aggregatorIndex +
+        '}';
+  }
 }
 
 

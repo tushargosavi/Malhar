@@ -55,8 +55,7 @@ public class HDSMapQueryOperatorTest
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
     GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
-    hdsOut.setEventDescriptor(eventDesc);
-    hdsOut.setSerialiser(serializer);
+    hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
@@ -156,8 +155,7 @@ public class HDSMapQueryOperatorTest
     MapAggregator aggregator = new MapAggregator(eventDesc);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
     GenericEventSerializer serializer = new GenericEventSerializer(eventDesc);
-    hdsOut.setEventDescriptor(eventDesc);
-    hdsOut.setSerialiser(serializer);
+    hdsOut.setEventDesc(eventDesc);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);
