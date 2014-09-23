@@ -1,25 +1,30 @@
 package com.datatorrent.demos.adsdimension;
 
 import com.datatorrent.contrib.hds.AbstractSinglePortHDSWriter;
+import com.datatorrent.lib.statistics.DimensionsComputation;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
+interface TimeStampedAggregate extends DimensionsComputation.AggregateEvent {
+  public void setTimestamp(long timestamp);
+  public long getTimestamp();
+}
 
-public class HDSMapOutputOperator extends AbstractSinglePortHDSWriter<MapAggregate>
+abstract public class HDSOperator<EVENT, AGGREGATE extends TimeStampedAggregate> extends AbstractSinglePortHDSWriter<AGGREGATE>
 {
   private static final Logger LOG = LoggerFactory.getLogger(HDSOutputOperator.class);
 
   protected boolean debug = false;
 
-  protected final SortedMap<Long, Map<MapAggregate, MapAggregate>> cache = Maps.newTreeMap();
+  protected final SortedMap<Long, Map<AGGREGATE, AGGREGATE>> cache = Maps.newTreeMap();
 
   // TODO: should be aggregation interval count
   private int maxCacheSize = 5;
 
-  private MapAggregator aggregator;
+  private DimensionsComputation.Aggregator<EVENT, AGGREGATE> aggregator;
 
   public int getMaxCacheSize()
   {
@@ -37,9 +42,9 @@ public class HDSMapOutputOperator extends AbstractSinglePortHDSWriter<MapAggrega
     int expiredEntries = cache.size() - maxCacheSize;
     while(expiredEntries-- > 0){
 
-      Map<MapAggregate, MapAggregate> vals = cache.remove(cache.firstKey());
-      for (Map.Entry<MapAggregate, MapAggregate> en : vals.entrySet()) {
-        MapAggregate ai = en.getValue();
+      Map<AGGREGATE, AGGREGATE> vals = cache.remove(cache.firstKey());
+      for (Map.Entry<AGGREGATE, AGGREGATE> en : vals.entrySet()) {
+        AGGREGATE ai = en.getValue();
         try {
           super.processEvent(ai);
         } catch (IOException e) {
@@ -47,19 +52,18 @@ public class HDSMapOutputOperator extends AbstractSinglePortHDSWriter<MapAggrega
         }
       }
     }
-
     super.endWindow();
   }
 
-  @Override protected void processEvent(MapAggregate aggr) throws IOException
+  @Override protected void processEvent(AGGREGATE aggr) throws IOException
   {
-    Map<MapAggregate, MapAggregate> valMap = cache.get(aggr.getTimestamp());
+    Map<AGGREGATE, AGGREGATE> valMap = cache.get(aggr.getTimestamp());
     if (valMap == null) {
-      valMap = new HashMap<MapAggregate, MapAggregate>();
+      valMap = new HashMap<AGGREGATE, AGGREGATE>();
       valMap.put(aggr, aggr);
       cache.put(aggr.getTimestamp(), valMap);
     } else {
-      MapAggregate val = valMap.get(aggr);
+      AGGREGATE val = valMap.get(aggr);
       if (val == null) {
         valMap.put(aggr, aggr);
         return;
@@ -69,13 +73,13 @@ public class HDSMapOutputOperator extends AbstractSinglePortHDSWriter<MapAggrega
     }
   }
 
-  public MapAggregator getAggregator()
+  public DimensionsComputation.Aggregator getAggregator()
   {
     return aggregator;
   }
 
 
-  public void setAggregator(MapAggregator aggregator)
+  public void setAggregator(DimensionsComputation.Aggregator aggregator)
   {
     this.aggregator = aggregator;
   }
@@ -86,14 +90,8 @@ public class HDSMapOutputOperator extends AbstractSinglePortHDSWriter<MapAggrega
     return debug;
   }
 
-
   public void setDebug(boolean debug)
   {
     this.debug = debug;
-  }
-
-  @Override protected Class<? extends HDSCodec<MapAggregate>> getCodecClass()
-  {
-    return MapAggregateCodec.class;
   }
 }

@@ -14,6 +14,7 @@ package com.datatorrent.demos.adsdimension;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.common.util.Slice;
@@ -28,8 +29,13 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class HDSMapQueryOperator extends HDSMapOutputOperator
+public class MapDimensionStoreOperator extends HDSMapOutputOperator
 {
+
+  protected EventSchema eventDesc;
+
+  public transient GenericEventSerializer serializer;
+
   public final transient DefaultOutputPort<HDSRangeQueryResult> queryResult = new DefaultOutputPort<HDSRangeQueryResult>();
 
   public transient final DefaultInputPort<String> query = new DefaultInputPort<String>()
@@ -51,7 +57,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
   {
     public String id;
     public int windowCountdown;
-    public  MapAggregateEvent prototype;
+    public MapAggregate prototype;
     public long startTime;
     public long endTime;
     public TimeUnit intervalTimeUnit = TimeUnit.MINUTES;
@@ -102,21 +108,25 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     this.defaultTimeWindow = defaultTimeWindow;
   }
 
-  protected Map<String, Object> converQueryKey(Map<String, String> key)
+  protected MapAggregate converQueryKey(Map<String, String> key)
   {
-    Map<String, Object> map = Maps.newHashMap();
-    for(String param : key.keySet()) {
-      Class c = eventDesc.getType(param);
-      if (c.equals(Integer.class))
-        map.put(param, new Integer(Integer.valueOf(key.get(param))));
-      else if (c.equals(Long.class))
-        map.put(param, new Long(Long.valueOf(key.get(param))));
-      else if (c.equals(Float.class))
-        map.put(param, new Float(Float.valueOf(key.get(param))));
-      else if (c.equals(Double.class))
-        map.put(param, new Double(Double.valueOf(key.get(param))));
+    MapAggregate ae = new MapAggregate(0);
+    for(String keyStr : eventDesc.keys)
+    {
+      if (key.containsKey(keyStr))
+      {
+        Class c = eventDesc.getType(keyStr);
+        if (c.equals(Integer.class))
+          ae.keys.put(keyStr, new Integer(Integer.valueOf(key.get(keyStr))));
+        else if (c.equals(Long.class))
+          ae.keys.put(keyStr, new Long(Long.valueOf(key.get(keyStr))));
+        else if (c.equals(Float.class))
+          ae.keys.put(keyStr, new Float(Float.valueOf(key.get(keyStr))));
+        else if (c.equals(Double.class))
+          ae.keys.put(keyStr, new Double(Double.valueOf(key.get(keyStr))));
+      }
     }
-    return map;
+    return ae;
   }
 
   public void registerQuery(String queryString) throws Exception
@@ -132,8 +142,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
       return;
     }
 
-    MapAggregateEvent ae = new MapAggregateEvent(0);
-    ae.keys = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
+    MapAggregate ae = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
     if (!(super.partitions == null || super.partitions.contains((int)bucketKey))) {
@@ -163,7 +172,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     // set query for each point in series
     query.prototype.setTimestamp(query.startTime);
     while (query.prototype.getTimestamp() <= query.endTime) {
-      Slice key = HDS.SliceExt.toSlice(serialiser.getKey(query.prototype));
+      Slice key = HDS.SliceExt.toSlice(codec.getKeyBytes(query.prototype));
       HDSQuery q = super.queries.get(key);
       if (q == null) {
         q = new HDSQuery();
@@ -207,9 +216,9 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
       rangeQuery.prototype.setTimestamp(rangeQuery.startTime);
       for (HDSQuery query : rangeQuery.points) {
         // check in-flight memory store first
-        Map<MapAggregateEvent, MapAggregateEvent> buffered = super.cache.get(rangeQuery.prototype.getTimestamp());
+        Map<MapAggregate, MapAggregate> buffered = super.cache.get(rangeQuery.prototype.getTimestamp());
         if (buffered != null) {
-          MapAggregateEvent ae = buffered.get(rangeQuery.prototype);
+          MapAggregate ae = buffered.get(rangeQuery.prototype);
           if (ae != null) {
             LOG.debug("Adding from aggregation buffer {}" + ae);
             res.data.add(combineMaps(ae.fields, ae.keys));
@@ -219,7 +228,7 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
         }
         // results from persistent store
         if (query.processed && query.result != null) {
-          MapAggregateEvent ae = serialiser.fromBytes(query.key.buffer, query.result);
+          MapAggregate ae = codec.fromKeyValue(query.key.buffer, query.result);
           if (ae.fields != null)
             res.data.add(combineMaps(ae.fields, ae.keys));
         }
@@ -238,6 +247,22 @@ public class HDSMapQueryOperator extends HDSMapOutputOperator
     combMap.putAll(fields);
     combMap.putAll(keys);
     return combMap;
+  }
+
+  public EventSchema getEventDesc()
+  {
+    return eventDesc;
+  }
+
+  public void setEventDesc(EventSchema eventDesc)
+  {
+    this.eventDesc = eventDesc;
+  }
+
+  @Override public void setup(Context.OperatorContext arg0)
+  {
+    super.setup(arg0);
+    this.serializer = new GenericEventSerializer(eventDesc);
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDSQueryOperator.class);

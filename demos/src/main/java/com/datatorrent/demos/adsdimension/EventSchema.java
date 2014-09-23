@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * Class contains description about input.
  */
-public class EventDescription implements Serializable
+public class EventSchema implements Serializable
 {
 
   /* What are fields in event */
@@ -41,7 +41,7 @@ public class EventDescription implements Serializable
   transient private int valLen;
 
   /* Do not allow users to create object directly */
-  public EventDescription() { }
+  public EventSchema() { }
 
 
   /* Generate Event description from string
