@@ -166,7 +166,7 @@ public class GenericApplication implements StreamingApplication
     }
     dimensions.setAggregators(aggregators);
 
-    HDSMapQueryOperator hdsOut = dag.addOperator("HDSOut", HDSMapQueryOperator.class);
+    MapDimensionStoreOperator hdsOut = dag.addOperator("HDSOut", MapDimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsOut.setEventDesc(dataDesc);

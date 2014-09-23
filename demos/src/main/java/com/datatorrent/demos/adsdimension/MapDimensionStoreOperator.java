@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class HDSMapQueryOperator extends HDSMapOutputOperator
+public class MapDimensionStoreOperator extends HDSMapOutputOperator
 {
 
   protected EventSchema eventDesc;

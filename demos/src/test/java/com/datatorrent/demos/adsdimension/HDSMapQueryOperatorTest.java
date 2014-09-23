@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
-import com.datatorrent.demos.adsdimension.HDSMapQueryOperator.HDSRangeQueryResult;
+import com.datatorrent.demos.adsdimension.MapDimensionStoreOperator.HDSRangeQueryResult;
 import com.datatorrent.lib.testbench.CollectorTestSink;
 import com.datatorrent.lib.util.TestUtils;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -40,7 +40,7 @@ public class HDSMapQueryOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    HDSMapQueryOperator hdsOut = new HDSMapQueryOperator() {
+    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -63,7 +63,7 @@ public class HDSMapQueryOperatorTest
 
     hdsOut.setDebug(false);
 
-    CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult>();
+    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -117,7 +117,7 @@ public class HDSMapQueryOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    HDSMapQueryOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -139,7 +139,7 @@ public class HDSMapQueryOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    HDSMapQueryOperator hdsOut = new HDSMapQueryOperator() {
+    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -162,7 +162,7 @@ public class HDSMapQueryOperatorTest
 
     hdsOut.setDebug(false);
 
-    CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult>();
+    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -212,7 +212,7 @@ public class HDSMapQueryOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    HDSMapQueryOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -240,7 +240,7 @@ public class HDSMapQueryOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    HDSMapQueryOperator hdsOut = new HDSMapQueryOperator() {
+    MapDimensionStoreOperator hdsOut = new MapDimensionStoreOperator() {
       @Override
       public void setup(OperatorContext arg0)
       {
@@ -263,7 +263,7 @@ public class HDSMapQueryOperatorTest
 
     hdsOut.setDebug(false);
 
-    CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<HDSMapQueryOperator.HDSRangeQueryResult>();
+    CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult> queryResults = new CollectorTestSink<MapDimensionStoreOperator.HDSRangeQueryResult>();
     @SuppressWarnings({"unchecked", "rawtypes"})
     CollectorTestSink<Object> tmp = (CollectorTestSink) queryResults;
     hdsOut.queryResult.setSink(tmp);
@@ -313,7 +313,7 @@ public class HDSMapQueryOperatorTest
     hdsOut.query.process(query.toString());
 
     Assert.assertEquals("rangeQueries " + hdsOut.rangeQueries, 1, hdsOut.rangeQueries.size());
-    HDSMapQueryOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
+    MapDimensionStoreOperator.HDSRangeQuery aq = hdsOut.rangeQueries.values().iterator().next();
     Assert.assertEquals("numTimeUnits " + hdsOut.rangeQueries, baseMinute, aq.startTime);
 
     hdsOut.endWindow();
@@ -329,5 +329,3 @@ public class HDSMapQueryOperatorTest
     Assert.assertEquals("clicks", ae3.fields.get("clicks"), r.data.get(1).get("clicks"));
   }
 }
-
-

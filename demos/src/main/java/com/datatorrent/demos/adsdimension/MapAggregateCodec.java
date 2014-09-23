@@ -5,7 +5,7 @@ import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 
 public class MapAggregateCodec extends KryoSerializableStreamCodec<MapAggregate> implements AbstractSinglePortHDSWriter.HDSCodec<MapAggregate>
 {
-  public HDSMapQueryOperator operator;
+  public MapDimensionStoreOperator operator;
 
   @Override public byte[] getKeyBytes(MapAggregate aggr)
   {
