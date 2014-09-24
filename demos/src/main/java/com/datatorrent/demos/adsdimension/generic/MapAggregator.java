@@ -171,16 +171,16 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     if (eDesc.aggrDesc.get(metric).equals("sum"))
     {
       if (eDesc.dataDesc.get(metric).equals(Integer.class)) {
-        int val1 = (o != null) ? ((Integer)o).intValue() : 0;
-        int val2 = (o1 != null) ? ((Integer)o1).intValue() : 0;
+        int val1 = (o != null) ? ((Number)o).intValue() : 0;
+        int val2 = (o1 != null) ? ((Number)o1).intValue() : 0;
         return new Integer(val1 + val2);
       } else if (eDesc.dataDesc.get(metric).equals(Long.class)) {
-        long val1 = (o != null) ? ((Long)o).longValue() : 0;
-        long val2 = (o1 != null) ? ((Long)o1).longValue() : 0;
+        long val1 = (o != null) ? ((Number)o).longValue() : 0;
+        long val2 = (o1 != null) ? ((Number)o1).longValue() : 0;
         return new Long(val1 + val2);
       } else if (eDesc.dataDesc.get(metric).equals(Double.class)) {
-        double val1 = (o != null) ? ((Double)o).doubleValue() : 0;
-        double val2 = (o1 != null) ? ((Double)o1).doubleValue() : 0;
+        double val1 = (o != null) ? ((Number)o).doubleValue() : 0;
+        double val2 = (o1 != null) ? ((Number)o1).doubleValue() : 0;
         return new Double(val1 + val2);
       }
     }

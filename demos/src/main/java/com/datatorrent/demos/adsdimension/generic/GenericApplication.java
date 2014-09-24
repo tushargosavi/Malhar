@@ -119,14 +119,14 @@ public class GenericApplication implements StreamingApplication
 
     Map<String, Class<?>> dataDesc  = Maps.newHashMap();
     dataDesc.put("timestamp", Long.class);
-    dataDesc.put("pubId", Integer.class);
-    dataDesc.put("adId", Integer.class);
+    dataDesc.put("publisherId", Integer.class);
+    dataDesc.put("advertiserId", Integer.class);
     dataDesc.put("adUnit", Integer.class);
 
     dataDesc.put("clicks", Long.class);
     eDesc.setDataDesc(dataDesc);
 
-    String[] keys = { "timestamp", "pubId", "adId", "adUnit" };
+    String[] keys = { "timestamp", "publisherId", "advertiserId", "adUnit" };
     List<String> keyDesc = Lists.newArrayList(keys);
     eDesc.setKeys(keyDesc);
 
@@ -151,12 +151,12 @@ public class GenericApplication implements StreamingApplication
     String[] dimensionSpecs = new String[] {
         "time=" + TimeUnit.MINUTES,
         "time=" + TimeUnit.MINUTES + ":adUnit",
-        "time=" + TimeUnit.MINUTES + ":adId",
-        "time=" + TimeUnit.MINUTES + ":pubId",
-        "time=" + TimeUnit.MINUTES + ":adId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":pubId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":pubId:adId",
-        "time=" + TimeUnit.MINUTES + ":pubId:adId:adUnit"
+        "time=" + TimeUnit.MINUTES + ":advertiserId",
+        "time=" + TimeUnit.MINUTES + ":publisherId",
+        "time=" + TimeUnit.MINUTES + ":advertiserId:adUnit",
+        "time=" + TimeUnit.MINUTES + ":publisherId:adUnit",
+        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId",
+        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit"
     };
 
     MapAggregator[] aggregators = new MapAggregator[dimensionSpecs.length];

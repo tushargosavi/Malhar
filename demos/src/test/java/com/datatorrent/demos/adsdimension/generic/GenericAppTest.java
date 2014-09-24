@@ -78,7 +78,8 @@ public class GenericAppTest
     conf.set("dt.operator.InputGenerator.numPublishers", "2");
     conf.set("dt.loggers.level", "server.*:INFO");
 
-    lma.prepareDAG(new GenericApplication(), conf);
+    GenericApplication app = new GenericApplication();
+    lma.prepareDAG(app, conf);
     LocalMode.Controller lc = lma.getController();
     lc.setHeartbeatMonitoringEnabled(false);
     lc.runAsync();
@@ -88,7 +89,7 @@ public class GenericAppTest
     String testQuery="{\n" +
         " \"id\": \"query1\",\n" +
         " \"keys\": {\n" +
-        "  \"pubId\": 1\n" +
+        "  \"publisherId\": 1\n" +
         " }\n" +
         "}";
 
