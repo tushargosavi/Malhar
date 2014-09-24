@@ -144,9 +144,9 @@ public class GenericApplication implements StreamingApplication
   {
     EventSchema dataDesc = getDataDesc();
     dag.setAttribute(DAG.APPLICATION_NAME, "AdsDimensionsGeneric");
-    InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
 
-    AdEventToMapConverter converter = dag.addOperator("Converter", new AdEventToMapConverter());
+    JsonAdInfoGenerator input = dag.addOperator("InputGenerator", JsonAdInfoGenerator.class);
+    JsonToMapConverter converter = dag.addOperator("Converter", JsonToMapConverter.class);
 
     DimensionsComputation<Map<String, Object>, MapAggregate> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<Map<String, Object>, MapAggregate>());
     dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
@@ -169,11 +169,11 @@ public class GenericApplication implements StreamingApplication
     }
     dimensions.setAggregators(aggregators);
 
-    DimensionStoreOperator hdsOut = dag.addOperator("Store", DimensionStoreOperator.class);
+    DimensionStoreOperator hdsStore = dag.addOperator("HDSStore", DimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
-    hdsOut.setFileStore(hdsFile);
-    hdsOut.setEventDesc(dataDesc);
-    hdsOut.setAggregator(new MapAggregator(dataDesc));
+    hdsStore.setFileStore(hdsFile);
+    hdsStore.setEventDesc(dataDesc);
+    hdsStore.setAggregator(new MapAggregator(dataDesc));
 
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
     queries.setConsumer(new SimpleKafkaConsumer());
@@ -181,11 +181,11 @@ public class GenericApplication implements StreamingApplication
     KafkaSinglePortOutputOperator<Object, Object> queryResult = dag.addOperator("QueryResult", new KafkaSinglePortOutputOperator<Object, Object>());
     queryResult.getConfigProperties().put("serializer.class", com.datatorrent.demos.adsdimension.KafkaJsonEncoder.class.getName());
 
-    dag.addStream("InputStream", input.outputPort, converter.in).setLocality(Locality.CONTAINER_LOCAL);
-    dag.addStream("ConvertingStream", converter.out, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
-    dag.addStream("DimensionalData", dimensions.output, hdsOut.input);
-    dag.addStream("Query", queries.outputPort, hdsOut.query);
-    dag.addStream("QueryResult", hdsOut.queryResult, queryResult.inputPort);
+    dag.addStream("JSONStream", input.outputPort, converter.input).setLocality(Locality.CONTAINER_LOCAL);
+    dag.addStream("MapStream", converter.outputMap, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+    dag.addStream("DimensionalData", dimensions.output, hdsStore.input);
+    dag.addStream("Query", queries.outputPort, hdsStore.query);
+    dag.addStream("QueryResult", hdsStore.queryResult, queryResult.inputPort);
   }
 
 }
