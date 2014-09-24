@@ -146,26 +146,8 @@ public class GenericApplication implements StreamingApplication
     JsonAdInfoGenerator input = dag.addOperator("InputGenerator", JsonAdInfoGenerator.class);
     JsonToMapConverter converter = dag.addOperator("Converter", JsonToMapConverter.class);
 
-    DimensionsComputation<Map<String, Object>, MapAggregate> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<Map<String, Object>, MapAggregate>());
-    dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
-    String[] dimensionSpecs = new String[] {
-        "time=" + TimeUnit.MINUTES,
-        "time=" + TimeUnit.MINUTES + ":adUnit",
-        "time=" + TimeUnit.MINUTES + ":advertiserId",
-        "time=" + TimeUnit.MINUTES + ":publisherId",
-        "time=" + TimeUnit.MINUTES + ":advertiserId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":publisherId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId",
-        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit"
-    };
-
-    MapAggregator[] aggregators = new MapAggregator[dimensionSpecs.length];
-    for (int i = dimensionSpecs.length; i-- > 0;) {
-      MapAggregator aggregator = new MapAggregator(dataDesc);
-      aggregator.init(dimensionSpecs[i]);
-      aggregators[i] = aggregator;
-    }
-    dimensions.setAggregators(aggregators);
+    GenericDimensionComputation dimensions = dag.addOperator("DimensionsComputation", new GenericDimensionComputation());
+    dimensions.setSchema(dataDesc);
 
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
