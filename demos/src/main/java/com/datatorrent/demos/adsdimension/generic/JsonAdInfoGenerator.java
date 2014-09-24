@@ -30,14 +30,15 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class JsonAdInfoGenerator extends InputItemGenerator
 {
-  @OutputPortFieldAnnotation(name = "outputPort")
-  public final transient DefaultOutputPort outputPort = new DefaultOutputPort<byte[]>();
+  @OutputPortFieldAnnotation(name = "jsonOutput")
+  public final transient DefaultOutputPort<byte[]> jsonOutput = new DefaultOutputPort<byte[]>();
   private static final ObjectMapper mapper = new ObjectMapper();
 
+  @Override
   public void emitTuple(AdInfo adInfo)
   {
     try {
-      this.outputPort.emit(mapper.writeValueAsString(adInfo).getBytes());
+      this.jsonOutput.emit(mapper.writeValueAsBytes(adInfo));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

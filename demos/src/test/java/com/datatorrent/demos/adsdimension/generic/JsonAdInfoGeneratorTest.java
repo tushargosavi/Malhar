@@ -21,7 +21,10 @@ package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.demos.adsdimension.AdInfo;
 import com.datatorrent.lib.testbench.CollectorTestSink;
+import com.datatorrent.lib.util.TestUtils;
+
 import junit.framework.Assert;
+
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
@@ -48,7 +51,7 @@ public class JsonAdInfoGeneratorTest {
     oper.setNumAdvertisers(maxAdvertisers);
     oper.setNumAdUnits(maxAdUnits);
     CollectorTestSink<byte[]> sink = new CollectorTestSink<byte[]>();
-    oper.outputPort.setSink(sink);
+    TestUtils.setSink(oper.jsonOutput, sink);
     oper.setup(null);
     oper.beginWindow(0);
     oper.emitTuples();
