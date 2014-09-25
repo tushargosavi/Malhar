@@ -44,14 +44,8 @@ public class EventSchema implements Serializable
   /* Do not allow users to create object directly */
   public EventSchema() { }
 
+  public List<String> dimensions = Lists.newArrayList();
 
-  /* Generate Event description from string
-     {
-       "fields": [ {"publisherId": "int", "advertiserId": "int", "adUnit" : "int", "clicks":"long"],
-       "keys": ["publisherId", "advertiserId", "adUnit"],
-       "aggrDesc" : [ "clicks":"sum"],
-     }
-   */
 
   public void setDataDesc(Map<String, Class<?>> dataDesc)
   {
