@@ -27,6 +27,9 @@ public class GenericDimensionComputation extends DimensionsComputation<Map<Strin
   public void setSchema(EventSchema schema)
   {
     this.schema = schema;
+    DimensionsGenerator gen = new DimensionsGenerator(schema);
+    MapAggregator[] aggregators = gen.generateAggregators();
+    setAggregators(aggregators);
   }
 
   @Override public void setup(Context.OperatorContext context)

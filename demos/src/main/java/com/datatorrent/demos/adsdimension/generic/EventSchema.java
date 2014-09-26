@@ -24,7 +24,32 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Class contains description about input.
+ * Describes schema for performing dimensional computation on a stream of Map<String,Object> tuples.
+ *
+ * Schema can be constructed from following JSON string:
+ *
+ * {
+ *   // Keys for dimensional computation.  If dimensions relationship is undefined,
+ *   // all permutation of keys are used to generate the dimensional aggregates.
+ *   // Data types supported: int, long, float, double
+ *   "keys": {"publisherId":"int", "advertiserId":"int", "adUnit":"int"},
+ *
+ *   // OPTIONAL specification for dimensional combinations
+ *   // If omitted, all combinations of keys are grouped by MINUTE
+ *   // Supported time groupings: MINUTE, HOUR, DAY
+ *   "dimensions": ["MINUTE:publisherId:advertiserId", "HOUR:advertiserId:adUnit"],
+ *
+ *   // Fields to aggregate with matching operation types and data types
+ *   // Possible operations include: SUM, AVG, MIN, MAX
+ *   // Data types supported: int, long, float, double
+ *   "aggregates": { "clicks": "SUM:long", "price": "SUM:long" },
+ *
+ *   // Name of the timestamp fields with time specified in milliseconds ( since Jan 1, 1970 GMT )
+ *   // Data type is implied to be: long
+ *   "time": "timestamp",
+ * }
+ *
+ *
  */
 public class EventSchema implements Serializable
 {
