@@ -134,7 +134,7 @@ public class SalesApplication implements StreamingApplication
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    EventSchema dataDesc = getDataDesc();
+    EventSchema dataDesc = GenericApplication.getDataDesc();
     dag.setAttribute(DAG.APPLICATION_NAME, "SalesApplication");
 
     JsonSalesInfoGenerator input = dag.addOperator("InputGenerator", JsonSalesInfoGenerator.class);

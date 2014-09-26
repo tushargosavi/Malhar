@@ -30,14 +30,14 @@ import java.util.Random;
 public class SalesDataGenerator implements InputOperator
 {
 
-  static class SaleInfo
+  public static class SaleInfo
   {
     public int productId;
     public int customerId;
     public int channelId;
 
-    double amount;
-    long timestamp;
+    public long amount;
+    public long timestamp;
   }
 
   @Min(1)
@@ -133,7 +133,7 @@ public class SalesDataGenerator implements InputOperator
         int channelId = random.nextInt(numChannels);
         timestamp = System.currentTimeMillis();
 
-        double cost = random.nextDouble() * 100.0 + 1.0;
+        long cost = random.nextInt(100);
 
         /* 0 (zero) is used as the invalid value */
         buildAndSend(false, productId + 1, customerId + 1, channelId + 1, cost, timestamp);
@@ -150,7 +150,7 @@ public class SalesDataGenerator implements InputOperator
     this.outputPort.emit(adInfo);
   }
 
-  private void buildAndSend(boolean click, int productId, int customerId, int channelId, double amount, long timestamp)
+  private void buildAndSend(boolean click, int productId, int customerId, int channelId, long amount, long timestamp)
   {
     SaleInfo saleInfo = new SaleInfo();
     saleInfo.productId = productId;

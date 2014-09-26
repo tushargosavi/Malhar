@@ -19,7 +19,6 @@ import com.datatorrent.api.LocalMode;
 import com.datatorrent.contrib.kafka.KafkaOperatorTestBase;
 import com.datatorrent.contrib.kafka.KafkaTestConsumer;
 import com.datatorrent.contrib.kafka.KafkaTestProducer;
-import com.datatorrent.demos.adsdimension.HDSApplicationTest;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SalesAppTest
 {
-  private static final Logger LOG = LoggerFactory.getLogger(HDSApplicationTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SalesAppTest.class);
   private final KafkaOperatorTestBase kafkaLauncher = new KafkaOperatorTestBase();
 
   private static final String kafkaQueryTopic = "HDSApplicationQuery";
