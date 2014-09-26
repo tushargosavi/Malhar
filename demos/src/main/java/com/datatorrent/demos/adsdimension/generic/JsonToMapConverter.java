@@ -24,10 +24,11 @@ import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.api.annotation.Stateless;
 import com.datatorrent.common.util.DTThrowable;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectReader;
+import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -48,6 +49,7 @@ import java.util.Map;
 public class JsonToMapConverter extends BaseOperator {
 
   private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectReader reader = mapper.reader(new TypeReference<Map<String,Object>>() { });
   private static final Logger logger = LoggerFactory.getLogger(JsonToMapConverter.class);
 
   @InputPortFieldAnnotation(name = "json")
@@ -58,7 +60,7 @@ public class JsonToMapConverter extends BaseOperator {
     {
       try {
         // Convert byte array JSON representation to HashMap
-        HashMap<String, Object> tuple = mapper.readValue(message, HashMap.class) ;
+        Map<String, Object> tuple = reader.readValue(message);
         outputMap.emit(tuple);
       }
       catch (Throwable ex) {

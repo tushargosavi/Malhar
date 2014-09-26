@@ -161,8 +161,9 @@ public class GenericApplication implements StreamingApplication
     KafkaSinglePortOutputOperator<Object, Object> queryResult = dag.addOperator("QueryResult", new KafkaSinglePortOutputOperator<Object, Object>());
     queryResult.getConfigProperties().put("serializer.class", com.datatorrent.demos.adsdimension.KafkaJsonEncoder.class.getName());
 
-    dag.addStream("JSONStream", input.jsonOutput, converter.input).setLocality(Locality.CONTAINER_LOCAL);
-    dag.addStream("MapStream", converter.outputMap, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+    // Removing setLocality(Locality.CONTAINER_LOCAL) from JSONStream and MapStream to isolate performance bottleneck
+    dag.addStream("JSONStream", input.jsonOutput, converter.input);
+    dag.addStream("MapStream", converter.outputMap, dimensions.data);
     dag.addStream("DimensionalData", dimensions.output, store.input);
     dag.addStream("Query", queries.outputPort, store.query);
     dag.addStream("QueryResult", store.queryResult, queryResult.inputPort);

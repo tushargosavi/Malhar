@@ -22,6 +22,8 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 /**
  * Test {@link JsonToMapConverter}
  */
@@ -30,9 +32,7 @@ public class JsonToMapConverterTest {
   @Test
   public void testOperator() throws Exception {
     JsonToMapConverter operator = new JsonToMapConverter();
-
     CollectorTestSink mapSink = new CollectorTestSink();
-
     operator.outputMap.setSink(mapSink);
 
     operator.beginWindow(0);
