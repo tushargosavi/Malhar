@@ -9,7 +9,7 @@ public class GenericDimensionComputationTest
   public void test()
   {
     GenericDimensionComputation dc = new GenericDimensionComputation();
-    dc.setSchema(GenericEventSerializerTest.getDataDesc());
+    dc.setSchema(GenericEventSerializerTest.getEventSchema());
     dc.setup(null);
 
     Assert.assertEquals("Total number of aggregators ", 8, dc.getAggregators().length);

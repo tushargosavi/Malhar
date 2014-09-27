@@ -31,15 +31,14 @@ public class MapAggregateCodec extends KryoSerializableStreamCodec<MapAggregate>
   {
     final int prime = 31;
     int hashCode = 1;
-    for(String key : aggr.keys.keySet())
+    for(String key : aggr.getEventSchema().keys)
     {
-      if (key.equals(MapAggregate.TIMESTAMP_KEY_STR))
+      if (key.equals(aggr.getEventSchema().getTimeKey()))
         continue;
       Object o = aggr.get(key);
       if (o != null)
         hashCode = hashCode * prime + aggr.get(key).hashCode();
     }
-
     return hashCode;
   }
 }

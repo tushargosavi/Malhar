@@ -16,6 +16,7 @@
 package com.datatorrent.demos.adsdimension.generic;
 
 import com.datatorrent.lib.statistics.DimensionsComputation;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -25,49 +26,66 @@ import java.util.concurrent.TimeUnit;
 
 class MapAggregate implements DimensionsComputation.AggregateEvent
 {
-  protected static final String TIMESTAMP_KEY_STR = "timestamp";
 
-  public Map<String, Object> keys = Maps.newLinkedHashMap();
+  MapAggregate() {
+  }
+
   public Map<String, Object> fields = Maps.newLinkedHashMap();
-  private int aggregatorIndex;
+  private int aggregatorIndex = 0;
+  private EventSchema eventSchema;
 
-  protected MapAggregate() {}
-  public MapAggregate(int aggregatorIndex)
-  {
+  public MapAggregate(EventSchema eventSchema) {
+    this.eventSchema = eventSchema;
+  }
+
+  public MapAggregate(EventSchema eventSchema, int aggregatorIndex) {
+    this.eventSchema = eventSchema;
     this.aggregatorIndex = aggregatorIndex;
   }
 
-  @Override public int getAggregatorIndex()
+  public MapAggregate(EventSchema eventSchema, Map<String, String> event) {
+    this.eventSchema = eventSchema;
+    for(String keyStr : eventSchema.keys)
+    {
+      if (event.containsKey(keyStr))
+      {
+        fields.put(keyStr, eventSchema.typeCast(event.get(keyStr), keyStr));
+      }
+    }
+  }
+
+  public EventSchema getEventSchema() {
+    return eventSchema;
+  }
+
+
+  @Override
+  public int getAggregatorIndex()
   {
     return aggregatorIndex;
   }
 
-  public Long getTimestamp()
+  public long getTimestamp()
   {
-    Object o = keys.get(TIMESTAMP_KEY_STR);
-    if (o == null)
-      return 0L;
-
-    return ((Long)o).longValue();
+    Object o = fields.get(eventSchema.getTimeKey());
+    if (o == null) return 0L;
+    return ((Number)o).longValue();
   }
 
   public void setTimestamp(long timestamp)
   {
-    keys.put(TIMESTAMP_KEY_STR, timestamp);
+    fields.put(eventSchema.getTimeKey(), timestamp);
   }
 
   public Object get(String field)
   {
-    if (keys.containsKey(field))
-      return keys.get(field);
-    if (fields.containsKey(field))
-      return fields.get(field);
-    return null;
+    return fields.get(field);
   }
 
   @Override
   public boolean equals(Object o)
   {
+
     if (this == o) {
       return true;
     }
@@ -77,24 +95,36 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 
     MapAggregate that = (MapAggregate) o;
 
-    if (keys != null ? !keys.equals(that.keys) : that.keys != null) {
-      return false;
+    for(String key: eventSchema.keys) {
+      Object thisValue = fields.get(key);
+      Object thatValue = that.fields.get(key);
+      if (thisValue != null ? ! thisValue.equals(thatValue) : thatValue != null) {
+        return false;
+      }
     }
 
     return true;
   }
 
+  /**
+   * Get a subset of fields which represent keys based on the schema
+   * @return
+   */
+  public Map<String, Object> getKeys(){
+    return Maps.filterKeys(fields, Predicates.in(eventSchema.keys));
+  }
+
   @Override
   public int hashCode()
   {
-    return (keys != null)? keys.hashCode() : 0;
+    return getKeys().hashCode();
   }
 
   @Override
   public String toString()
   {
     return "MapAggregate{" +
-        "keys=" + keys +
+        "keys=" + eventSchema.keys.toString() +
         ", fields=" + fields +
         ", aggregatorIndex=" + aggregatorIndex +
         '}';
@@ -105,16 +135,16 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 public class MapAggregator implements DimensionsComputation.Aggregator<Map<String, Object>, MapAggregate>
 {
   private static final long serialVersionUID = 7636266873750826291L;
-  private EventSchema eDesc;
+  private EventSchema eventSchema;
   private String dimension;
   private TimeUnit time;
   private final List<String> keys = Lists.newArrayList();
 
   public MapAggregator() {}
 
-  public MapAggregator(EventSchema eDesc)
+  public MapAggregator(EventSchema eventSchema)
   {
-    this.eDesc = eDesc;
+    this.eventSchema = eventSchema;
   }
 
   public void init(String dimension)
@@ -141,16 +171,15 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   @Override
   public MapAggregate getGroup(Map<String, Object> src, int aggregatorIndex)
   {
-    MapAggregate aggr = new MapAggregate(aggregatorIndex);
-    for(String key : eDesc.keys) {
-      if (keys.contains(key))
-        aggr.keys.put(key, src.get(key));
+    MapAggregate aggr = new MapAggregate(eventSchema, aggregatorIndex);
+    for (String key: keys) {
+      aggr.fields.put(key, src.get(key));
     }
     /* Add converted timestamp */
     if (time != null) {
-      long timestamp = src.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)src.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
+      long timestamp = src.get(eventSchema.getTimeKey()) != null? ((Number)src.get(eventSchema.getTimeKey())).longValue() : 0;
       timestamp = TimeUnit.MILLISECONDS.convert(time.convert(timestamp, TimeUnit.MILLISECONDS), time);
-      aggr.keys.put("timestamp", new Long(timestamp));
+      aggr.fields.put("timestamp", new Long(timestamp));
     }
     return aggr;
   }
@@ -158,7 +187,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   @Override
   public void aggregate(MapAggregate dest, Map<String, Object> src)
   {
-    for(String metric : eDesc.getMetrices()) {
+    for(String metric : eventSchema.getAggregateKeys()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.get(metric)));
     }
   }
@@ -168,17 +197,17 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
   {
     //TODO define a class for each type of aggregation and
     // avoid if/else.
-    if (eDesc.aggrDesc.get(metric).equals("sum"))
+    if (eventSchema.aggregates.get(metric).equals("sum"))
     {
-      if (eDesc.dataDesc.get(metric).equals(Integer.class)) {
+      if (eventSchema.fieldTypes.get(metric).equals(Integer.class)) {
         int val1 = (o != null) ? ((Number)o).intValue() : 0;
         int val2 = (o1 != null) ? ((Number)o1).intValue() : 0;
         return new Integer(val1 + val2);
-      } else if (eDesc.dataDesc.get(metric).equals(Long.class)) {
+      } else if (eventSchema.fieldTypes.get(metric).equals(Long.class)) {
         long val1 = (o != null) ? ((Number)o).longValue() : 0;
         long val2 = (o1 != null) ? ((Number)o1).longValue() : 0;
         return new Long(val1 + val2);
-      } else if (eDesc.dataDesc.get(metric).equals(Double.class)) {
+      } else if (eventSchema.fieldTypes.get(metric).equals(Double.class)) {
         double val1 = (o != null) ? ((Number)o).doubleValue() : 0;
         double val2 = (o1 != null) ? ((Number)o1).doubleValue() : 0;
         return new Double(val1 + val2);
@@ -187,9 +216,9 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return null;
   }
 
-  @Override public void aggregate(MapAggregate dest, MapAggregate src)
-  {
-    for(String metric : eDesc.getMetrices()) {
+  @Override
+  public void aggregate(MapAggregate dest, MapAggregate src) {
+    for (String metric : eventSchema.getAggregateKeys()) {
       dest.fields.put(metric, apply(metric, dest.fields.get(metric), src.fields.get(metric)));
     }
   }
@@ -205,7 +234,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
     /* TODO: special handling for timestamp */
     if (time != null) {
-        long timestamp = tuple.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)tuple.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
+        long timestamp = tuple.get(getEventSchema().getTimeKey()) != null? ((Number)tuple.get(getEventSchema().getTimeKey())).longValue() : 0;
         long ltime = time.convert(timestamp, TimeUnit.MILLISECONDS);
         hash = 71 * hash + (int) (ltime ^ (ltime >>> 32));
     }
@@ -228,8 +257,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     // Special handling for timestamp
     if (time != null)
     {
-      long t1 = event1.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)event1.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
-      long t2 = event2.get(MapAggregate.TIMESTAMP_KEY_STR) != null? ((Long)event2.get(MapAggregate.TIMESTAMP_KEY_STR)).longValue() : 0;
+      long t1 = event1.get(getEventSchema().getTimeKey()) != null? ((Number)event1.get(getEventSchema().getTimeKey())).longValue() : 0;
+      long t2 = event2.get(getEventSchema().getTimeKey()) != null? ((Number)event2.get(getEventSchema().getTimeKey())).longValue() : 0;
 
       if (time.convert(t1, TimeUnit.MILLISECONDS) != time.convert(t2, TimeUnit.MILLISECONDS))
         return false;
@@ -237,9 +266,9 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     return true;
   }
 
-  public EventSchema geteDesc()
+  public EventSchema getEventSchema()
   {
-    return eDesc;
+    return eventSchema;
   }
 
   public String getDimension()

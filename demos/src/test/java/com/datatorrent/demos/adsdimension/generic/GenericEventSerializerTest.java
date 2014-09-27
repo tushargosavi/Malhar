@@ -1,8 +1,5 @@
 package com.datatorrent.demos.adsdimension.generic;
 
-import com.datatorrent.demos.adsdimension.generic.EventSchema;
-import com.datatorrent.demos.adsdimension.generic.GenericEventSerializer;
-import com.datatorrent.demos.adsdimension.generic.MapAggregate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -20,7 +17,7 @@ public class GenericEventSerializerTest
    * perform aggregation, serialization and deserialization.
    * @return
    */
-  public static EventSchema getDataDesc() {
+  public static EventSchema getEventSchema() {
     EventSchema eDesc = new EventSchema();
 
     Map<String, Class<?>> dataDesc  = Maps.newHashMap();
@@ -30,7 +27,7 @@ public class GenericEventSerializerTest
     dataDesc.put("adUnit", Integer.class);
 
     dataDesc.put("clicks", Long.class);
-    eDesc.setDataDesc(dataDesc);
+    eDesc.setFieldTypes(dataDesc);
 
     String[] keys = { "timestamp", "pubId", "adId", "adUnit" };
     List<String> keyDesc = Lists.newArrayList(keys);
@@ -38,7 +35,7 @@ public class GenericEventSerializerTest
 
     Map<String, String> aggrDesc = Maps.newHashMap();
     aggrDesc.put("clicks", "sum");
-    eDesc.setAggrDesc(aggrDesc);
+    eDesc.setAggregates(aggrDesc);
 
     return eDesc;
   }
@@ -46,17 +43,17 @@ public class GenericEventSerializerTest
   @Test
   public void test()
   {
-    EventSchema eDesc = getDataDesc();
-    GenericEventSerializer ser = new GenericEventSerializer(eDesc);
+    EventSchema eventSchema = getEventSchema();
+    GenericEventSerializer ser = new GenericEventSerializer(eventSchema);
 
-    System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
+    System.out.println("keySize " + eventSchema.getKeyLen() + " val len " + eventSchema.getValLen());
 
     /* prepare a object */
-    MapAggregate event = new MapAggregate(0);
-    event.keys.put("timestamp", System.currentTimeMillis());
-    event.keys.put("pubId", 1);
-    event.keys.put("adUnit", 2);
-    event.keys.put("adId", 3);
+    MapAggregate event = new MapAggregate(eventSchema);
+    event.fields.put("timestamp", System.currentTimeMillis());
+    event.fields.put("pubId", 1);
+    event.fields.put("adUnit", 2);
+    event.fields.put("adId", 3);
     event.fields.put("clicks", new Long(10));
 
     /* serialize and deserialize object */
@@ -84,16 +81,16 @@ public class GenericEventSerializerTest
   @Test
   public void test1()
   {
-    EventSchema eDesc = getDataDesc();
-    GenericEventSerializer ser = new GenericEventSerializer(eDesc);
+    EventSchema eventSchema = getEventSchema();
+    GenericEventSerializer ser = new GenericEventSerializer(eventSchema);
 
-    System.out.println("keySize " + eDesc.getKeyLen() + " val len " + eDesc.getValLen());
+    System.out.println("keySize " + eventSchema.getKeyLen() + " val len " + eventSchema.getValLen());
 
     /* prepare a object */
-    MapAggregate event = new MapAggregate(0);
-    event.keys.put("timestamp", System.currentTimeMillis());
-    event.keys.put("pubId", 1);
-    event.keys.put("adUnit", 2);
+    MapAggregate event = new MapAggregate(eventSchema);
+    event.fields.put("timestamp", System.currentTimeMillis());
+    event.fields.put("pubId", 1);
+    event.fields.put("adUnit", 2);
     event.fields.put("clicks", new Long(10));
 
     /* serialize and deserialize object */

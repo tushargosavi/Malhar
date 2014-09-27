@@ -17,23 +17,19 @@ package com.datatorrent.demos.adsdimension.generic;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.hadoop.conf.Configuration;
 
-import com.datatorrent.api.Context;
 import com.datatorrent.api.DAG;
-import com.datatorrent.api.DAG.Locality;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
 import com.datatorrent.contrib.kafka.KafkaSinglePortStringInputOperator;
 import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
-import com.datatorrent.lib.statistics.DimensionsComputation;
 
 /**
  * DimensionsDemo run with HDS
@@ -114,46 +110,46 @@ import com.datatorrent.lib.statistics.DimensionsComputation;
 public class GenericApplication implements StreamingApplication
 {
 
-  public static EventSchema getDataDesc() {
-    EventSchema eDesc = new EventSchema();
+  public static EventSchema getEventSchema() {
+    EventSchema eventSchema = new EventSchema();
 
-    Map<String, Class<?>> dataDesc  = Maps.newHashMap();
-    dataDesc.put("timestamp", Long.class);
-    dataDesc.put("publisherId", Integer.class);
-    dataDesc.put("advertiserId", Integer.class);
-    dataDesc.put("adUnit", Integer.class);
+    Map<String, Class<?>> fieldTypes  = Maps.newHashMap();
+    fieldTypes.put("timestamp", Long.class);
+    fieldTypes.put("publisherId", Integer.class);
+    fieldTypes.put("advertiserId", Integer.class);
+    fieldTypes.put("adUnit", Integer.class);
 
-    dataDesc.put("clicks", Long.class);
-    eDesc.setDataDesc(dataDesc);
+    fieldTypes.put("clicks", Long.class);
+    eventSchema.setFieldTypes(fieldTypes);
 
     String[] keys = { "timestamp", "publisherId", "advertiserId", "adUnit" };
     List<String> keyDesc = Lists.newArrayList(keys);
-    eDesc.setKeys(keyDesc);
+    eventSchema.setKeys(keyDesc);
 
-    Map<String, String> aggrDesc = Maps.newHashMap();
-    aggrDesc.put("clicks", "sum");
-    eDesc.setAggrDesc(aggrDesc);
+    Map<String, String> aggregates = Maps.newHashMap();
+    aggregates.put("clicks", "sum");
+    eventSchema.setAggregates(aggregates);
 
-    return eDesc;
+    return eventSchema;
   }
 
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    EventSchema dataDesc = getDataDesc();
+    EventSchema eventSchema = getEventSchema();
     dag.setAttribute(DAG.APPLICATION_NAME, "AdsDimensionsGeneric");
 
     JsonAdInfoGenerator input = dag.addOperator("InputGenerator", JsonAdInfoGenerator.class);
     JsonToMapConverter converter = dag.addOperator("Converter", JsonToMapConverter.class);
 
     GenericDimensionComputation dimensions = dag.addOperator("DimensionsComputation", new GenericDimensionComputation());
-    dimensions.setSchema(dataDesc);
+    dimensions.setSchema(eventSchema);
 
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     store.setFileStore(hdsFile);
-    store.setEventDesc(dataDesc);
-    store.setAggregator(new MapAggregator(dataDesc));
+    store.setEventDesc(eventSchema);
+    store.setAggregator(new MapAggregator(eventSchema));
 
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
     queries.setConsumer(new SimpleKafkaConsumer());

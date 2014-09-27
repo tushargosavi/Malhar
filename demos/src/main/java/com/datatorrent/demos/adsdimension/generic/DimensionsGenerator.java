@@ -6,27 +6,27 @@ import java.util.List;
 
 public class DimensionsGenerator
 {
-  private EventSchema schema;
+  private EventSchema eventSchema;
 
-  public DimensionsGenerator(EventSchema schema)
+  public DimensionsGenerator(EventSchema eventSchema)
   {
-    this.schema = schema;
+    this.eventSchema = eventSchema;
   }
 
   MapAggregator[] generateAggregators()
   {
-    if (schema.dimensions == null || schema.dimensions.size() == 0)
+    if (eventSchema.dimensions == null || eventSchema.dimensions.size() == 0)
     {
       return generateAllAggregators();
     }
 
-    int numDimensions = schema.dimensions.size();
+    int numDimensions = eventSchema.dimensions.size();
     MapAggregator[] aggregators = new MapAggregator[numDimensions];
 
     for(int i = 0; i < numDimensions; i++)
     {
-      aggregators[i] = new MapAggregator(schema);
-      aggregators[i].init(schema.dimensions.get(i));
+      aggregators[i] = new MapAggregator(eventSchema);
+      aggregators[i].init(eventSchema.dimensions.get(i));
     }
     return aggregators;
   }
@@ -38,10 +38,10 @@ public class DimensionsGenerator
   MapAggregator[] generateAllAggregators()
   {
 
-    List<String> keys = Lists.newArrayListWithCapacity(schema.keys.size());
-    for(String key : schema.keys)
+    List<String> keys = Lists.newArrayListWithCapacity(eventSchema.keys.size());
+    for(String key : eventSchema.keys)
     {
-      if (key.equals(MapAggregate.TIMESTAMP_KEY_STR))
+      if (key.equals(eventSchema.getTimeKey()))
         continue;
       keys.add(key);
     }
@@ -52,7 +52,7 @@ public class DimensionsGenerator
     for(int i = 0; i < numDimensions; i++)
     {
       StringBuilder builder = new StringBuilder("time=MINUTES");
-      aggregators[i] = new MapAggregator(schema);
+      aggregators[i] = new MapAggregator(eventSchema);
       for(int k = 0; k < numKeys; k++)
       {
         if ((i & (1 << k)) != 0) {
