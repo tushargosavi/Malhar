@@ -27,8 +27,9 @@ import java.util.concurrent.TimeUnit;
 class MapAggregate implements DimensionsComputation.AggregateEvent
 {
 
-  //DELETE protected static final String TIMESTAMP_KEY_STR = "timestamp";
-  //DELETE public Map<String, Object> keys = Maps.newLinkedHashMap();
+  MapAggregate() {
+  }
+
   public Map<String, Object> fields = Maps.newLinkedHashMap();
   private int aggregatorIndex = 0;
   private EventSchema eventSchema;
