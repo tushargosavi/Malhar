@@ -17,11 +17,16 @@ package com.datatorrent.demos.adsdimension.generic;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Describes schema for performing dimensional computation on a stream of Map<String,Object> tuples.
@@ -29,24 +34,23 @@ import java.util.Map;
  * Schema can be constructed from following JSON string:
  *
  * {
- *   // Keys for dimensional computation.  If dimensions relationship is undefined,
- *   // all permutation of keys are used to generate the dimensional aggregates.
- *   // Data types supported: int, long, float, double
- *   "keys": {"publisherId":"int", "advertiserId":"int", "adUnit":"int"},
+ *   // Names of all the fields and their types.
+ *   // Data types supported: int, long, float, double, string
+ *   "fieldTypes": {"publisherId":"java.lang.Integer", "advertiserId":"java.lang.Long", "adUnit":"java.lang.Integer", "clicks":"java.lang.Long", "price":"java.lang.Long"},
  *
- *   // OPTIONAL specification for dimensional combinations
+ *   // Combinations to use for dimensional computations
  *   // If omitted, all combinations of keys are grouped by MINUTE
  *   // Supported time groupings: MINUTE, HOUR, DAY
- *   "dimensions": ["MINUTE:publisherId:advertiserId", "HOUR:advertiserId:adUnit"],
+ *   "dimensions": ["time=MINUTE:publisherId:advertiserId", "time=HOUR:advertiserId:adUnit"],
  *
  *   // Fields to aggregate with matching operation types and data types
  *   // Possible operations include: SUM, AVG, MIN, MAX
  *   // Data types supported: int, long, float, double
- *   "aggregates": { "clicks": "SUM:long", "price": "SUM:long" },
+ *   "aggregates": { "clicks": "sum", "price": "sum" },
  *
  *   // Name of the timestamp fields with time specified in milliseconds ( since Jan 1, 1970 GMT )
  *   // Data type is implied to be: long
- *   "time": "timestamp",
+ *   "timeKey": "timestamp",
  * }
  *
  *
@@ -55,26 +59,52 @@ public class EventSchema implements Serializable
 {
   private static final long serialVersionUID = 4586481500190519858L;
 
-  /* What are fields in event */
-  public Map<String, Class<?>> dataDesc = Maps.newHashMap();
+  /* Map of all the fields and their types in an event tuple */
+  public Map<String, Class<?>> fieldTypes = Maps.newHashMap();
 
-  /* The fields in object which forms keys */
+  /* Names of the fields which make up the keys */
   public List<String> keys = Lists.newArrayList();
 
-  /* how metrices should be aggregated */
-  public Map<String, String> aggrDesc = Maps.newHashMap();
+  // Fields to aggregate mapped to aggregate operations and data types
+  public Map<String, String> aggregates = Maps.newHashMap();
+
+  // List of dimensional combinations to compute
+  public List<String> dimensions = Lists.newArrayList();
+
+  private String timeKey = "timestamp";
+
   transient private int keyLen;
   transient private int valLen;
 
-  /* Do not allow users to create object directly */
-  public EventSchema() { }
+  public static EventSchema createFromJSON(String json) throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    EventSchema eventSchema = mapper.readValue(json, EventSchema.class);
+    Set<String> uniqueKeys = Sets.newHashSet();
+    for(String dimension: eventSchema.dimensions) {
+      String[] attributes = dimension.split(":");
+      for (String attribute : attributes) {
+        String[] keyval = attribute.split("=", 2);
+        String key = keyval[0];
+        if (key.equals("time")) {
+          continue;
+        }
+        uniqueKeys.add(key);
+      }
+    }
+    uniqueKeys.add(eventSchema.getTimeKey());
+    List<String> keys = Lists.newArrayList();
+    keys.addAll(uniqueKeys);
+    eventSchema.setKeys(keys);
+    return eventSchema;
+  }
 
-  public List<String> dimensions = Lists.newArrayList();
+  public String getTimeKey() {
+    return timeKey;
+  }
 
-
-  public void setDataDesc(Map<String, Class<?>> dataDesc)
+  public void setFieldTypes(Map<String, Class<?>> fieldTypes)
   {
-    this.dataDesc = dataDesc;
+    this.fieldTypes = fieldTypes;
   }
 
   public void setKeys(List<String> keys)
@@ -82,17 +112,17 @@ public class EventSchema implements Serializable
     this.keys = keys;
   }
 
-  public Collection<String> getMetrices() {
-    return aggrDesc.keySet();
+  public Collection<String> getAggregateKeys() {
+    return aggregates.keySet();
   }
 
-  public void setAggrDesc(Map<String, String> aggrDesc)
+  public void setAggregates(Map<String, String> aggregates)
   {
-    this.aggrDesc = aggrDesc;
+    this.aggregates = aggregates;
   }
 
   public Class<?> getClass(String field) {
-    return dataDesc.get(field);
+    return fieldTypes.get(field);
   }
 
   public int getKeyLen() {
@@ -103,14 +133,14 @@ public class EventSchema implements Serializable
 
   public int getValLen() {
     if (valLen == 0)
-      valLen = getSerializedLength(getMetrices());
+      valLen = getSerializedLength(getAggregateKeys());
     return valLen;
   }
 
   public int getSerializedLength(Collection<String> fields) {
     int len = 0;
     for(String field : fields) {
-      Class<?> k = dataDesc.get(field);
+      Class<?> k = fieldTypes.get(field);
       len += GenericEventSerializer.fieldSerializers.get(k).dataLength();
     }
     return len;
@@ -118,6 +148,22 @@ public class EventSchema implements Serializable
 
   public Class<?> getType(String param)
   {
-    return dataDesc.get(param);
+    return fieldTypes.get(param);
   }
+
+  public Object typeCast(String input, String fieldKey) {
+    Class<?> c = getType(fieldKey);
+
+    if (c.equals(Integer.class)) return Integer.valueOf(input);
+    else if (c.equals(Long.class)) return Long.valueOf(input);
+    else if (c.equals(Float.class)) return Float.valueOf(input);
+    else if (c.equals(Double.class)) return Float.valueOf(input);
+    else return input;
+  }
+
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+  }
+
+
 }

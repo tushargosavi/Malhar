@@ -9,7 +9,7 @@ public class DimensionsGeneratorTest
   @Test
   public void testDimensionGenerator()
   {
-    EventSchema schema = GenericEventSerializerTest.getDataDesc();
+    EventSchema schema = GenericEventSerializerTest.getEventSchema();
     DimensionsGenerator gen = new DimensionsGenerator(schema);
     MapAggregator[] aggregators = gen.generateAggregators();
 
@@ -24,7 +24,7 @@ public class DimensionsGeneratorTest
   @Test
   public void testDimensionGenerator1()
   {
-    EventSchema schema = GenericEventSerializerTest.getDataDesc();
+    EventSchema schema = GenericEventSerializerTest.getEventSchema();
     schema.dimensions.add("time=MINUTES:publisherId");
     schema.dimensions.add("time=MINUTES:publisherId:advertiserId");
     DimensionsGenerator gen = new DimensionsGenerator(schema);

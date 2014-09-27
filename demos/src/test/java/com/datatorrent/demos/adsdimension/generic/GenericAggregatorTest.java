@@ -15,8 +15,6 @@
  */
 package com.datatorrent.demos.adsdimension.generic;
 
-import com.datatorrent.demos.adsdimension.generic.MapAggregate;
-import com.datatorrent.demos.adsdimension.generic.MapAggregator;
 import com.google.common.collect.Maps;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -31,7 +29,7 @@ public class GenericAggregatorTest
 {
   @Test
   public void test() {
-    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getDataDesc());
+    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getEventSchema());
     aggregator.init("time=DAYS:pubId:adUnit:adId");
     /* prepare a object */
     Map<String, Object> event = Maps.newHashMap();
@@ -59,7 +57,7 @@ public class GenericAggregatorTest
 
   @Test
   public void test1() {
-    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getDataDesc());
+    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getEventSchema());
     aggregator.init("time=DAYS:pubId:adUnit");
 
     /* prepare a object */
@@ -89,7 +87,7 @@ public class GenericAggregatorTest
 
   @Test
   public void test2() {
-    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getDataDesc());
+    MapAggregator aggregator = new MapAggregator(GenericEventSerializerTest.getEventSchema());
     aggregator.init("time=MINUTES:pubId:adUnit");
 
     /* prepare a object */

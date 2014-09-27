@@ -137,28 +137,6 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
     this.defaultTimeWindow = defaultTimeWindow;
   }
 
-  protected MapAggregate converQueryKey(Map<String, String> key)
-  {
-    MapAggregate ae = new MapAggregate(0);
-    for(String keyStr : eventSchema.keys)
-    {
-      if (key.containsKey(keyStr))
-      {
-        // TODO: what happens if the keys are not numeric?
-        Class<?> c = eventSchema.getType(keyStr);
-        if (c.equals(Integer.class))
-          ae.keys.put(keyStr, new Integer(Integer.valueOf(key.get(keyStr))));
-        else if (c.equals(Long.class))
-          ae.keys.put(keyStr, new Long(Long.valueOf(key.get(keyStr))));
-        else if (c.equals(Float.class))
-          ae.keys.put(keyStr, new Float(Float.valueOf(key.get(keyStr))));
-        else if (c.equals(Double.class))
-          ae.keys.put(keyStr, new Double(Double.valueOf(key.get(keyStr))));
-      }
-    }
-    return ae;
-  }
-
   public void registerQuery(String queryString) throws Exception
   {
     if (mapper == null) {
@@ -173,7 +151,7 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
     }
 
     @SuppressWarnings("unchecked")
-    MapAggregate ae = converQueryKey(mapper.convertValue(queryParams.keys, Map.class));
+    MapAggregate ae = new MapAggregate(eventSchema, mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
     if (!(super.partitions == null || super.partitions.contains((int)bucketKey))) {
@@ -294,7 +272,7 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
           MapAggregate ae = buffered.get(rangeQuery.prototype);
           if (ae != null) {
             LOG.debug("Adding from aggregation buffer {}" + ae);
-            res.data.add(combineMaps(ae.fields, ae.keys));
+            res.data.add(ae.fields);
             rangeQuery.prototype.setTimestamp(rangeQuery.prototype.getTimestamp() + rangeQuery.intervalTimeUnit.toMillis(1));
             continue;
           }
@@ -303,7 +281,7 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
         if (query.processed && query.result != null) {
           MapAggregate ae = codec.fromKeyValue(query.key.buffer, query.result);
           if (ae.fields != null)
-            res.data.add(combineMaps(ae.fields, ae.keys));
+            res.data.add(ae.fields);
         }
         rangeQuery.prototype.setTimestamp(rangeQuery.prototype.getTimestamp() + rangeQuery.intervalTimeUnit.toMillis(1));
       }
@@ -314,15 +292,7 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
     }
   }
 
-  private Map<String, Object> combineMaps(Map<String, Object> fields, Map<String, Object> keys)
-  {
-    Map<String, Object> combMap = Maps.newHashMap();
-    combMap.putAll(fields);
-    combMap.putAll(keys);
-    return combMap;
-  }
-
-  public EventSchema getEventDesc()
+  public EventSchema getEventSchema()
   {
     return eventSchema;
   }

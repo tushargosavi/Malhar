@@ -29,10 +29,6 @@ import org.junit.Test;
 
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
-import com.datatorrent.demos.adsdimension.generic.EventSchema;
-import com.datatorrent.demos.adsdimension.generic.MapAggregate;
-import com.datatorrent.demos.adsdimension.generic.MapAggregator;
-import com.datatorrent.demos.adsdimension.generic.DimensionStoreOperator;
 import com.datatorrent.demos.adsdimension.generic.DimensionStoreOperator.HDSRangeQueryResult;
 import com.datatorrent.lib.testbench.CollectorTestSink;
 import com.datatorrent.lib.util.TestUtils;
@@ -59,10 +55,10 @@ public class MapDimensionStoreOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
-    MapAggregator aggregator = new MapAggregator(eventDesc);
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+    MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventDesc);
+    hdsOut.setEventDesc(eventSchema);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
@@ -79,27 +75,27 @@ public class MapDimensionStoreOperatorTest
     long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
 
     // Check aggregation for ae1 and ae2 as they have same key.
-    MapAggregate ae1 = new MapAggregate(0);
+    MapAggregate ae1 = new MapAggregate(eventSchema);
     ae1.setTimestamp(baseMinute);
-    ae1.keys.put("pubId", 1);
-    ae1.keys.put("adId", 2);
-    ae1.keys.put("adUnit", 3);
+    ae1.fields.put("pubId", 1);
+    ae1.fields.put("adId", 2);
+    ae1.fields.put("adUnit", 3);
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
-    MapAggregate ae2 = new MapAggregate(0);
+    MapAggregate ae2 = new MapAggregate(eventSchema);
     ae2.setTimestamp(baseMinute);
-    ae2.keys.put("pubId", 1);
-    ae2.keys.put("adId", 2);
-    ae2.keys.put("adUnit", 3);
+    ae2.fields.put("pubId", 1);
+    ae2.fields.put("adId", 2);
+    ae2.fields.put("adUnit", 3);
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
-    MapAggregate ae3 = new MapAggregate(0);
+    MapAggregate ae3 = new MapAggregate(eventSchema);
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
-    ae3.keys.put("pubId", 1);
-    ae3.keys.put("adId", 2);
-    ae3.keys.put("adUnit", 3);
+    ae3.fields.put("pubId", 1);
+    ae3.fields.put("adId", 2);
+    ae3.fields.put("adUnit", 3);
     ae3.fields.put("clicks", 10L);
     hdsOut.input.process(ae3);
 
@@ -155,10 +151,10 @@ public class MapDimensionStoreOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
-    MapAggregator aggregator = new MapAggregator(eventDesc);
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+    MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventDesc);
+    hdsOut.setEventDesc(eventSchema);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
@@ -175,24 +171,24 @@ public class MapDimensionStoreOperatorTest
     long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
 
     // Check aggregation for ae1 and ae2 as they have same key.
-    MapAggregate ae1 = new MapAggregate(0);
+    MapAggregate ae1 = new MapAggregate(eventSchema);
     ae1.setTimestamp(baseMinute);
-    ae1.keys.put("pubId", 1);
-    ae1.keys.put("adUnit", 3);
+    ae1.fields.put("pubId", 1);
+    ae1.fields.put("adUnit", 3);
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
-    MapAggregate ae2 = new MapAggregate(0);
+    MapAggregate ae2 = new MapAggregate(eventSchema);
     ae2.setTimestamp(baseMinute);
-    ae2.keys.put("pubId", 1);
-    ae2.keys.put("adUnit", 3);
+    ae2.fields.put("pubId", 1);
+    ae2.fields.put("adUnit", 3);
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
-    MapAggregate ae3 = new MapAggregate(0);
+    MapAggregate ae3 = new MapAggregate(eventSchema);
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
-    ae3.keys.put("pubId", 1);
-    ae3.keys.put("adUnit", 3);
+    ae3.fields.put("pubId", 1);
+    ae3.fields.put("adUnit", 3);
     ae3.fields.put("clicks", 10L);
     hdsOut.input.process(ae3);
 
@@ -253,10 +249,10 @@ public class MapDimensionStoreOperatorTest
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
-    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
-    MapAggregator aggregator = new MapAggregator(eventDesc);
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+    MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventDesc);
+    hdsOut.setEventDesc(eventSchema);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);
@@ -273,24 +269,24 @@ public class MapDimensionStoreOperatorTest
     long baseMinute = TimeUnit.MILLISECONDS.convert(TimeUnit.MINUTES.convert(baseTime, TimeUnit.MILLISECONDS), TimeUnit.MINUTES);
 
     // Check aggregation for ae1 and ae2 as they have same key.
-    MapAggregate ae1 = new MapAggregate(0);
+    MapAggregate ae1 = new MapAggregate(eventSchema);
     ae1.setTimestamp(baseMinute);
-    ae1.keys.put("pubId", 1);
-    ae1.keys.put("adId", 2);
+    ae1.fields.put("pubId", 1);
+    ae1.fields.put("adId", 2);
     ae1.fields.put("clicks", 10L);
     hdsOut.input.process(ae1);
 
-    MapAggregate ae2 = new MapAggregate(0);
+    MapAggregate ae2 = new MapAggregate(eventSchema);
     ae2.setTimestamp(baseMinute);
-    ae2.keys.put("pubId", 1);
-    ae2.keys.put("adId", 2);
+    ae2.fields.put("pubId", 1);
+    ae2.fields.put("adId", 2);
     ae2.fields.put("clicks", 20L);
     hdsOut.input.process(ae2);
 
-    MapAggregate ae3 = new MapAggregate(0);
+    MapAggregate ae3 = new MapAggregate(eventSchema);
     ae3.setTimestamp(baseMinute + TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES));
-    ae3.keys.put("pubId", 1);
-    ae3.keys.put("adId", 2);
+    ae3.fields.put("pubId", 1);
+    ae3.fields.put("adId", 2);
     ae3.fields.put("clicks", 10L);
     hdsOut.input.process(ae3);
 
@@ -335,7 +331,7 @@ public class MapDimensionStoreOperatorTest
     File file = new File(testInfo.getDir());
     FileUtils.deleteDirectory(file);
 
-    EventSchema eventDesc = GenericEventSerializerTest.getDataDesc();
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
 
     String[] dimensionSpecs = new String[] {
         "time=" + TimeUnit.MINUTES,
@@ -350,7 +346,7 @@ public class MapDimensionStoreOperatorTest
 
     MapAggregator[] aggregators = new MapAggregator[dimensionSpecs.length];
     for (int i = dimensionSpecs.length; i-- > 0;) {
-      MapAggregator aggregator = new MapAggregator(eventDesc);
+      MapAggregator aggregator = new MapAggregator(eventSchema);
       aggregator.init(dimensionSpecs[i]);
       aggregators[i] = aggregator;
     }
@@ -368,7 +364,7 @@ public class MapDimensionStoreOperatorTest
     hdsFile.setBasePath(testInfo.getDir());
     //MapAggregator aggregator = new MapAggregator(eventSchema);
     //aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventDesc);
+    hdsOut.setEventDesc(eventSchema);
     hdsOut.setAggregator(aggregators[0]);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);

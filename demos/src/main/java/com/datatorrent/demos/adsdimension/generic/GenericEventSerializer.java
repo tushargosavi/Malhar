@@ -112,13 +112,13 @@ public class GenericEventSerializer {
     }
   }
 
-  EventSchema eventDescription;
+  EventSchema eventSchema;
 
   // For kryo
   protected GenericEventSerializer() {}
-  public GenericEventSerializer(EventSchema eventDescription)
+  public GenericEventSerializer(EventSchema eventSchema)
   {
-    this.eventDescription = eventDescription;
+    this.eventSchema = eventSchema;
   }
 
   static Map<Class<?>, FieldSerializer> fieldSerializers = Maps.newHashMapWithExpectedSize(4);
@@ -131,17 +131,12 @@ public class GenericEventSerializer {
 
   byte[] getKey(MapAggregate event)
   {
-    return getKey(event.keys);
-  }
-
-  byte[] getKey(Map<String, Object> tuple)
-  {
-    ByteBuffer bb = ByteBuffer.allocate(eventDescription.getKeyLen());
+    ByteBuffer bb = ByteBuffer.allocate(eventSchema.getKeyLen());
 
     bb.rewind();
-    for (String key : eventDescription.keys) {
-      Object o = tuple.get(key);
-      fieldSerializers.get(eventDescription.getClass(key)).putField(bb, o);
+    for (String key : eventSchema.keys) {
+      Object o = event.get(key);
+      fieldSerializers.get(eventSchema.getClass(key)).putField(bb, o);
     }
     bb.rewind();
     return bb.array();
@@ -149,37 +144,32 @@ public class GenericEventSerializer {
 
   byte[] getValue(MapAggregate event)
   {
-    return getValue(event.fields);
-  }
-
-  byte[] getValue(Map<String, Object> tuple)
-  {
-    ByteBuffer bb = ByteBuffer.allocate(eventDescription.getValLen());
-    for(String metric : eventDescription.getMetrices())
+    ByteBuffer bb = ByteBuffer.allocate(eventSchema.getValLen());
+    for(String metric : eventSchema.getAggregateKeys())
     {
-      Object o = tuple.get(metric);
-      fieldSerializers.get(eventDescription.getClass(metric)).putField(bb, o);
+      Object o = event.get(metric);
+      fieldSerializers.get(eventSchema.getClass(metric)).putField(bb, o);
     }
     return bb.array();
   }
 
   public MapAggregate fromBytes(byte[] keyBytes, byte[] valBytes)
   {
-    MapAggregate event = new MapAggregate(0);
+    MapAggregate event = new MapAggregate(eventSchema);
 
     ByteBuffer bb = ByteBuffer.wrap(keyBytes);
 
     // Deserialize keys.
-    for (java.lang.String key : eventDescription.keys) {
-      java.lang.Object o = fieldSerializers.get(eventDescription.getClass(key)).readField(bb);
-      event.keys.put(key, o);
+    for (java.lang.String key : eventSchema.keys) {
+      java.lang.Object o = fieldSerializers.get(eventSchema.getClass(key)).readField(bb);
+      event.fields.put(key, o);
     }
 
     // Deserialize metrics
     bb = ByteBuffer.wrap(valBytes);
-    for(java.lang.String metric : eventDescription.getMetrices())
+    for(java.lang.String metric : eventSchema.getAggregateKeys())
     {
-      java.lang.Object o = fieldSerializers.get(eventDescription.getClass(metric)).readField(bb);
+      java.lang.Object o = fieldSerializers.get(eventSchema.getClass(metric)).readField(bb);
       event.fields.put(metric, o);
     }
 
