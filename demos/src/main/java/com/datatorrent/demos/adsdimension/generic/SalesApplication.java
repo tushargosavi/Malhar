@@ -108,7 +108,7 @@ import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
 public class SalesApplication implements StreamingApplication
 {
 
-  public static EventSchema getDataDesc() {
+  public static EventSchema getEventSchema() {
     EventSchema eDesc = new EventSchema();
 
     Map<String, Class<?>> dataDesc  = Maps.newHashMap();
@@ -118,7 +118,7 @@ public class SalesApplication implements StreamingApplication
     dataDesc.put("channelId", Integer.class);
 
     dataDesc.put("amount", Long.class);
-    eDesc.setDataDesc(dataDesc);
+    eDesc.setFieldTypes(dataDesc);
 
     String[] keys = { "timestamp", "productId", "customerId", "channelId" };
     List<String> keyDesc = Lists.newArrayList(keys);
@@ -126,7 +126,7 @@ public class SalesApplication implements StreamingApplication
 
     Map<String, String> aggrDesc = Maps.newHashMap();
     aggrDesc.put("amount", "sum");
-    eDesc.setAggrDesc(aggrDesc);
+    eDesc.setAggregates(aggrDesc);
 
     return eDesc;
   }
@@ -134,7 +134,7 @@ public class SalesApplication implements StreamingApplication
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    EventSchema dataDesc = GenericApplication.getDataDesc();
+    EventSchema dataDesc = SalesApplication.getEventSchema();
     dag.setAttribute(DAG.APPLICATION_NAME, "SalesApplication");
 
     JsonSalesInfoGenerator input = dag.addOperator("InputGenerator", JsonSalesInfoGenerator.class);
