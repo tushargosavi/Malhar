@@ -39,10 +39,9 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
 {
   protected final SortedMap<Long, Map<MapAggregate, MapAggregate>> cache = Maps.newTreeMap();
 
-  // TODO: should be aggregation interval count
   private int maxCacheSize = 5;
   private MapAggregator aggregator;
-  protected EventSchema eventSchema;
+  private transient EventSchema eventSchema;
   protected transient GenericEventSerializer serializer;
 
   public int getMaxCacheSize()
@@ -66,6 +65,32 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
   }
 
   public final transient DefaultOutputPort<HDSRangeQueryResult> queryResult = new DefaultOutputPort<HDSRangeQueryResult>();
+
+  // Set default schema to ADS
+  private String eventSchemaJSON = EventSchema.DEFAULT_SCHEMA_ADS;
+
+  public String getEventSchemaJSON()
+  {
+    return eventSchemaJSON;
+  }
+
+  public void setEventSchemaJSON(String eventSchemaJSON)
+  {
+    this.eventSchemaJSON = eventSchemaJSON;
+    setAggregator(new MapAggregator(getEventSchema()));
+  }
+
+  public EventSchema getEventSchema() {
+    if (eventSchema == null) {
+      try {
+        eventSchema = EventSchema.createFromJSON(eventSchemaJSON);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to parse JSON input: " + eventSchemaJSON, e);
+      }
+    }
+    return eventSchema;
+  }
+
 
   public transient final DefaultInputPort<String> query = new DefaultInputPort<String>()
   {
@@ -151,7 +176,7 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
     }
 
     @SuppressWarnings("unchecked")
-    MapAggregate ae = new MapAggregate(eventSchema, mapper.convertValue(queryParams.keys, Map.class));
+    MapAggregate ae = new MapAggregate(getEventSchema(), mapper.convertValue(queryParams.keys, Map.class));
 
     long bucketKey = getBucketKey(ae);
     if (!(super.partitions == null || super.partitions.contains((int)bucketKey))) {
@@ -292,20 +317,13 @@ public class DimensionStoreOperator extends AbstractSinglePortHDSWriter<MapAggre
     }
   }
 
-  public EventSchema getEventSchema()
-  {
-    return eventSchema;
-  }
 
-  public void setEventDesc(EventSchema eventDesc)
-  {
-    this.eventSchema = eventDesc;
-  }
 
   @Override public void setup(Context.OperatorContext arg0)
   {
     super.setup(arg0);
-    this.serializer = new GenericEventSerializer(eventSchema);
+    this.serializer = new GenericEventSerializer(getEventSchema());
+    setAggregator(new MapAggregator(getEventSchema()));
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDSQueryOperator.class);

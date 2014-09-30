@@ -21,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import com.sun.org.apache.xml.internal.dtm.ref.DTMNamedNodeMap;
 import org.apache.hadoop.conf.Configuration;
 
 import com.datatorrent.api.DAG;
@@ -110,46 +111,19 @@ import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
 public class GenericApplication implements StreamingApplication
 {
 
-  public static EventSchema getEventSchema() {
-    EventSchema eventSchema = new EventSchema();
-
-    Map<String, Class<?>> fieldTypes  = Maps.newHashMap();
-    fieldTypes.put("timestamp", Long.class);
-    fieldTypes.put("publisherId", Integer.class);
-    fieldTypes.put("advertiserId", Integer.class);
-    fieldTypes.put("adUnit", Integer.class);
-
-    fieldTypes.put("clicks", Long.class);
-    eventSchema.setFieldTypes(fieldTypes);
-
-    String[] keys = { "timestamp", "publisherId", "advertiserId", "adUnit" };
-    List<String> keyDesc = Lists.newArrayList(keys);
-    eventSchema.setKeys(keyDesc);
-
-    Map<String, String> aggregates = Maps.newHashMap();
-    aggregates.put("clicks", "sum");
-    eventSchema.setAggregates(aggregates);
-
-    return eventSchema;
-  }
-
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    EventSchema eventSchema = getEventSchema();
     dag.setAttribute(DAG.APPLICATION_NAME, "AdsDimensionsGeneric");
 
     JsonAdInfoGenerator input = dag.addOperator("InputGenerator", JsonAdInfoGenerator.class);
     JsonToMapConverter converter = dag.addOperator("Converter", JsonToMapConverter.class);
 
     GenericDimensionComputation dimensions = dag.addOperator("DimensionsComputation", new GenericDimensionComputation());
-    dimensions.setSchema(eventSchema);
 
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     store.setFileStore(hdsFile);
-    store.setEventDesc(eventSchema);
-    store.setAggregator(new MapAggregator(eventSchema));
 
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
     queries.setConsumer(new SimpleKafkaConsumer());

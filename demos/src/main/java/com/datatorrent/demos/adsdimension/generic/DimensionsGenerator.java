@@ -37,11 +37,13 @@ public class DimensionsGenerator
    */
   MapAggregator[] generateAllAggregators()
   {
+    if (eventSchema.keys.size() <= 0 ) return null;
 
-    List<String> keys = Lists.newArrayListWithCapacity(eventSchema.keys.size());
-    for(String key : eventSchema.keys)
+    List<String> keys = eventSchema.keys;
+
+    for(String key : keys)
     {
-      if (key.equals(eventSchema.getTimeKey()))
+      if (key.equals(eventSchema.getTimestamp()))
         continue;
       keys.add(key);
     }

@@ -24,29 +24,63 @@ import org.slf4j.LoggerFactory;
 
 
 public class EventSchemaTest {
-  private static final Logger LOG = LoggerFactory.getLogger(JsonAdInfoGeneratorTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EventSchemaTest.class);
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @Test
   public void testCreateFromJSON() throws Exception {
 
     String sampleJSON = "{\n" +
-            "  \"fieldTypes\": {\"publisherId\":\"java.lang.Integer\", \"advertiserId\":\"java.lang.Long\", \"adUnit\":\"java.lang.Integer\", \"clicks\":\"java.lang.Long\", \"price\":\"java.lang.Long\"},\n" +
-            "  \"dimensions\": [\"time=MINUTE:publisherId:advertiserId\", \"time=HOUR:advertiserId:adUnit\"],\n" +
-            "  \"aggregates\": { \"clicks\": \"sum\", \"price\": \"sum\" },\n" +
-            "  \"timeKey\": \"timestamp\"\n" +
-            "}\n";
+            "  \"fields\": {\"publisherId\":\"java.lang.Integer\", \"advertiserId\":\"java.lang.Long\", \"adUnit\":\"java.lang.Integer\", \"clicks\":\"java.lang.Long\", \"price\":\"java.lang.Long\", \"cost\":\"java.lang.Double\", \"revenue\":\"java.lang.Double\", \"timestamp\":\"java.lang.Long\"},\n" +
+            "  \"dimensions\": [\"time=MINUTES\", \"time=MINUTES:adUnit\", \"time=MINUTES:advertiserId\", \"time=MINUTES:publisherId\", \"time=MINUTES:advertiserId:adUnit\", \"time=MINUTES:publisherId:adUnit\", \"time=MINUTES:publisherId:advertiserId\", \"time=MINUTES:publisherId:advertiserId:adUnit\"],\n" +
+            "  \"aggregates\": { \"clicks\": \"sum\", \"price\": \"sum\", \"cost\": \"sum\", \"revenue\": \"sum\"},\n" +
+            "  \"timestamp\": \"timestamp\"\n" +
+            "}";
     EventSchema eventSchema = EventSchema.createFromJSON(sampleJSON);
 
     LOG.debug("Evaluating EventSchema: {}", eventSchema.toString());
 
     Assert.assertNotNull("EventSchema was created", eventSchema);
-    Assert.assertEquals("timeKey is timestamp", eventSchema.getTimeKey(), "timestamp");
+    Assert.assertEquals("timestamp is timestamp", eventSchema.getTimestamp(), "timestamp");
     Assert.assertTrue("aggregates are have clicks", eventSchema.getAggregateKeys().contains("clicks") );
     Assert.assertTrue("aggregate for price is sum", eventSchema.aggregates.get("price").equals("sum") );
-    Assert.assertTrue("fieldType publisher is Integer", eventSchema.fieldTypes.get("publisherId").equals(Integer.class));
-    Assert.assertTrue("fieldType clicks is Long", eventSchema.fieldTypes.get("clicks").equals(Long.class));
-    Assert.assertTrue("dimensions include time=MINUTE:publisherId:advertiserId", eventSchema.dimensions.contains("time=MINUTE:publisherId:advertiserId"));
+    Assert.assertTrue("field publisher is Integer", eventSchema.fields.get("publisherId").equals(Integer.class));
+    Assert.assertTrue("field clicks is Long", eventSchema.fields.get("clicks").equals(Long.class));
+    Assert.assertTrue("dimensions include time=MINUTES:publisherId:advertiserId", eventSchema.dimensions.contains("time=MINUTES:publisherId:advertiserId"));
+  }
+
+
+  @Test
+  public void testDefaultSchemaAds() throws Exception {
+
+    EventSchema eventSchema = EventSchema.createFromJSON(EventSchema.DEFAULT_SCHEMA_ADS);
+
+    LOG.debug("Evaluating Ads Schema: {}", eventSchema.toString());
+
+    Assert.assertNotNull("EventSchema was created", eventSchema);
+    Assert.assertEquals("timestamp is timestamp", eventSchema.getTimestamp(), "timestamp");
+    Assert.assertTrue("aggregates are have clicks", eventSchema.getAggregateKeys().contains("clicks") );
+    Assert.assertTrue("aggregate for price is sum", eventSchema.aggregates.get("price").equals("sum") );
+    Assert.assertTrue("field publisher is Integer", eventSchema.fields.get("publisherId").equals(Integer.class));
+    Assert.assertTrue("field clicks is Long", eventSchema.fields.get("clicks").equals(Long.class));
+    Assert.assertTrue("dimensions include time=MINUTES:publisherId:advertiserId", eventSchema.dimensions.contains("time=MINUTES:publisherId:advertiserId"));
+
+  }
+
+
+  @Test
+  public void testDefaultSchemaSales() throws Exception {
+
+    EventSchema eventSchema = EventSchema.createFromJSON(EventSchema.DEFAULT_SCHEMA_SALES);
+    LOG.debug("Evaluating Sales Schema: {}", eventSchema.toString());
+
+    Assert.assertNotNull("EventSchema was created", eventSchema);
+    Assert.assertEquals("timestamp is timestamp", eventSchema.getTimestamp(), "timestamp");
+    Assert.assertTrue("aggregates are have amount", eventSchema.getAggregateKeys().contains("amount") );
+    Assert.assertTrue("aggregate for amount is sum", eventSchema.aggregates.get("amount").equals("sum") );
+    Assert.assertTrue("field productId is Integer", eventSchema.fields.get("productId").equals(Integer.class));
+    Assert.assertTrue("field timestamp is Long", eventSchema.fields.get("timestamp").equals(Long.class));
+    Assert.assertTrue("dimensions include time=MINUTES:productCategory", eventSchema.dimensions.contains("time=MINUTES:productCategory"));
   }
 
 
