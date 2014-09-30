@@ -39,9 +39,10 @@ public class DimensionsGenerator
   {
     if (eventSchema.keys.size() <= 0 ) return null;
 
-    List<String> keys = eventSchema.keys;
+    List<String> keys = Lists.newArrayList();
 
-    for(String key : keys)
+
+    for(String key : eventSchema.keys)
     {
       if (key.equals(eventSchema.getTimestamp()))
         continue;
@@ -55,6 +56,39 @@ public class DimensionsGenerator
     {
       StringBuilder builder = new StringBuilder("time=MINUTES");
       aggregators[i] = new MapAggregator(eventSchema);
+      for(int k = 0; k < numKeys; k++)
+      {
+        if ((i & (1 << k)) != 0) {
+          builder.append(':');
+          builder.append(keys.get(k));
+        }
+      }
+      aggregators[i].init(builder.toString());
+    }
+
+    return aggregators;
+  }
+
+  public ArrayAggregator[] generateArrayAggregators()
+  {
+    if (eventSchema.keys.size() <= 0 ) return null;
+
+    List<String> keys = Lists.newArrayList();
+
+    for(String key : eventSchema.keys)
+    {
+      if (key.equals(eventSchema.getTimestamp()))
+        continue;
+      keys.add(key);
+    }
+    int numKeys = keys.size();
+    int numDimensions = 1 << numKeys;
+    ArrayAggregator[] aggregators = new ArrayAggregator[numDimensions];
+
+    for(int i = 0; i < numDimensions; i++)
+    {
+      StringBuilder builder = new StringBuilder("time=MINUTES");
+      aggregators[i] = new ArrayAggregator(eventSchema);
       for(int k = 0; k < numKeys; k++)
       {
         if ((i & (1 << k)) != 0) {

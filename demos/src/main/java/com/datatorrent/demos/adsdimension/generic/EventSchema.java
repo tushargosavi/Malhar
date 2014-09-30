@@ -68,6 +68,10 @@ public class EventSchema implements Serializable
 
   public String timestamp = "timestamp";
 
+  transient public List<String> keyList = Lists.newArrayList();
+  transient public List<String> allFields = Lists.newArrayList();
+  transient public List<String> metrices = Lists.newArrayList();
+
   transient private int keyLen;
   transient private int valLen;
 
@@ -83,6 +87,7 @@ public class EventSchema implements Serializable
           "  \"aggregates\": { \"amount\": \"sum\" },\n" +
           "  \"timestamp\": \"timestamp\"\n" +
           "}";
+  private int timestampIndex;
 
   public static EventSchema createFromJSON(String json) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
@@ -107,6 +112,21 @@ public class EventSchema implements Serializable
     List<String> keys = Lists.newArrayList();
     keys.addAll(uniqueKeys);
     eventSchema.setKeys(keys);
+
+
+    for(String a : eventSchema.keys)
+    {
+      if (a.equals(eventSchema.getTimestamp()))
+        continue;
+      eventSchema.allFields.add(a);
+      eventSchema.keyList.add(a);
+    }
+
+    for(String a : eventSchema.aggregates.keySet())
+    {
+      eventSchema.allFields.add(a);
+      eventSchema.metrices.add(a);
+    }
 
     return eventSchema;
   }
@@ -179,4 +199,40 @@ public class EventSchema implements Serializable
   }
 
 
+  ArrayEvent convertMapToArrayEvent(Map<String, Object> tuple)
+  {
+    ArrayEvent ae = new ArrayEvent();
+    Object[] keys = new Object[keyList.size()];
+    int idx = 0;
+    for(String key : keyList)
+    {
+      if (tuple.containsKey(key))
+        keys[idx++] = tuple.get(key);
+      else
+        keys[idx++] = null;
+    }
+    ae.keys = keys;
+    Object[] flds = new Object[metrices.size()];
+    idx = 0;
+    for(String metric : metrices)
+    {
+      if (tuple.containsKey(metric))
+        flds[idx++] = tuple.get(metric);
+      else
+        flds[idx++] = null;
+    }
+    ae.fields = flds;
+    ae.timestamp = ((Long)(tuple.get(getTimestamp()))).longValue();
+    return ae;
+  }
+
+  public int getTimestampIndex()
+  {
+    return timestampIndex;
+  }
+
+  public Class getAggregateType(int i)
+  {
+    return getType(metrices.get(i));
+  }
 }

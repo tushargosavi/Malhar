@@ -98,7 +98,6 @@ public class GenericAppTest
     kafkaQuery.setMessages(testQueryMessages);
     kafkaQuery.run();
 
-
     // Setup a message listener to receive the query results
     CountDownLatch latch = new CountDownLatch(100);
     KafkaTestConsumer queryResultsListener = new KafkaTestConsumer(kafkaQueryResultTopic);

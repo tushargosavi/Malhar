@@ -134,4 +134,171 @@ public class GenericAggregatorTest
     System.out.println(mapper.readValue(eventStr, Map.class));
   }
 
+
+  @Test
+  public void testArrayAggregator() {
+    ArrayAggregator aggregator = new ArrayAggregator(GenericEventSerializerTest.getEventSchema());
+    aggregator.init("time=DAYS:pubId:adUnit:adId");
+    /* prepare a object */
+    ArrayEvent event = new ArrayEvent();
+    event.timestamp = System.currentTimeMillis();
+    Object[] keys = new Object[3];
+    keys[0] = 1;
+    keys[1] = 2;
+    keys[2] = 3;
+    event.keys = keys;
+
+    Object[] fields = new Object[1];
+    fields[0] = 10L;
+    event.fields = fields;
+
+    ArrayAggregate aggr = aggregator.getGroup(event, 0);
+    aggregator.aggregate(aggr, event);
+
+    ArrayEvent event2 = new ArrayEvent();
+    event.timestamp = System.currentTimeMillis();
+    keys = new Object[3];
+    keys[0] = 1;
+    keys[1] = 2;
+    keys[2] = 3;
+    event2.keys = keys;
+
+    fields = new Object[1];
+    fields[0] = 20L;
+    event2.fields = fields;
+
+
+    aggregator.aggregate(aggr, event2);
+
+    Assert.assertEquals("sum is 30", aggr.fields[0], 30L);
+  }
+
+  @Test
+  public void testArrayAggregator2() {
+    ArrayAggregator aggregator = new ArrayAggregator(GenericEventSerializerTest.getEventSchema());
+    aggregator.init("time=DAYS:pubId:adUnit");
+    /* prepare a object */
+    ArrayEvent event = new ArrayEvent();
+    event.timestamp = System.currentTimeMillis();
+    Object[] keys = new Object[3];
+    keys[0] = 1;
+    keys[1] = 2;
+    keys[2] = 3;
+    event.keys = keys;
+
+    Object[] fields = new Object[1];
+    fields[0] = 10L;
+    event.fields = fields;
+
+    ArrayAggregate aggr = aggregator.getGroup(event, 0);
+    aggregator.aggregate(aggr, event);
+
+    ArrayEvent event2 = new ArrayEvent();
+    event.timestamp = System.currentTimeMillis();
+    keys = new Object[3];
+    keys[0] = 1;
+    keys[1] = 2;
+    keys[2] = 3;
+    event2.keys = keys;
+
+    fields = new Object[1];
+    fields[0] = 20L;
+    event2.fields = fields;
+
+
+    aggregator.aggregate(aggr, event2);
+
+    Assert.assertEquals("sum is 30", aggr.fields[0], 30L);
+  }
+
+  @Test
+  public void testArrayAggregator3() {
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+    ArrayAggregator aggregator = new ArrayAggregator(eventSchema);
+    aggregator.init("time=DAYS:pubId:adUnit:adId");
+    /* prepare a object */
+    Map<String, Object> event = Maps.newHashMap();
+    event.put("timestamp", System.currentTimeMillis());
+    event.put("pubId", 1);
+    event.put("adUnit", 2);
+    event.put("adId", 3);
+    event.put("clicks", new Long(10));
+    ArrayEvent ae = eventSchema.convertMapToArrayEvent(event);
+
+    ArrayAggregate aggr = aggregator.getGroup(ae, 0);
+    aggregator.aggregate(aggr, ae);
+
+    /* prepare a object */
+    Map<String, Object> event2 = Maps.newHashMap();
+    event2.put("timestamp", System.currentTimeMillis());
+    event2.put("pubId", 1);
+    event2.put("adUnit", 2);
+    event2.put("adId", 3);
+    event2.put("clicks", new Long(20));
+    ArrayEvent ae2 = eventSchema.convertMapToArrayEvent(event2);
+
+    aggregator.aggregate(aggr, ae2);
+
+    Assert.assertEquals("sum is 30", aggr.fields[0], 30L);
+  }
+
+  @Test
+  public void testArrayAggregator4() {
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+    ArrayAggregator aggregator = new ArrayAggregator(eventSchema);
+    aggregator.init("time=DAYS:pubId:adUnit");
+    /* prepare a object */
+    Map<String, Object> event = Maps.newHashMap();
+    event.put("timestamp", System.currentTimeMillis());
+    event.put("pubId", 1);
+    event.put("adUnit", 2);
+    event.put("adId", 3);
+    event.put("clicks", new Long(10));
+    ArrayEvent ae = eventSchema.convertMapToArrayEvent(event);
+
+    ArrayAggregate aggr = aggregator.getGroup(ae, 0);
+    aggregator.aggregate(aggr, ae);
+
+    // odering is pubId, adId, adUnit
+    Assert.assertEquals("Aggregator 0", aggr.keys[0], 1);
+    Assert.assertEquals("Aggregator 1 " , aggr.keys[1], null);
+    Assert.assertEquals("Aggregator 2 ", aggr.keys[2], 2);
+
+    /* prepare a object */
+    Map<String, Object> event2 = Maps.newHashMap();
+    event2.put("timestamp", System.currentTimeMillis());
+    event2.put("pubId", 1);
+    event2.put("adUnit", 2);
+    event2.put("adId", 3);
+    event2.put("clicks", new Long(20));
+    ArrayEvent ae2 = eventSchema.convertMapToArrayEvent(event2);
+
+    aggregator.aggregate(aggr, ae2);
+
+    Assert.assertEquals("sum is 30", aggr.fields[0], 30L);
+  }
+
+
+  @Test
+  public void dimensionComputationTest() {
+    EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
+
+    ArrayDimensionComputation dimensions = new ArrayDimensionComputation();
+    dimensions.setEventSchemaJSON(GenericEventSerializerTest.TEST_SCHEMA_JSON);
+    dimensions.setup(null);
+
+    for(int i = 0; i < 10; i++) {
+      Map<String, Object> event = Maps.newHashMap();
+      event.put("timestamp", System.currentTimeMillis());
+      event.put("pubId", 1);
+      event.put("adUnit", 2);
+      event.put("adId", 3);
+      event.put("clicks", new Long(10));
+
+      dimensions.data.process(event);
+    }
+    System.out.println("Something needs to be done");
+  }
+
+
 }
