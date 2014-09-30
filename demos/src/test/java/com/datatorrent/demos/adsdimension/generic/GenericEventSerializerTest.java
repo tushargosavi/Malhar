@@ -6,39 +6,39 @@ import com.google.common.collect.Maps;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class GenericEventSerializerTest
 {
+
+  public static final String TEST_SCHEMA_JSON = "{\n" +
+            "  \"fields\": {\"pubId\":\"java.lang.Integer\", \"adId\":\"java.lang.Integer\", \"adUnit\":\"java.lang.Integer\", \"clicks\":\"java.lang.Long\", \"timestamp\":\"java.lang.Long\"},\n" +
+            "  \"dimensions\": [\"time=MINUTES\", \"time=MINUTES:adUnit\", \"time=MINUTES:adId\", \"time=MINUTES:pubId\", \"time=MINUTES:adId:adUnit\", \"time=MINUTES:pubId:adUnit\", \"time=MINUTES:pubId:adId\", \"time=MINUTES:pubId:adId:adUnit\"],\n" +
+            "  \"aggregates\": { \"clicks\": \"sum\"},\n" +
+            "  \"timestamp\": \"timestamp\"\n" +
+            "}";
+
   /**
    * Return a EventDescrition object, to be used by operator to
    * perform aggregation, serialization and deserialization.
    * @return
    */
   public static EventSchema getEventSchema() {
-    EventSchema eDesc = new EventSchema();
+    EventSchema eventSchema;
+    try {
+      eventSchema = EventSchema.createFromJSON(TEST_SCHEMA_JSON);
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Failed to parse JSON input: " + TEST_SCHEMA_JSON, e);
+    }
 
-    Map<String, Class<?>> dataDesc  = Maps.newHashMap();
-    dataDesc.put("timestamp", Long.class);
-    dataDesc.put("pubId", Integer.class);
-    dataDesc.put("adId", Integer.class);
-    dataDesc.put("adUnit", Integer.class);
-
-    dataDesc.put("clicks", Long.class);
-    eDesc.setFieldTypes(dataDesc);
-
-    String[] keys = { "timestamp", "pubId", "adId", "adUnit" };
-    List<String> keyDesc = Lists.newArrayList(keys);
-    eDesc.setKeys(keyDesc);
-
-    Map<String, String> aggrDesc = Maps.newHashMap();
-    aggrDesc.put("clicks", "sum");
-    eDesc.setAggregates(aggrDesc);
-
-    return eDesc;
+    return eventSchema;
   }
+  private static final Logger LOG = LoggerFactory.getLogger(GenericEventSerializerTest.class);
+
 
   @Test
   public void test()
@@ -46,7 +46,9 @@ public class GenericEventSerializerTest
     EventSchema eventSchema = getEventSchema();
     GenericEventSerializer ser = new GenericEventSerializer(eventSchema);
 
-    System.out.println("keySize " + eventSchema.getKeyLen() + " val len " + eventSchema.getValLen());
+    LOG.debug("eventSchema: {}", eventSchema );
+
+    LOG.debug("keySize: {}  valLen: {} ", eventSchema.getKeyLen(), eventSchema.getValLen() );
 
     /* prepare a object */
     MapAggregate event = new MapAggregate(eventSchema);
@@ -84,7 +86,7 @@ public class GenericEventSerializerTest
     EventSchema eventSchema = getEventSchema();
     GenericEventSerializer ser = new GenericEventSerializer(eventSchema);
 
-    System.out.println("keySize " + eventSchema.getKeyLen() + " val len " + eventSchema.getValLen());
+    LOG.debug("keySize: {}  valLen: {} ", eventSchema.getKeyLen(), eventSchema.getValLen() );
 
     /* prepare a object */
     MapAggregate event = new MapAggregate(eventSchema);

@@ -31,27 +31,22 @@ import java.util.Set;
 /**
  * Describes schema for performing dimensional computation on a stream of Map<String,Object> tuples.
  *
- * Schema can be constructed from following JSON string:
+ * Schema can be specified as a JSON string with following keys.
  *
- * {
- *   // Names of all the fields and their types.
- *   // Data types supported: int, long, float, double, string
- *   "fieldTypes": {"publisherId":"java.lang.Integer", "advertiserId":"java.lang.Long", "adUnit":"java.lang.Integer", "clicks":"java.lang.Long", "price":"java.lang.Long"},
+ *   fields: Map of all the field names and their types.  Supported types: java.lang.(Integer, Long, Float, Double, String)
+ *   dimension: Array of dimensions with fields separated by colon, and time prefixed with time=.  Supported time units: MINUTES, HOURS, DAYS
+ *   aggregates: Fields to aggregate for specified dimensions.  Aggregates types can include: sum, avg, min, max
+ *   timestamp: Name of the timestamp field.  Data type should be Long with value in milliseconds since Jan 1, 1970 GMT.
  *
- *   // Combinations to use for dimensional computations
- *   // If omitted, all combinations of keys are grouped by MINUTE
- *   // Supported time groupings: MINUTE, HOUR, DAY
- *   "dimensions": ["time=MINUTE:publisherId:advertiserId", "time=HOUR:advertiserId:adUnit"],
+ * Example JSON schema for Ads demo:
  *
- *   // Fields to aggregate with matching operation types and data types
- *   // Possible operations include: SUM, AVG, MIN, MAX
- *   // Data types supported: int, long, float, double
- *   "aggregates": { "clicks": "sum", "price": "sum" },
+ *   {
+ *     "fields": {"publisherId":"java.lang.Integer", "advertiserId":"java.lang.Integer", "adUnit":"java.lang.Integer", "clicks":"java.lang.Long", "price":"java.lang.Long", "cost":"java.lang.Double", "revenue":"java.lang.Double", "timestamp":"java.lang.Long"},
+ *     "dimensions": ["time=MINUTES", "time=MINUTES:adUnit", "time=MINUTES:advertiserId", "time=MINUTES:publisherId", "time=MINUTES:advertiserId:adUnit", "time=MINUTES:publisherId:adUnit", "time=MINUTES:publisherId:advertiserId", "time=MINUTES:publisherId:advertiserId:adUnit"],
+ *     "aggregates": { "clicks": "sum", "price": "sum", "cost": "sum", "revenue": "sum"},
+ *     "timestamp": "timestamp"
+ *   }
  *
- *   // Name of the timestamp fields with time specified in milliseconds ( since Jan 1, 1970 GMT )
- *   // Data type is implied to be: long
- *   "timeKey": "timestamp",
- * }
  *
  *
  */
@@ -60,7 +55,7 @@ public class EventSchema implements Serializable
   private static final long serialVersionUID = 4586481500190519858L;
 
   /* Map of all the fields and their types in an event tuple */
-  public Map<String, Class<?>> fieldTypes = Maps.newHashMap();
+  public Map<String, Class<?>> fields = Maps.newHashMap();
 
   /* Names of the fields which make up the keys */
   public List<String> keys = Lists.newArrayList();
@@ -71,14 +66,31 @@ public class EventSchema implements Serializable
   // List of dimensional combinations to compute
   public List<String> dimensions = Lists.newArrayList();
 
-  private String timeKey = "timestamp";
+  public String timestamp = "timestamp";
 
   transient private int keyLen;
   transient private int valLen;
 
+  public static final String DEFAULT_SCHEMA_ADS = "{\n" +
+          "  \"fields\": {\"publisherId\":\"java.lang.Integer\", \"advertiserId\":\"java.lang.Integer\", \"adUnit\":\"java.lang.Integer\", \"clicks\":\"java.lang.Long\", \"price\":\"java.lang.Long\", \"cost\":\"java.lang.Double\", \"revenue\":\"java.lang.Double\", \"timestamp\":\"java.lang.Long\"},\n" +
+          "  \"dimensions\": [\"time=MINUTES\", \"time=MINUTES:adUnit\", \"time=MINUTES:advertiserId\", \"time=MINUTES:publisherId\", \"time=MINUTES:advertiserId:adUnit\", \"time=MINUTES:publisherId:adUnit\", \"time=MINUTES:publisherId:advertiserId\", \"time=MINUTES:publisherId:advertiserId:adUnit\"],\n" +
+          "  \"aggregates\": { \"clicks\": \"sum\", \"price\": \"sum\", \"cost\": \"sum\", \"revenue\": \"sum\"},\n" +
+          "  \"timestamp\": \"timestamp\"\n" +
+          "}";
+  public static final String DEFAULT_SCHEMA_SALES = "{\n" +
+          "  \"fields\": {\"productId\":\"java.lang.Integer\",\"customerId\":\"java.lang.Integer\",\"channelId\":\"java.lang.Integer\",\"productCategory\":\"java.lang.String\",\"amount\":\"java.lang.Double\",\"timestamp\":\"java.lang.Long\"},\n" +
+          "  \"dimensions\": [\"time=MINUTES\", \"time=MINUTES:productCategory\",\"time=MINUTES:channelId\",\"time=MINUTES:productCategory:channelId\"],\n" +
+          "  \"aggregates\": { \"amount\": \"sum\" },\n" +
+          "  \"timestamp\": \"timestamp\"\n" +
+          "}";
+
   public static EventSchema createFromJSON(String json) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     EventSchema eventSchema = mapper.readValue(json, EventSchema.class);
+
+    if ( eventSchema.dimensions.size() == 0 ) throw new IllegalArgumentException("EventSchema JSON must specify dimensions list");
+
+    // Generate list of keys from dimensions specified
     Set<String> uniqueKeys = Sets.newHashSet();
     for(String dimension: eventSchema.dimensions) {
       String[] attributes = dimension.split(":");
@@ -91,20 +103,21 @@ public class EventSchema implements Serializable
         uniqueKeys.add(key);
       }
     }
-    uniqueKeys.add(eventSchema.getTimeKey());
+    uniqueKeys.add(eventSchema.getTimestamp());
     List<String> keys = Lists.newArrayList();
     keys.addAll(uniqueKeys);
     eventSchema.setKeys(keys);
+
     return eventSchema;
   }
 
-  public String getTimeKey() {
-    return timeKey;
+  public String getTimestamp() {
+    return timestamp;
   }
 
-  public void setFieldTypes(Map<String, Class<?>> fieldTypes)
+  public void setFields(Map<String, Class<?>> fields)
   {
-    this.fieldTypes = fieldTypes;
+    this.fields = fields;
   }
 
   public void setKeys(List<String> keys)
@@ -122,7 +135,7 @@ public class EventSchema implements Serializable
   }
 
   public Class<?> getClass(String field) {
-    return fieldTypes.get(field);
+    return fields.get(field);
   }
 
   public int getKeyLen() {
@@ -140,7 +153,7 @@ public class EventSchema implements Serializable
   public int getSerializedLength(Collection<String> fields) {
     int len = 0;
     for(String field : fields) {
-      Class<?> k = fieldTypes.get(field);
+      Class<?> k = this.fields.get(field);
       len += GenericEventSerializer.fieldSerializers.get(k).dataLength();
     }
     return len;
@@ -148,7 +161,7 @@ public class EventSchema implements Serializable
 
   public Class<?> getType(String param)
   {
-    return fieldTypes.get(param);
+    return fields.get(param);
   }
 
   public Object typeCast(String input, String fieldKey) {

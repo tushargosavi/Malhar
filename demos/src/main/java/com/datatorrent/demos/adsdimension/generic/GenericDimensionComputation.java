@@ -16,27 +16,39 @@ import java.util.Map;
  */
 public class GenericDimensionComputation extends DimensionsComputation<Map<String, Object>, MapAggregate>
 {
-  // TODO , generate schema from json string in setup.
-  private EventSchema schema;
+  // Set default schema to ADS
+  private String eventSchemaJSON = EventSchema.DEFAULT_SCHEMA_ADS;
+  private transient EventSchema eventSchema;
 
-  public EventSchema getSchema()
+  public String getEventSchemaJSON()
   {
-    return schema;
+    return eventSchemaJSON;
   }
 
-  public void setSchema(EventSchema schema)
+  public void setEventSchemaJSON(String eventSchemaJSON)
   {
-    this.schema = schema;
-    DimensionsGenerator gen = new DimensionsGenerator(schema);
+    this.eventSchemaJSON = eventSchemaJSON;
+    DimensionsGenerator gen = new DimensionsGenerator(getEventSchema());
     MapAggregator[] aggregators = gen.generateAggregators();
     setAggregators(aggregators);
   }
 
+  public EventSchema getEventSchema() {
+    if (eventSchema == null ) {
+      try {
+        eventSchema = EventSchema.createFromJSON(eventSchemaJSON);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Failed to parse JSON input: " + eventSchemaJSON, e);
+      }
+    }
+    return eventSchema;
+  }
+
+
   @Override public void setup(Context.OperatorContext context)
   {
     super.setup(context);
-    //EventSchema schema = EventSchema.fromJson(schemaStr);
-    DimensionsGenerator gen = new DimensionsGenerator(schema);
+    DimensionsGenerator gen = new DimensionsGenerator(getEventSchema());
     MapAggregator[] aggregators = gen.generateAggregators();
     setAggregators(aggregators);
   }

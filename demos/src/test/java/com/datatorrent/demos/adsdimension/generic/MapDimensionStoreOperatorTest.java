@@ -58,7 +58,7 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
     MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventSchema);
+    hdsOut.setEventSchemaJSON(GenericEventSerializerTest.TEST_SCHEMA_JSON);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
@@ -154,7 +154,7 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
     MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventSchema);
+    hdsOut.setEventSchemaJSON(GenericEventSerializerTest.TEST_SCHEMA_JSON);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
@@ -252,7 +252,7 @@ public class MapDimensionStoreOperatorTest
     EventSchema eventSchema = GenericEventSerializerTest.getEventSchema();
     MapAggregator aggregator = new MapAggregator(eventSchema);
     aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventSchema);
+    hdsOut.setEventSchemaJSON(GenericEventSerializerTest.TEST_SCHEMA_JSON);
     hdsOut.setAggregator(aggregator);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);
@@ -364,7 +364,7 @@ public class MapDimensionStoreOperatorTest
     hdsFile.setBasePath(testInfo.getDir());
     //MapAggregator aggregator = new MapAggregator(eventSchema);
     //aggregator.init("time=MINUTES:pubId:adId:adUnit");
-    hdsOut.setEventDesc(eventSchema);
+    hdsOut.setEventSchemaJSON(GenericEventSerializerTest.TEST_SCHEMA_JSON);
     hdsOut.setAggregator(aggregators[0]);
     hdsOut.setMaxCacheSize(100);
     hdsOut.setFlushIntervalCount(100);

@@ -67,14 +67,14 @@ class MapAggregate implements DimensionsComputation.AggregateEvent
 
   public long getTimestamp()
   {
-    Object o = fields.get(eventSchema.getTimeKey());
+    Object o = fields.get(eventSchema.getTimestamp());
     if (o == null) return 0L;
     return ((Number)o).longValue();
   }
 
   public void setTimestamp(long timestamp)
   {
-    fields.put(eventSchema.getTimeKey(), timestamp);
+    fields.put(eventSchema.getTimestamp(), timestamp);
   }
 
   public Object get(String field)
@@ -177,7 +177,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     }
     /* Add converted timestamp */
     if (time != null) {
-      long timestamp = src.get(eventSchema.getTimeKey()) != null? ((Number)src.get(eventSchema.getTimeKey())).longValue() : 0;
+      long timestamp = src.get(eventSchema.getTimestamp()) != null? ((Number)src.get(eventSchema.getTimestamp())).longValue() : 0;
       timestamp = TimeUnit.MILLISECONDS.convert(time.convert(timestamp, TimeUnit.MILLISECONDS), time);
       aggr.fields.put("timestamp", new Long(timestamp));
     }
@@ -199,15 +199,15 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     // avoid if/else.
     if (eventSchema.aggregates.get(metric).equals("sum"))
     {
-      if (eventSchema.fieldTypes.get(metric).equals(Integer.class)) {
+      if (eventSchema.fields.get(metric).equals(Integer.class)) {
         int val1 = (o != null) ? ((Number)o).intValue() : 0;
         int val2 = (o1 != null) ? ((Number)o1).intValue() : 0;
         return new Integer(val1 + val2);
-      } else if (eventSchema.fieldTypes.get(metric).equals(Long.class)) {
+      } else if (eventSchema.fields.get(metric).equals(Long.class)) {
         long val1 = (o != null) ? ((Number)o).longValue() : 0;
         long val2 = (o1 != null) ? ((Number)o1).longValue() : 0;
         return new Long(val1 + val2);
-      } else if (eventSchema.fieldTypes.get(metric).equals(Double.class)) {
+      } else if (eventSchema.fields.get(metric).equals(Double.class)) {
         double val1 = (o != null) ? ((Number)o).doubleValue() : 0;
         double val2 = (o1 != null) ? ((Number)o1).doubleValue() : 0;
         return new Double(val1 + val2);
@@ -234,7 +234,7 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
 
     /* TODO: special handling for timestamp */
     if (time != null) {
-        long timestamp = tuple.get(getEventSchema().getTimeKey()) != null? ((Number)tuple.get(getEventSchema().getTimeKey())).longValue() : 0;
+        long timestamp = tuple.get(getEventSchema().getTimestamp()) != null? ((Number)tuple.get(getEventSchema().getTimestamp())).longValue() : 0;
         long ltime = time.convert(timestamp, TimeUnit.MILLISECONDS);
         hash = 71 * hash + (int) (ltime ^ (ltime >>> 32));
     }
@@ -257,8 +257,8 @@ public class MapAggregator implements DimensionsComputation.Aggregator<Map<Strin
     // Special handling for timestamp
     if (time != null)
     {
-      long t1 = event1.get(getEventSchema().getTimeKey()) != null? ((Number)event1.get(getEventSchema().getTimeKey())).longValue() : 0;
-      long t2 = event2.get(getEventSchema().getTimeKey()) != null? ((Number)event2.get(getEventSchema().getTimeKey())).longValue() : 0;
+      long t1 = event1.get(getEventSchema().getTimestamp()) != null? ((Number)event1.get(getEventSchema().getTimestamp())).longValue() : 0;
+      long t2 = event2.get(getEventSchema().getTimestamp()) != null? ((Number)event2.get(getEventSchema().getTimestamp())).longValue() : 0;
 
       if (time.convert(t1, TimeUnit.MILLISECONDS) != time.convert(t2, TimeUnit.MILLISECONDS))
         return false;

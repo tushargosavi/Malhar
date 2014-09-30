@@ -33,7 +33,7 @@ public class MapAggregateCodec extends KryoSerializableStreamCodec<MapAggregate>
     int hashCode = 1;
     for(String key : aggr.getEventSchema().keys)
     {
-      if (key.equals(aggr.getEventSchema().getTimeKey()))
+      if (key.equals(aggr.getEventSchema().getTimestamp()))
         continue;
       Object o = aggr.get(key);
       if (o != null)
