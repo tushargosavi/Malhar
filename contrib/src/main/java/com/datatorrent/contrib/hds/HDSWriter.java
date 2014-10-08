@@ -204,13 +204,17 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
 
       BucketMeta bmeta = getMeta(bucketKey);
       WalMeta wmeta = getWalMeta(bucketKey);
+
+      LOG.debug("Existing walmeta information fileId {} offset {} tailId {} tailOffset {} windowId {} committedWid {} currentWid {}",
+          wmeta.fileId, wmeta.offset, wmeta.tailId, wmeta.tailOffset, wmeta.windowId, bmeta.committedWid, windowId);
+
       bucket.wal = new HDSWalManager(this.store, bucketKey, wmeta.fileId, wmeta.offset);
       bucket.wal.setMaxWalFileSize(maxWalFileSize);
 
       // bmeta.componentLSN is data which is committed to disks.
       // wmeta.windowId windowId till which data is available in WAL.
       if (bmeta.committedWid < wmeta.windowId) {
-        LOG.debug("Recovery for bucket {}", bucketKey);
+        LOG.debug("Recovering bucket {} from WAL", bucketKey);
         // Get last committed LSN from store, and use that for recovery.
         bucket.wal.runRecovery(bucket.writeCache, wmeta.tailId, wmeta.tailOffset);
       }

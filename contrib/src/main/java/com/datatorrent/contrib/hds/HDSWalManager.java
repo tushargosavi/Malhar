@@ -145,14 +145,17 @@ public class HDSWalManager implements Closeable
     logger.info("Recovery of store, start file {} offset {} till file {} offset {}",
         walid, offset, walFileId, committedLength);
     for (long i = fileId; i <= walFileId; i++) {
+      logger.info("Recovery of store, from file {} start offset {}",
+          i, offset);
       WALReader wReader = new HDFSWalReader(bfs, bucketKey, WAL_FILE_PREFIX + i);
       wReader.seek(offset);
       offset = 0;
-
+      int count = 0;
       while (wReader.advance()) {
         MutableKeyValue o = wReader.get();
         writeCache.put(HDS.SliceExt.toSlice(o.getKey()), o.getValue());
       }
+      logger.info("Recovered {} tuples from wal {}", count, i);
       wReader.close();
     }
 
