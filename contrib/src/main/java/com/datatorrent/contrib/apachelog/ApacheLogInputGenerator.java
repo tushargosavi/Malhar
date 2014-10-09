@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * @tags input operator, log
  * @since 0.9.4
  */
-public class ApacheLogInputGenerator implements InputOperator, ActivationListener<OperatorContext>
+public class ApacheLogInputGenerator implements InputOperator, Operator.ActivationListener<OperatorContext>
 {
   private final static String delimiter = ";";
 

@@ -32,9 +32,9 @@ import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datatorrent.api.CheckpointListener;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.Operator;
+import com.datatorrent.api.Operator.CheckpointListener;
 import com.datatorrent.common.util.NameableThreadFactory;
 import com.datatorrent.common.util.Slice;
 import com.datatorrent.contrib.hds.HDSFileAccess.HDSFileReader;
@@ -322,7 +322,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     // write modified files
     for (Map.Entry<BucketFileMeta, Map<Slice, byte[]>> fileEntry : modifiedFiles.entrySet()) {
       BucketFileMeta fileMeta = fileEntry.getKey();
-      TreeMap<Slice, byte[]> fileData = Maps.newTreeMap(getKeyComparator());
+      TreeMap<Slice, byte[]> fileData = new TreeMap<Slice, byte[]>(getKeyComparator());
 
       if (fileMeta.name != null) {
         // load existing file

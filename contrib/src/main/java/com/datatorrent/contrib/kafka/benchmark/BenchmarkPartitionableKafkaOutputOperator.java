@@ -15,30 +15,33 @@
  */
 package com.datatorrent.contrib.kafka.benchmark;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
+
+import kafka.javaapi.producer.Producer;
+import kafka.producer.KeyedMessage;
+import kafka.producer.ProducerConfig;
+
+import com.datatorrent.api.Context.OperatorContext;
+import com.datatorrent.api.DefaultPartition;
+import com.datatorrent.api.InputOperator;
+import com.datatorrent.api.Operator.ActivationListener;
+import com.datatorrent.api.Partitioner;
+import com.datatorrent.contrib.kafka.KafkaMetadataUtil;
+import com.yammer.metrics.Metrics;
+
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
-import com.datatorrent.api.ActivationListener;
-import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.api.DefaultPartition;
-import com.datatorrent.api.InputOperator;
-import com.datatorrent.api.Partitioner;
 
 /**
- * This operator keep sending constant messages(1kb each) in {@link #threadNum} threads.&nbsp;
- * Messages are distributed evenly to partitions.
- * <p></p>
- * @displayName Benchmark Partitionable Kafka Output
- * @category Messaging
- * @tags output operator
+ * This operator keep sending constant messages(1kb each) in {@link #threadNum} threads
+ * Messages are distributed evenly to partitions
+ *
+ * It will also be split to {@link #partitionNum} partitions
+ * Please set the {@link #partitionNum} in property file to get optimized performance
  *
  * @since 0.9.3
  */
@@ -67,6 +70,9 @@ public class BenchmarkPartitionableKafkaOutputOperator implements Partitioner<Be
   private int stickyKey = 0;
   
   private transient Runnable r = new Runnable() {
+    
+    Producer<String, String> producer = null;
+    
     @Override
     public void run()
     {
@@ -80,7 +86,9 @@ public class BenchmarkPartitionableKafkaOutputOperator implements Partitioner<Be
 //      props.setProperty("send.buffer.bytes", "1048576");
       props.setProperty("topic.metadata.refresh.interval.ms", "100000");
 
-      Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(props));
+      if (producer == null) {
+        producer = new Producer<String, String>(new ProducerConfig(props));
+      }
       long k = 0;
       
       while (k<msgsSecThread || !controlThroughput) {
@@ -91,7 +99,6 @@ public class BenchmarkPartitionableKafkaOutputOperator implements Partitioner<Be
           k=0;
         }
       }
-      producer.close();
     }
   };
 

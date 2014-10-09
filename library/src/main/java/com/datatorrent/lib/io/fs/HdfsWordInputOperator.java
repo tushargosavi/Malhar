@@ -15,16 +15,9 @@
  */
 package com.datatorrent.lib.io.fs;
 
-
-//import java.io.DataInputStream;
 import java.io.EOFException;
-//import java.io.FileInputStream;
-//import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import org.apache.hadoop.fs.FSDataInputStream;
-
-
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;

@@ -15,7 +15,6 @@
  */
 package com.datatorrent.contrib.zmq;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.datatorrent.api.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import org.slf4j.Logger;
@@ -55,7 +54,6 @@ import org.zeromq.ZMQ;
  * @tags output operator
  * @since 0.3.2
  */
-@ShipContainingJars(classes={org.zeromq.ZMQ.Socket.class})
 public abstract class AbstractBaseZeroMQOutputOperator extends BaseOperator
 {
   private static final Logger logger = LoggerFactory.getLogger(AbstractBaseZeroMQInputOperator.class);

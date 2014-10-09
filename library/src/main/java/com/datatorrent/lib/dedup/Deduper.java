@@ -77,7 +77,7 @@ import com.datatorrent.lib.counters.BasicCounters;
  * @since 0.9.4
  */
 public abstract class Deduper<INPUT extends Bucketable, OUTPUT>
-  implements Operator, BucketManager.Listener<INPUT>, IdleTimeHandler, Partitioner<Deduper<INPUT, OUTPUT>>
+  implements Operator, BucketManager.Listener<INPUT>, Operator.IdleTimeHandler, Partitioner<Deduper<INPUT, OUTPUT>>
 {
   /**
    * The input port on which events are received.
