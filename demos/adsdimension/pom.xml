@@ -4,7 +4,7 @@
 
   <groupId>com.datatorrent</groupId>
   <version>1.0-SNAPSHOT</version>
-  <artifactId>ads-dimension-demo</artifactId>
+  <artifactId>ads-dimension-demo-tushar</artifactId>
   <packaging>jar</packaging>
 
   <name>DataTorrent Ads Dimension Demo</name>

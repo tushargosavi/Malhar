@@ -72,5 +72,25 @@
     <value>-Xmx6g -server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
   </property>
 
-
+  <!-- HDSWalBenchmark is test application for testing WAL functionality -->
+  <property>
+      <name>dt.application.HDSWalBenchmark.attr.CONTAINER_MEMORY_MB</name>
+      <value>1024</value>
+  </property>
+  <property>
+      <name>dt.application.HDSWalBenchmark.attr.containerJvmOpts</name>
+      <value>-Xmx4g -server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
+  </property>
+  <property>
+      <name>dt.application.HDSWalBenchmark.operator.Generator.attr.INITIAL_PARTITION_COUNT</name>
+      <value>4</value>
+  </property>
+  <property>
+      <name>dt.application.HDSWalBenchmark.operator.HDSStore.fileStore.basePath</name>
+      <value>HDSWalTest</value>
+  </property>
+  <property>
+      <name>dt.application.HDSWalBenchmark.operator.HDSStore.attr.INITIAL_PARTITION_COUNT</name>
+      <value>4</value>
+  </property>
 </configuration>
