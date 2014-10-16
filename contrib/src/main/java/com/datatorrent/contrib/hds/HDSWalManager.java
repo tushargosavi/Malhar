@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.datatorrent.lib.counters.BasicCounters;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,6 +141,7 @@ public class HDSWalManager implements Closeable
       return;
 
     restoreLastWal();
+    recoveryCounts.increment();
 
     /* Reconstruct Store cache state, from WAL files */
     long walid = fileId;
@@ -186,10 +189,18 @@ public class HDSWalManager implements Closeable
       writer = new HDFSWalWriter(bfs, bucketKey, WAL_FILE_PREFIX + walFileId);
 
     writer.append(key, value);
+    long bytes = key.length + value.length + 2 * 4;
+    totalBytes.add(bytes);
     dirty = true;
 
     if (maxUnflushedBytes > 0 && writer.getUnflushedCount() > maxUnflushedBytes)
+    {
+      long startTime = System.currentTimeMillis();
       writer.flush();
+      flushCounts.increment();
+      sizeBasedFlushed.increment();
+      flushDuration.add(System.currentTimeMillis() - startTime);
+    }
   }
 
   /* Update WAL meta data after committing window id wid */
@@ -205,7 +216,10 @@ public class HDSWalManager implements Closeable
       return;
 
     if (writer != null) {
+      long startTime = System.currentTimeMillis();
+      flushCounts.increment();
       writer.flush();
+      flushDuration.add(System.currentTimeMillis() - startTime);
     }
     dirty = false;
     committedLsn = windowId;
@@ -292,5 +306,38 @@ public class HDSWalManager implements Closeable
   }
 
   private static transient final Logger logger = LoggerFactory.getLogger(HDSWalManager.class);
+
+  /**
+   * Stats related functionality
+   */
+
+  //private HDSStatCounters counters = new HDSStatCounters();
+  //public HDSStatCounters getCounters() {
+  //  return counters;
+  //}
+
+  MutableLong totalBytes = new MutableLong();
+  MutableLong flushCounts = new MutableLong();
+  MutableLong sizeBasedFlushed = new MutableLong();
+  MutableLong flushDuration = new MutableLong();
+  MutableLong recoveryCounts = new MutableLong();
+
+  public static enum WalCounterEnum {
+    TOTAL_BYTES,
+    TOTAL_FLUSH_COUNT,
+    TIME_FLUSH,
+  }
+
+  BasicCounters<MutableLong> counters = new BasicCounters<MutableLong>(MutableLong.class);
+  public void initCounters()
+  {
+    counters.setCounter(WalCounterEnum.TOTAL_BYTES, totalBytes);
+    counters.setCounter(WalCounterEnum.TOTAL_FLUSH_COUNT, flushCounts);
+    counters.setCounter(WalCounterEnum.TIME_FLUSH, flushDuration);
+  }
+
+  public BasicCounters<MutableLong> getCounters() {
+    return counters;
+  }
 }
 
