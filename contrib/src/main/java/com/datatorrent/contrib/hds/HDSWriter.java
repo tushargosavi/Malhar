@@ -441,16 +441,19 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     if (writerError != null) {
       throw new RuntimeException("Error while flushing write cache.", this.writerError);
     }
-//
-//    if (context != null) {
-//      for(Bucket bucket : buckets.values())
-//      {
-//        if (bucket.wal != null)
-//          context.setCounters(bucket.wal.getCounters());
-//      }
-//    }
 
-    context.setCounters(counters);
+    if (context != null) {
+      for(Bucket bucket : buckets.values())
+      {
+        System.out.println("stats for bucket " + bucket.bucketKey + " wal " + bucket.wal);
+        if (bucket.wal != null) {
+          context.setCounters(bucket.wal.getCounters());
+          System.out.println("counters " + bucket.wal.getCounters());
+        }
+      }
+    }
+
+//    context.setCounters(counters);
   }
 
   private WalMeta getWalMeta(long bucketKey)

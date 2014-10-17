@@ -121,6 +121,7 @@ public class HDSWalManager implements Closeable
   public HDSWalManager(HDSFileAccess bfs, long bucketKey) {
     this.bfs = bfs;
     this.bucketKey = bucketKey;
+    initCounters();
   }
 
   public HDSWalManager(HDSFileAccess bfs, long bucketKey, long fileId, long offset) {
@@ -128,6 +129,7 @@ public class HDSWalManager implements Closeable
     this.bucketKey = bucketKey;
     this.walFileId = fileId;
     this.committedLength = offset;
+    initCounters();
     logger.info("current {}  offset {} ", walFileId, committedLength);
   }
 
@@ -195,12 +197,19 @@ public class HDSWalManager implements Closeable
 
     if (maxUnflushedBytes > 0 && writer.getUnflushedCount() > maxUnflushedBytes)
     {
-      long startTime = System.currentTimeMillis();
-      writer.flush();
-      flushCounts.increment();
-      sizeBasedFlushed.increment();
-      flushDuration.add(System.currentTimeMillis() - startTime);
+      flush();
     }
+  }
+
+  protected void flush() throws IOException
+  {
+    if (writer == null)
+      return;
+    long startTime = System.currentTimeMillis();
+    writer.flush();
+    flushCounts.increment();
+    sizeBasedFlushed.increment();
+    flushDuration.add(System.currentTimeMillis() - startTime);
   }
 
   /* Update WAL meta data after committing window id wid */
@@ -215,12 +224,7 @@ public class HDSWalManager implements Closeable
     if (!dirty)
       return;
 
-    if (writer != null) {
-      long startTime = System.currentTimeMillis();
-      flushCounts.increment();
-      writer.flush();
-      flushDuration.add(System.currentTimeMillis() - startTime);
-    }
+    flush();
     dirty = false;
     committedLsn = windowId;
     committedLength = writer.logSize();
@@ -325,13 +329,14 @@ public class HDSWalManager implements Closeable
   public static enum WalCounterEnum {
     TOTAL_BYTES,
     TOTAL_FLUSH_COUNT,
-    TIME_FLUSH,
+    TIME_FLUSH, SIZEBASED_FLUSHES,
   }
 
   BasicCounters<MutableLong> counters = new BasicCounters<MutableLong>(MutableLong.class);
   public void initCounters()
   {
     counters.setCounter(WalCounterEnum.TOTAL_BYTES, totalBytes);
+    counters.setCounter(WalCounterEnum.SIZEBASED_FLUSHES, sizeBasedFlushed);
     counters.setCounter(WalCounterEnum.TOTAL_FLUSH_COUNT, flushCounts);
     counters.setCounter(WalCounterEnum.TIME_FLUSH, flushDuration);
   }
