@@ -6,6 +6,7 @@ import com.datatorrent.contrib.hds.HDSStatCounters;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import com.datatorrent.lib.counters.BasicCounters;
 import com.datatorrent.lib.io.fs.AbstractFSDirectoryInputOperator;
+import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.hadoop.conf.Configuration;
 import com.datatorrent.api.Context.PortContext;
 
@@ -20,11 +21,12 @@ public class WalTestApplication implements StreamingApplication
     HDSOperator hdsOut = dag.addOperator("HDSStore", new HDSOperator());
 
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
+    hdsFile.setBasePath("WALBenchMarkDir");
     hdsOut.setFileStore(hdsFile);
     hdsOut.setMaxWalFileSize(2 * 1024 * 1024);
+    dag.getOperatorMeta("HDSStore").getAttributes().put(Context.OperatorContext.COUNTERS_AGGREGATOR,
+        new BasicCounters.LongAggregator<MutableLong>());
 
     dag.addStream("s1", gen.out, hdsOut.input);
-
-    dag.getOperatorMeta("HDSStore").getAttributes().put(Context.OperatorContext.COUNTERS_AGGREGATOR, new BasicCounters.LongAggregator());
   }
 }
