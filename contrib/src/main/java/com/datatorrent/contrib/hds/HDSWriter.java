@@ -17,18 +17,18 @@ package com.datatorrent.contrib.hds;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.Serializable;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.validation.constraints.Min;
 
+import com.datatorrent.api.Context;
 import com.datatorrent.lib.counters.BasicCounters;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.mutable.MutableLong;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,19 +78,6 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
   private int flushIntervalCount = 120;
 
   private final HashMap<Long, WalMeta> walMeta = Maps.newHashMap();
-
-  /**
-   * Counters for wal HDFS usage, currently tracking only
-   * number of bytes written to HDFS.
-   */
-  public static enum WALCounters
-  {
-    WAL_TOTAL_BYTES
-  }
-
-  protected BasicCounters<MutableLong> counters = new BasicCounters<MutableLong>(MutableLong.class);
-  protected MutableLong totalWalBytes = new MutableLong();
-
   private transient OperatorContext context;
 
   /**
@@ -167,6 +154,10 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
    */
   private void writeFile(Bucket bucket, BucketMeta bucketMeta, TreeMap<Slice, byte[]> data) throws IOException
   {
+    BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
+    long startTime = System.currentTimeMillis();
+    long written = 0;
+
     HDSFileWriter fw = null;
     BucketFileMeta fileMeta = null;
     int keysWritten = 0;
@@ -182,6 +173,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       fw.append(HDS.SliceExt.asArray(dataEntry.getKey()), dataEntry.getValue());
       keysWritten++;
       if (fw.getBytesWritten() > this.maxFileSize) {
+        written += fw.getBytesWritten();
+        ioStats.dataFilesWritten++;
         // roll file
         fw.close();
         this.store.rename(bucket.bucketKey, fileMeta.name + ".tmp", fileMeta.name);
@@ -192,10 +185,15 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     }
 
     if (fw != null) {
+      written += fw.getBytesWritten();
+      ioStats.dataFilesWritten++;
       fw.close();
       this.store.rename(bucket.bucketKey, fileMeta.name + ".tmp", fileMeta.name);
       LOG.debug("created data file {} {} with {} entries", bucket.bucketKey, fileMeta.name, keysWritten);
     }
+
+    ioStats.dataBytesWritten += written;
+    ioStats.dataWriteTime += System.currentTimeMillis() - startTime;
   }
 
   private Bucket getBucket(long bucketKey) throws IOException
@@ -267,7 +265,6 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
   {
     Bucket bucket = getBucket(bucketKey);
     bucket.wal.append(key, value);
-    totalWalBytes.add(key.length + value.length);
     bucket.writeCache.put(key, value);
   }
 
@@ -279,6 +276,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
    */
   private void writeDataFiles(Bucket bucket) throws IOException
   {
+    BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
+
     // copy meta data on write
     BucketMeta bucketMetaCopy = kryo.copy(getMeta(bucket.bucketKey));
 
@@ -370,13 +369,25 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     bucket.wal.cleanup(walMeta.tailId);
   }
 
+  // TODO: This should be moved to reader and writter, to return number of
+  // bytes read or written.
+  private long getBytesLen(TreeMap<Slice, byte[]> fileData)
+  {
+    long len = 0;
+    for(Map.Entry<Slice, byte[]> entry : fileData.entrySet())
+    {
+      len += entry.getKey().length;
+      len += entry.getValue().length;
+    }
+    return len;
+  }
+
   @Override
   public void setup(OperatorContext context)
   {
     super.setup(context);
     writeExecutor = Executors.newSingleThreadScheduledExecutor(new NameableThreadFactory(this.getClass().getSimpleName() + "-Writer"));
     this.context = context;
-    counters.setCounter(WALCounters.WAL_TOTAL_BYTES, totalWalBytes);
   }
 
   @Override
@@ -447,8 +458,19 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       throw new RuntimeException("Error while flushing write cache.", this.writerError);
     }
 
-    if (context != null)
-      context.setCounters(counters);
+    if (context != null) {
+      for(Bucket bucket : buckets.values())
+      {
+        BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
+        /* fill in stats for WAL */
+        HDSWalManager.WalStats walStats = bucket.wal.getCounters();
+        ioStats.walBytesWritten = walStats.totalBytes;
+        ioStats.walFlushCount = walStats.flushCounts;
+        ioStats.walFlushTime = walStats.flushDuration;
+        LOG.info("stats for bucket {} is {}", bucket.bucketKey, ioStats);
+      }
+      context.setCounters(bucketStats);
+    }
   }
 
   private WalMeta getWalMeta(long bucketKey)
@@ -533,4 +555,79 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     public long tailOffset;
   }
 
+  @JsonSerialize
+  public static class BucketIOStats implements Serializable
+  {
+    /* Bytes written to the WAL till now */
+    public long walBytesWritten;
+    /* Number of times WAL was flushed */
+    public long walFlushCount;
+    /* Amount of time spent while waiting for WAL flush to disk in milliseconds */
+    public long walFlushTime;
+    /* Number of data files written */
+    public long dataFilesWritten;
+    /* Number of bytes written to data file for the bucket */
+    public long dataBytesWritten;
+    /* Time taken for writing files */
+    public long dataWriteTime;
+    /* The number of files which are modified */
+
+    @Override public String toString()
+    {
+      return "BucketIOStats{" +
+          "walBytesWritten=" + walBytesWritten +
+          ", walFlushCount=" + walFlushCount +
+          ", walFlushTime=" + walFlushTime +
+          ", dataFilesWritten=" + dataFilesWritten +
+          ", dataBytesWritten=" + dataBytesWritten +
+          ", dataWriteTime=" + dataWriteTime +
+          '}';
+    }
+  }
+
+  @JsonSerialize
+  public static class AggregatedBucketIOStats implements Serializable {
+    public BucketIOStats globalStats = new BucketIOStats();
+    /* Individual bucket stats */
+    public Map<Long, BucketIOStats> aggregatedStats = Maps.newHashMap();
+  }
+
+  public static class BucketIOStatAggregator implements Serializable, Context.CountersAggregator
+  {
+    @Override public Object aggregate(Collection<?> countersList)
+    {
+      AggregatedBucketIOStats aggStats = new AggregatedBucketIOStats();
+      for(Object o : countersList)
+      {
+        Map<Long, BucketIOStats> statMap = (Map<Long, BucketIOStats>)o;
+        for(Long bId : statMap.keySet())
+        {
+          BucketIOStats stats = statMap.get(bId);
+          aggStats.globalStats.walBytesWritten += stats.walBytesWritten;
+          aggStats.globalStats.walFlushCount += stats.walFlushCount;
+          aggStats.globalStats.walFlushTime += stats.walFlushTime;
+
+          aggStats.globalStats.dataWriteTime += stats.dataWriteTime;
+          aggStats.globalStats.dataFilesWritten += stats.dataFilesWritten;
+          aggStats.globalStats.dataBytesWritten += stats.dataBytesWritten;
+
+          aggStats.aggregatedStats.put(bId, stats);
+        }
+      }
+      return aggStats;
+    }
+  }
+
+  /* A map holding stats for each bucket written by this partition */
+  private HashMap<Long, BucketIOStats> bucketStats = Maps.newHashMap();
+
+  private BucketIOStats getOrCretaStats(long bucketKey)
+  {
+    BucketIOStats ioStats = bucketStats.get(bucketKey);
+    if (ioStats == null) {
+      ioStats = new BucketIOStats();
+      bucketStats.put(bucketKey, ioStats);
+    }
+    return ioStats;
+  }
 }

@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.datatorrent.lib.counters.BasicCounters;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,8 +96,8 @@ public class HDSWalManager implements Closeable
   transient long maxUnflushedBytes = 64 * 1024;
 
   /* Maximum number of bytes per WAL file,
-   * default is 100M */
-  transient long maxWalFileSize = 512 * 1024;
+   * default is 128M */
+  transient long maxWalFileSize = 128 * 1024 * 1024;
 
   /* The class responsible writing WAL entry to file */
   transient WALWriter writer;
@@ -186,10 +188,25 @@ public class HDSWalManager implements Closeable
       writer = new HDFSWalWriter(bfs, bucketKey, WAL_FILE_PREFIX + walFileId);
 
     writer.append(key, value);
+    long bytes = key.length + value.length + 2 * 4;
+    stats.totalBytes += bytes;
     dirty = true;
 
     if (maxUnflushedBytes > 0 && writer.getUnflushedCount() > maxUnflushedBytes)
-      writer.flush();
+    {
+      flush();
+    }
+  }
+
+  protected void flush() throws IOException
+  {
+    if (writer == null)
+      return;
+    long startTime = System.currentTimeMillis();
+    writer.flush();
+
+    stats.flushCounts++;
+    stats.flushDuration += System.currentTimeMillis() - startTime;
   }
 
   /* Update WAL meta data after committing window id wid */
@@ -204,9 +221,7 @@ public class HDSWalManager implements Closeable
     if (!dirty)
       return;
 
-    if (writer != null) {
-      writer.flush();
-    }
+    flush();
     dirty = false;
     committedLsn = windowId;
     committedLength = writer.logSize();
@@ -292,5 +307,20 @@ public class HDSWalManager implements Closeable
   }
 
   private static transient final Logger logger = LoggerFactory.getLogger(HDSWalManager.class);
-}
 
+  /**
+   * Stats related functionality
+   */
+  public static class WalStats
+  {
+    long totalBytes;
+    long flushCounts;
+    long flushDuration;
+  }
+
+  private WalStats stats = new WalStats();
+
+  public WalStats getCounters() {
+    return stats;
+  }
+}
