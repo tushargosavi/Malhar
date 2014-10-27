@@ -24,6 +24,7 @@ import java.util.Arrays;
 public class MutableKeyValue {
   private byte key[];
   private byte value[];
+  protected MutableKeyValue() { }
   public MutableKeyValue(byte[] key, byte[] value) {
     this.key = key;
     this.value = value;
