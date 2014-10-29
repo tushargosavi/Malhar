@@ -41,6 +41,7 @@ import static org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Cate
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mortbay.log.Log;
 
 public class ByteArraySerDe implements SerDe
 {
@@ -274,10 +275,13 @@ public class ByteArraySerDe implements SerDe
           StructObjectInspector structOI,
           boolean isRow)
   {
+    Log.info(obj.toString());
+    Log.info(obj.getClass().toString());
     Map<Object, Object> struct = new HashMap<Object, Object>();
     List<? extends StructField> fields = structOI.getAllStructFieldRefs();
     for (int i = 0; i < fields.size(); i++) {
       StructField field = fields.get(i);
+
       // The top-level row object is treated slightly differently from other
       // structs, because the field names for the row do not correctly reflect
       // the Hive column names. For lower-level structs, we can get the field
