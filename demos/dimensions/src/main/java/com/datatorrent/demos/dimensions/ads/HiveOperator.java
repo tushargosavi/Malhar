@@ -103,6 +103,8 @@ public class HiveOperator extends HDSWriter
       LOG.info("key in byte is" + Arrays.toString(keyBytes));
       LOG.info("value is in byte" + Arrays.toString(valBytes));
       AdInfo.AdInfoAggregateEvent ae1 = bytesToAggregate(key, valBytes);
+      LOG.info("object is " +ae1.toString());
+
     }
 
     private AdInfoAggregateEvent bytesToAggregate(Slice key, byte[] valBytes)

@@ -5,18 +5,19 @@
  */
 package com.datatorrent.demos.dimensions.ads;
 
-import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregateEvent;
+import java.util.*;
+import kafka.log.Log;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde.Constants;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
-import static org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category.*;
+import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.*;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BooleanObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.FloatObjectInspector;
@@ -26,29 +27,34 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.ShortObjectInspec
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.apache.hadoop.io.Writable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
-import org.codehaus.jettison.json.JSONObject;
+import org.apache.hadoop.io.Writable;
+import static org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category.*;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ByteArraySerDe implements SerDe
 {
   private static final Logger LOG = LoggerFactory.getLogger(ByteArraySerDe.class);
-
+  ByteArrayStructOIOptions options;
   List<String> columnNames;
   List<TypeInfo> columnTypes;
   StructTypeInfo rowTypeInfo;
-  StructObjectInspector rowObjectInspector;
+  ObjectInspector rowObjectInspector;
+  long deserializedDataSize;
+  long serializedDataSize;
+  private boolean lastOperationSerialize;
+  private SerDeStats stats;
+  private List<Object> row = new ArrayList<Object>();
 
   @Override
   public void initialize(Configuration conf, Properties tbl) throws SerDeException
   {
-
     LOG.debug("Initializing SerDe");
+    stats = new SerDeStats();
     // Get column names and types
     String columnNameProperty = tbl.getProperty(Constants.LIST_COLUMNS);
     String columnTypeProperty = tbl.getProperty(Constants.LIST_COLUMN_TYPES);
@@ -73,76 +79,211 @@ public class ByteArraySerDe implements SerDe
     assert (columnNames.size() == columnTypes.size());
     // Create row related objects
     rowTypeInfo = (StructTypeInfo)TypeInfoFactory.getStructTypeInfo(columnNames, columnTypes);
-   // rowObjectInspector = (StructObjectInspector)PrimitiveObjectInspectorFactory.getPrimitiveJavaObjectInspector(rowTypeInfo);
-
+    rowObjectInspector = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(rowTypeInfo);
+    options
+            = new ByteArrayStructOIOptions(getMappings(tbl));
   }
 
-  /* public static AbstractPrimitiveJavaObjectInspector getPrimitiveJavaObjectInspector(PrimitiveCategory primitiveCategory) {
-   return  JavaByteObjectInspector.;
-   }*/
   @Override
   public Object deserialize(Writable w) throws SerDeException
   {
-    Text rowText = (Text)w;
-
-    // Try parsing row into ad info object
-    AdInfo.AdInfoAggregateEvent adObj = null;
+    Map<?, ?> root = null;
+    row.clear();
     try {
-      adObj = new AdInfoAggregateEvent(rowText.toString())
-      {
-
-        public AdInfo.AdInfoAggregateEvent put(String key, Object value)
-                throws Exception
-        {
-          return super.put(key.toLowerCase(), value);
-        }
-
-      };
+      ObjectMapper mapper = new ObjectMapper();
+      // This is really a Map<String, Object>. For more information about how
+      // Jackson parses JSON in this example, see
+      // http://wiki.fasterxml.com/JacksonDataBinding
+      root = mapper.readValue(w.toString(), Map.class);
     }
     catch (Exception e) {
-      // If row is not an object, make the whole row NULL
-      LOG.error("Row is not a valid Object - Exception: "
-              + e.getMessage());
       throw new SerDeException(e);
     }
-    return adObj;
+
+    // Lowercase the keys as expected by hive
+    Map<String, Object> lowerRoot = new HashMap();
+    for (Map.Entry entry: root.entrySet()) {
+      lowerRoot.put(((String)entry.getKey()).toLowerCase(), entry.getValue());
+    }
+    root = lowerRoot;
+    Object value = null;
+    for (String fieldName: rowTypeInfo.getAllStructFieldNames()) {
+      try {
+        TypeInfo fieldTypeInfo = rowTypeInfo.getStructFieldTypeInfo(fieldName);
+        value = parseField(root.get(fieldName), fieldTypeInfo);
+        LOG.info("value is " + value);
+
+      }
+      catch (Exception e) {
+        value = null;
+        LOG.info("Error parsing empty row. This should never happen." + e.getMessage());
+
+      }
+      row.add(value);
+    }
+
+    /*Text rowText = (Text)w;
+     String txt = rowText.toString().trim();
+     LOG.info("Text is" + txt);
+     deserializedDataSize = rowText.getBytes().length;
+     // Try parsing row into AdInfo object
+     AdInfo adInfoObj = null;
+     // if (txt.startsWith("{")) {
+     try {
+     adInfoObj = new AdInfo();
+     LOG.info(adInfoObj.toString());
+     }
+     catch (Exception e) {
+     try {
+     adInfoObj = new AdInfo.AdInfoAggregateEvent(Integer.valueOf("{}"));
+     }
+     catch (Exception ex) {
+     LOG.info("Error parsing empty row. This should never happen." + ex.getMessage());
+     }
+     }
+     // }*/
+    return row;
+  }
+
+  private Object parseField(Object field, TypeInfo fieldTypeInfo)
+  {
+    switch (fieldTypeInfo.getCategory()) {
+      case PRIMITIVE:
+      // Jackson will return the right thing in this case, so just return
+        // the object
+        if (field instanceof String) {
+          field = field.toString().replaceAll("\n", "\\\\n");
+        }
+        return field;
+      default:
+        return null;
+    }
   }
 
   @Override
   public ObjectInspector getObjectInspector() throws SerDeException
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    return rowObjectInspector;
   }
 
   @Override
   public SerDeStats getSerDeStats()
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (lastOperationSerialize) {
+      stats.setRawDataSize(serializedDataSize);
+    }
+    else {
+      stats.setRawDataSize(deserializedDataSize);
+    }
+    return stats;
+  }
+
+  public static final String PFX = "mapping.";
+
+  /**
+   * Builds mappings between hive columns and json attributes
+   *
+   * @param tbl
+   * @return
+   */
+  private Map<String, String> getMappings(Properties tbl)
+  {
+    int n = PFX.length();
+    Map<String, String> mps = new HashMap<String, String>();
+
+    for (Object o: tbl.keySet()) {
+      if (!(o instanceof String)) {
+        continue;
+      }
+      String s = (String)o;
+
+      if (s.startsWith(PFX)) {
+        mps.put(s.substring(n), tbl.getProperty(s).toLowerCase());
+      }
+    }
+    return mps;
   }
 
   @Override
   public Class<? extends Writable> getSerializedClass()
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    return Text.class;
   }
 
+  //@Override
+  /*public Writable serialize(Object obj, ObjectInspector objInspector)
+   throws SerDeException
+   {
+   // make sure it is a struct record
+   if (objInspector.getCategory() != Category.STRUCT) {
+   throw new SerDeException(getClass().toString()
+   + " can only serialize struct types, but we got: "
+   + objInspector.getTypeName());
+   }
+
+   JSONObject serializer =
+   serializeStruct( obj, (StructObjectInspector) objInspector, columnNames);
+
+   Text t = new Text(serializer.toString());
+   serializedDataSize = t.getBytes().length;
+   return t;
+   }*/
   @Override
-  public Writable serialize(Object obj, ObjectInspector objInspector)
+  public Writable serialize(Object obj, ObjectInspector oi)
           throws SerDeException
   {
-    // make sure it is a struct record
-    if (objInspector.getCategory() != Category.STRUCT) {
-      throw new SerDeException(getClass().toString()
-              + " can only serialize struct types, but we got: "
-              + objInspector.getTypeName());
+    LOG.info(obj.getClass().toString());
+    Object deparsedObj = deparseRow(obj, oi);
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      // Let Jackson do the work of serializing the object
+      return new Text(mapper.writeValueAsString(deparsedObj));
     }
+    catch (Exception e) {
+      throw new SerDeException(e);
+    }
+  }
 
-    JSONObject serializer
-            = serializeStruct(obj, (StructObjectInspector)objInspector, columnNames);
+  private Object deparseObject(Object obj, ObjectInspector oi)
+  {
+    switch (oi.getCategory()) {
 
-    Text t = new Text(serializer.toString());
+      case PRIMITIVE:
+        return deparsePrimitive(obj, (PrimitiveObjectInspector)oi);
 
-    return t;
+      default:
+        return null;
+    }
+  }
+
+  private Object deparsePrimitive(Object obj, PrimitiveObjectInspector primOI)
+  {
+    return primOI.getPrimitiveJavaObject(obj);
+  }
+
+  private Object deparseRow(Object obj, ObjectInspector structOI)
+  {
+    return deparseStruct(obj, (StructObjectInspector)structOI, true);
+  }
+
+  private Object deparseStruct(Object obj,
+          StructObjectInspector structOI,
+          boolean isRow)
+  {
+    Map<Object, Object> struct = new HashMap<Object, Object>();
+    List<? extends StructField> fields = structOI.getAllStructFieldRefs();
+    for (int i = 0; i < fields.size(); i++) {
+      StructField field = fields.get(i);
+      // The top-level row object is treated slightly differently from other
+      // structs, because the field names for the row do not correctly reflect
+      // the Hive column names. For lower-level structs, we can get the field
+      // name from the associated StructField object.
+      String fieldName = isRow ? columnNames.get(i) : field.getFieldName();
+      ObjectInspector fieldOI = field.getFieldObjectInspector();
+      Object fieldObj = structOI.getStructFieldData(obj, field);
+      struct.put(fieldName, deparseObject(fieldObj, fieldOI));
+    }
+    return struct;
   }
 
   private JSONObject serializeStruct(Object obj,
@@ -152,9 +293,7 @@ public class ByteArraySerDe implements SerDe
     if (null == obj) {
       return null;
     }
-
     JSONObject result = new JSONObject();
-
     List<? extends StructField> fields = soi.getAllStructFieldRefs();
 
     for (int i = 0; i < fields.size(); i++) {
@@ -163,13 +302,16 @@ public class ByteArraySerDe implements SerDe
 
       if (null != data) {
         try {
-          result.put((columnNames == null ? sf.getFieldName() : columnNames.get(i)),
-                     serializeField(
-                             data,
-                             sf.getFieldObjectInspector()));
+                    // we want to serialize columns with their proper HIVE name,
+          // not the _col2 kind of name usually generated upstream
+          result.put(
+                  getSerializedFieldName(columnNames, i, sf),
+                  serializeField(
+                          data,
+                          sf.getFieldObjectInspector()));
 
         }
-        catch (Exception ex) {
+        catch (JSONException ex) {
           LOG.warn("Problem serializing", ex);
           throw new RuntimeException(ex);
         }
@@ -177,6 +319,18 @@ public class ByteArraySerDe implements SerDe
     }
     return result;
 
+  }
+
+  private String getSerializedFieldName(List<String> columnNames, int pos, StructField sf)
+  {
+    String n = (columnNames == null ? sf.getFieldName() : columnNames.get(pos));
+
+    if (options.getMappings().containsKey(n)) {
+      return options.getMappings().get(n);
+    }
+    else {
+      return n;
+    }
   }
 
   Object serializeField(Object obj,
@@ -224,12 +378,12 @@ public class ByteArraySerDe implements SerDe
             throw new RuntimeException("Unknown primitive");
         }
         break;
-      case MAP:
-        result = serializeMap(obj, (MapObjectInspector)oi);
-        break;
-      case LIST:
-        result = serializeArray(obj, (ListObjectInspector)oi);
-        break;
+      /* case MAP:
+       result = serializeMap(obj, (MapObjectInspector)oi);
+       break;
+       case LIST:
+       result = serializeArray(obj, (ListObjectInspector)oi);
+       break;*/
       case STRUCT:
         result = serializeStruct(obj, (StructObjectInspector)oi, null);
         break;

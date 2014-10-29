@@ -90,6 +90,16 @@ public class ByteArraySerDe implements SerDe
    // options = new ByteArrayStructOIOptions(getMappings(tbl));
   }
 
+  /**
+   * This method does the work of deserializing a record into Java objects that
+   * Hive can work with via the ObjectInspector interface. For this SerDe, the
+   * blob that is passed in is a JSON string, and the Jackson JSON parser is
+   * being used to translate the string into Java objects.
+   *
+   * The JSON deserialization works by taking the column names in the Hive
+   * table, and looking up those fields in the parsed JSON object. If the value
+   * of the field is not a primitive, the object is parsed further.
+   */
   @Override
   public Object deserialize(Writable w) throws SerDeException
   {
@@ -234,6 +244,13 @@ public class ByteArraySerDe implements SerDe
    serializedDataSize = t.getBytes().length;
    return t;
    }*/
+
+  /**
+   * This method takes an object representing a row of data from Hive, and uses
+   * the ObjectInspector to get the data for each column and serialize it. This
+   * implementation deparses the row into an object that Jackson can easily
+   * serialize into a JSON blob.
+   */
   @Override
   public Writable serialize(Object obj, ObjectInspector oi)
           throws SerDeException
