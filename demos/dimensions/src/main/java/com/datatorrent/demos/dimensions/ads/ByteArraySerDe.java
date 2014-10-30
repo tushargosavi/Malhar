@@ -142,6 +142,7 @@ public class ByteArraySerDe implements SerDe
      }
      }
      // }*/
+    LOG.info("row is" + row.toString());
     return row;
   }
 
@@ -235,6 +236,7 @@ public class ByteArraySerDe implements SerDe
     LOG.info(obj.getClass().toString());
     Object deparsedObj = deparseRow(obj, oi);
     ObjectMapper mapper = new ObjectMapper();
+
     try {
       // Let Jackson do the work of serializing the object
       return new Text(mapper.writeValueAsString(deparsedObj));

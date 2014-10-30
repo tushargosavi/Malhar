@@ -172,11 +172,11 @@
         </executions>
       </plugin>
       <!-- generate javdoc -->
-      <plugin>
+      <!--<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <executions>
-          <!-- generate xml javadoc -->
+          < generate xml javadoc
           <execution>
             <id>xml-doclet</id>
             <phase>generate-resources</phase>
@@ -194,7 +194,7 @@
               </docletArtifact>
             </configuration>
           </execution>
-          <!-- generate default javadoc jar with custom tags -->
+          generate default javadoc jar with custom tags
           <execution>
             <id>attach-sources</id>
             <goals>
@@ -222,7 +222,7 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
       <!-- Transform xml javadoc to stripped down version containing only class/interface comments and tags-->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -386,6 +386,12 @@
       <type>jar</type>
     </dependency>
     <dependency>
+      <groupId>malhar</groupId>
+      <artifactId>CustomSerde</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-shims</artifactId>
       <version>0.13.1</version>
@@ -397,6 +403,7 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-exec</artifactId>
       <version>0.13.1</version>
+      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>

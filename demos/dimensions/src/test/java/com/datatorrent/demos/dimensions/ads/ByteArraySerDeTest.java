@@ -87,11 +87,53 @@ public class ByteArraySerDeTest
         Writable w = new Text("{\"one\":true,\"three\":[\"red\",\"yellow\",\"orange\"],\"two\":19.5,\"four\":\"poop\"}");
 
         Object result =  instance.deserialize(w);
-     
+
 
     }
 
     @Test
+    public void testSerializeWithMapping() throws SerDeException, Exception {
+        System.out.println("testSerializeWithMapping");
+
+        ByteArraySerDe serde = new ByteArraySerDe();
+
+        System.out.println("serialize");
+        ArrayList row = new ArrayList(5);
+
+        List<ObjectInspector> lOi = new LinkedList<ObjectInspector>();
+        List<String> fieldNames = new LinkedList<String>();
+
+        row.add(Boolean.TRUE);
+        fieldNames.add("one");
+        lOi.add(ObjectInspectorFactory.getReflectionObjectInspector(Boolean.class,
+                ObjectInspectorFactory.ObjectInspectorOptions.JAVA));
+
+        row.add(new Float(43.2));
+        fieldNames.add("two");
+        lOi.add(ObjectInspectorFactory.getReflectionObjectInspector(Float.class,
+                ObjectInspectorFactory.ObjectInspectorOptions.JAVA));
+
+        row.add("value1");
+        fieldNames.add("four");
+        lOi.add(ObjectInspectorFactory.getReflectionObjectInspector(String.class,
+                ObjectInspectorFactory.ObjectInspectorOptions.JAVA));
+
+        row.add(new Integer(7898));
+        fieldNames.add("ts");
+        lOi.add(ObjectInspectorFactory.getReflectionObjectInspector(Integer.class,
+                ObjectInspectorFactory.ObjectInspectorOptions.JAVA));
+
+        StructObjectInspector soi = ObjectInspectorFactory.getStandardStructObjectInspector(fieldNames, lOi);
+
+        Object obj = serde.serialize(row, soi);
+
+        assertTrue(obj instanceof Text);
+        assertEquals("{\"timestamp\":7898,\"two\":43.2,\"one\":true,\"three\":[],\"four\":\"value1\"}", obj.toString());
+
+        System.out.println("Output object " + obj.toString());
+    }
+
+
      public void testSerialize() throws SerDeException, Exception, Exception {
         System.out.println("serialize");
 

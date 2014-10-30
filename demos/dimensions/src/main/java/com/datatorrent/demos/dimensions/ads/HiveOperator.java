@@ -23,15 +23,17 @@ import com.datatorrent.common.util.Slice;
 import com.datatorrent.contrib.hds.HDSWriter;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregateEvent;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregator;
-import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.SortedMap;
+import java.util.logging.Level;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -102,7 +104,17 @@ public class HiveOperator extends HDSWriter
       Slice key = new Slice(keyBytes);
       LOG.info("key in byte is" + Arrays.toString(keyBytes));
       LOG.info("value is in byte" + Arrays.toString(valBytes));
-      AdInfo.AdInfoAggregateEvent ae1 = bytesToAggregate(key, valBytes);
+      AdInfo ae1 = bytesToAggregate(key, valBytes);
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        mapper.writeValue(new File("/tmp/out.json"), ae1);
+        //write  this object into orc file
+      }
+      catch (IOException ex) {
+        java.util.logging.Logger.getLogger(HiveOperator.class.getName()).log(Level.SEVERE, null, ex);
+      }
+
+
       LOG.info("object is " +ae1.toString());
 
     }

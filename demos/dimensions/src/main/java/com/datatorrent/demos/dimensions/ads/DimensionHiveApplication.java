@@ -24,13 +24,15 @@ import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregator;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 import java.sql.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class DimensionHiveApplication implements StreamingApplication
 {
   private static String driverName = "org.apache.hive.jdbc.HiveDriver";
+  private static Logger LOG = LoggerFactory.getLogger("DimensionHiveApplication.class");
+
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
@@ -38,7 +40,7 @@ public class DimensionHiveApplication implements StreamingApplication
       Class.forName(driverName);
     }
     catch (ClassNotFoundException ex) {
-      Logger.getLogger(HiveJdbcClient.class.getName()).log(Level.SEVERE, null, ex);
+      ex.printStackTrace();
     }
 
     Connection con = null;
@@ -46,53 +48,38 @@ public class DimensionHiveApplication implements StreamingApplication
       con = DriverManager.getConnection("jdbc:hive2://localhost:10000/default", "", "");
     }
     catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
+      LOG.info(DimensionHiveApplication.class.getName()+ ex);
     }
     Statement stmt = null;
     try {
       stmt = con.createStatement();
     }
     catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
+      LOG.info(DimensionHiveApplication.class.getName()+ ex);
     }
     String tableName = "adinfo";
     try {
       stmt.execute("drop table adinfo");
       stmt.execute("drop table adinfotemp");
-    }
-    catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    try {
       stmt.execute("CREATE TABLE  adinfo (publisherId int,advertiserId int, adUnit int, timestamp timestamp,cost double, revenue double, impressions int, clicks int )  \n"
-              + "row format SERDE '/tmp/CustomSerde-1.0-SNAPSHOT.jar'  \n"
+              + "row format SERDE 'malhar.customserde.ByteArraySerDe'  \n"
               // + "WITH SERDEPROPERTIES (“input.regex” = “([^ ]*) ([^ ]*) ([^ ]*) (-|\\\\[[^\\\\]]*\\\\]) ([^ \\\"]*|\\”[^\\\"]*\\”) ”),“output.format.string”=”%1$s %2$s %3$s %4$s %5$s”)  \n"
               + "STORED AS ORC");
       stmt.execute("CREATE TABLE adinfotemp (publisherId int,advertiserId int, adUnit int, timestamp timestamp,cost double, revenue double, impressions int, clicks int)  \n"
-              + "row format SERDE '/tmp/CustomSerde-1.0-SNAPSHOT.jar'  \n"
+              + "row format SERDE 'malhar.customserde.ByteArraySerDe'  \n"
               // + "WITH SERDEPROPERTIES (“input.regex” = “([^ ]*) ([^ ]*) ([^ ]*) (-|\\\\[[^\\\\]]*\\\\]) ([^ \\\"]*|\\”[^\\\"]*\\”) ”),“output.format.string”=”%1$s %2$s %3$s %4$s %5$s”)  \n"
               + "STORED AS TEXTFILE");
-    }
-    catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
-    }
 
-     String sql = "show tables '" + tableName + "'";
-    System.out.println("Running: " + sql);
-    ResultSet res = null;
-    try {
-      res = stmt.executeQuery(sql);
-    }
-    catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    try {
+      String sql = "show tables";
+      ResultSet res = stmt.executeQuery(sql);
+
+
       if (res.next()) {
         System.out.println(res.getString(1));
       }
     }
     catch (SQLException ex) {
-      Logger.getLogger(DimensionHiveApplication.class.getName()).log(Level.SEVERE, null, ex);
+      LOG.info(DimensionHiveApplication.class.getName() + ex.getCause());
     }
     dag.setAttribute(DAG.APPLICATION_NAME, "DimensionHiveApplication");
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);

@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Tue Oct 28 11:32:16 PDT 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0149-5807-a26c-000004530790 
+on database directory /Users/prerna/dev/Malhar/demos/metastore_db with class loader sun.misc.Launcher$AppClassLoader@3bad086a 
+Loaded from file:/usr/local/Cellar/hive/0.13.1/libexec/lib/derby-10.10.1.1.jar
+java.vendor=Apple Inc.
+java.runtime.version=1.6.0_65-b14-466.1-11M4716
+user.dir=/Users/prerna/dev/Malhar/demos
+os.name=Mac OS X
+os.arch=x86_64
+os.version=10.9.5
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
