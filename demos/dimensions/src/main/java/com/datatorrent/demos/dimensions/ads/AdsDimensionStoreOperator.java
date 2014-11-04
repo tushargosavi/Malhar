@@ -79,10 +79,6 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
   protected boolean debug = false;
 
   protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-  // in-memory aggregation before hitting WAL
-  protected final SortedMap<Long, Map<AdInfoAggregateEvent, AdInfoAggregateEvent>> cache = Maps.newTreeMap();
-  // TODO: should be aggregation interval count
-  private int maxCacheSize = 5;
 
   private AdInfoAggregator aggregator;
 
@@ -90,16 +86,6 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
   protected transient final Map<String, TimeSeriesQuery> timeSeriesQueries = Maps.newConcurrentMap();
   private transient ObjectMapper mapper = null;
   private long defaultTimeWindow = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
-
-  public int getMaxCacheSize()
-  {
-    return maxCacheSize;
-  }
-
-  public void setMaxCacheSize(int maxCacheSize)
-  {
-    this.maxCacheSize = maxCacheSize;
-  }
 
   public long getDefaultTimeWindow()
   {
@@ -131,28 +117,34 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
     this.debug = debug;
   }
 
-  /**
-   * Perform aggregation in memory until HDS flush threshold is reached.
-   * Avoids WAL writes for most of the aggregation.
+  protected AdInfoAggregateEvent getFromStore(AdInfoAggregateEvent event) {
+    AdInfoAggregateEvent ae = null;
+    byte[] key = getKey(event);
+    long bucketKey = getBucketKey(event);
+    HDSQuery query = new HDSQuery();
+    query.bucketKey = bucketKey;
+    query.key = new Slice(key);
+    super.processQuery(query);
+    if (!query.processed)
+      return null;
+    if (query.result != null)
+      ae = bytesToAggregate(query.key, query.result);
+    return ae;
+  }
+
+  /* Read from store, aggregate and write back to store, caching at store layer
+     should take care of most of the tuples before hitting to disks.
    */
   @Override
   protected void processEvent(AdInfoAggregateEvent event) throws IOException
   {
-    Map<AdInfoAggregateEvent, AdInfoAggregateEvent> valMap = cache.get(event.getTimestamp());
-    if (valMap == null) {
-      valMap = new HashMap<AdInfoAggregateEvent, AdInfoAggregateEvent>();
-      valMap.put(event, event);
-      cache.put(event.getTimestamp(), valMap);
-    } else {
-      AdInfoAggregateEvent val = valMap.get(event);
-      // FIXME: lookup from store as the value may have been flushed previously.
-      if (val == null) {
-        valMap.put(event, event);
-        return;
-      } else {
-        aggregator.aggregate(val, event);
-      }
-    }
+    // Check in in-memory cache.
+    AdInfoAggregateEvent val = getFromStore(event);
+    if (val == null)
+      val = event;
+    else
+      aggregator.aggregate(val, event);
+    super.put(getBucketKey(val), new Slice(getKey(val)), getValue(val));
   }
 
   @Override
@@ -164,20 +156,6 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
   @Override
   public void endWindow()
   {
-    // flush final aggregates
-    int expiredEntries = cache.size() - maxCacheSize;
-    while(expiredEntries-- > 0){
-
-      Map<AdInfoAggregateEvent, AdInfoAggregateEvent> vals = cache.remove(cache.firstKey());
-      for (Entry<AdInfoAggregateEvent, AdInfoAggregateEvent> en : vals.entrySet()) {
-        AdInfoAggregateEvent ai = en.getValue();
-        try {
-          put(getBucketKey(ai), new Slice(getKey(ai)), getValue(ai));
-        } catch (IOException e) {
-          LOG.warn("Error putting the value", e);
-        }
-      }
-    }
     super.endWindow();
     processTimeSeriesQueries();
   }
@@ -411,17 +389,6 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
       res.data = Lists.newArrayListWithExpectedSize(rangeQuery.points.size());
       rangeQuery.prototype.timestamp = rangeQuery.startTime;
       for (HDSQuery query : rangeQuery.points) {
-        // check in-flight memory store first
-        Map<AdInfoAggregateEvent, AdInfoAggregateEvent> buffered = cache.get(rangeQuery.prototype.timestamp);
-        if (buffered != null) {
-          AdInfo.AdInfoAggregateEvent ae = buffered.get(rangeQuery.prototype);
-          if (ae != null) {
-            LOG.debug("Adding from aggregation buffer {}" + ae);
-            res.data.add(ae);
-            rangeQuery.prototype.timestamp += rangeQuery.intervalTimeUnit.toMillis(1);
-            continue;
-          }
-        }
         // results from persistent store
         if (query.processed && query.result != null) {
           AdInfo.AdInfoAggregateEvent ae = super.codec.fromKeyValue(query.key, query.result);
