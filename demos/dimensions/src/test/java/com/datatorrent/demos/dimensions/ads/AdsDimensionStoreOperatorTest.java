@@ -55,7 +55,6 @@ public class AdsDimensionStoreOperatorTest
     hdsOut.setFileStore(hdsFile);
     hdsFile.setBasePath(testInfo.getDir());
     hdsOut.setAggregator(new AdInfo.AdInfoAggregator());
-    hdsOut.setMaxCacheSize(1);
     hdsOut.setFlushIntervalCount(0);
     hdsOut.setup(null);
 
@@ -132,8 +131,6 @@ public class AdsDimensionStoreOperatorTest
     Assert.assertEquals("clicks", ae3.clicks, r.data.get(1).clicks);
 
     Assert.assertNotSame("deserialized", ae1, r.data.get(1));
-    Assert.assertSame("from cache", ae3, r.data.get(1));
-
   }
 
 
