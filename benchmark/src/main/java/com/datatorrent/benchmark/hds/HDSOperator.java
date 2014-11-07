@@ -24,6 +24,8 @@ import java.util.Arrays;
 
 public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
 {
+
+
   public static class MutableKeyValCodec extends KryoSerializableStreamCodec<MutableKeyValue> implements HDSOperator.HDSCodec<MutableKeyValue>
   {
     @Override public byte[] getKeyBytes(MutableKeyValue mutableKeyValue)
@@ -51,8 +53,8 @@ public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
   }
 
 
-  @Override protected Class<? extends HDSCodec<MutableKeyValue>> getCodecClass()
+  @Override protected HDSCodec<MutableKeyValue> getCodec()
   {
-    return MutableKeyValCodec.class;
+    return new MutableKeyValCodec();
   }
 }
