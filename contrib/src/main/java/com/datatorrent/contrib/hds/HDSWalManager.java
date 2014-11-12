@@ -190,6 +190,7 @@ public class HDSWalManager implements Closeable
     writer.append(key, value);
     long bytes = key.length + value.length + 2 * 4;
     stats.totalBytes += bytes;
+    stats.totalKeys ++;
     dirty = true;
 
     if (maxUnflushedBytes > 0 && writer.getUnflushedCount() > maxUnflushedBytes)
@@ -316,6 +317,7 @@ public class HDSWalManager implements Closeable
     long totalBytes;
     long flushCounts;
     long flushDuration;
+    public long totalKeys;
   }
 
   private WalStats stats = new WalStats();

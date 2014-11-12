@@ -42,7 +42,7 @@ public class InputItemGenerator implements InputOperator
   private int numAdUnits = 5;
   private double expectedClickThruRate = 0.005;
   @Min(1)
-  private int blastCount = 10000;
+  private int blastCount = 1000;
   private final Random random = new Random();
   public final transient DefaultOutputPort<AdInfo> outputPort = new DefaultOutputPort<AdInfo>();
 
@@ -150,6 +150,7 @@ public class InputItemGenerator implements InputOperator
           buildAndSend(true, publisherId + 1, advertiserId + 1, adUnit + 1, revenue, timestamp);
         }
       }
+      Thread.sleep(10);
     }
     catch (Exception ex) {
       throw new RuntimeException(ex);

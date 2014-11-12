@@ -25,9 +25,7 @@ import java.util.concurrent.Executors;
 import javax.validation.constraints.Min;
 
 import com.datatorrent.api.Context;
-import com.datatorrent.lib.counters.BasicCounters;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.mutable.MutableLong;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,6 +191,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     }
 
     ioStats.dataBytesWritten += written;
+    ioStats.dataKeysWritten += keysWritten;
     ioStats.dataWriteTime += System.currentTimeMillis() - startTime;
   }
 
@@ -327,6 +326,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
         // load existing file
         HDSFileReader reader = store.getReader(bucket.bucketKey, fileMeta.name);
         reader.readFully(fileData);
+        /* these keys are re-written */
+        ioStats.dataKeysRewritten += fileData.size();
         reader.close();
         filesToDelete.add(fileMeta.name);
       }
@@ -459,16 +460,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     }
 
     if (context != null) {
-      for(Bucket bucket : buckets.values())
-      {
-        BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
-        /* fill in stats for WAL */
-        HDSWalManager.WalStats walStats = bucket.wal.getCounters();
-        ioStats.walBytesWritten = walStats.totalBytes;
-        ioStats.walFlushCount = walStats.flushCounts;
-        ioStats.walFlushTime = walStats.flushDuration;
-        LOG.info("stats for bucket {} is {}", bucket.bucketKey, ioStats);
-      }
+      updateStats();
       context.setCounters(bucketStats);
     }
   }
@@ -564,13 +556,21 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     public long walFlushCount;
     /* Amount of time spent while waiting for WAL flush to disk in milliseconds */
     public long walFlushTime;
+    /* wal keys written */
+    public long walKeysWritten;
     /* Number of data files written */
     public long dataFilesWritten;
     /* Number of bytes written to data file for the bucket */
     public long dataBytesWritten;
     /* Time taken for writing files */
     public long dataWriteTime;
+    /* total keys written to data files */
+    public long dataKeysWritten;
     /* The number of files which are modified */
+    public long dataKeysRewritten;
+    /* records in memmory */
+    public long dataInWriteCache;
+    public long dataInFrozenCache;
 
     @Override public String toString()
     {
@@ -582,6 +582,23 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
           ", dataBytesWritten=" + dataBytesWritten +
           ", dataWriteTime=" + dataWriteTime +
           '}';
+    }
+  }
+
+  private void updateStats()
+  {
+    for(Bucket bucket : buckets.values())
+    {
+      BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
+      /* fill in stats for WAL */
+      HDSWalManager.WalStats walStats = bucket.wal.getCounters();
+      ioStats.walBytesWritten = walStats.totalBytes;
+      ioStats.walFlushCount = walStats.flushCounts;
+      ioStats.walFlushTime = walStats.flushDuration;
+      ioStats.walKeysWritten = walStats.totalKeys;
+      ioStats.dataInWriteCache = bucket.writeCache.size();
+      ioStats.dataInFrozenCache = bucket.frozenWriteCache.size();
+      LOG.info("stats for bucket {} is {}", bucket.bucketKey, ioStats);
     }
   }
 
@@ -606,11 +623,16 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
           aggStats.globalStats.walBytesWritten += stats.walBytesWritten;
           aggStats.globalStats.walFlushCount += stats.walFlushCount;
           aggStats.globalStats.walFlushTime += stats.walFlushTime;
+          aggStats.globalStats.walKeysWritten += stats.walKeysWritten;
 
           aggStats.globalStats.dataWriteTime += stats.dataWriteTime;
           aggStats.globalStats.dataFilesWritten += stats.dataFilesWritten;
           aggStats.globalStats.dataBytesWritten += stats.dataBytesWritten;
+          aggStats.globalStats.dataKeysWritten += stats.dataKeysWritten;
+          aggStats.globalStats.dataKeysRewritten += stats.dataKeysRewritten;
 
+          aggStats.globalStats.dataInWriteCache += stats.dataInWriteCache;
+          aggStats.globalStats.dataInFrozenCache += stats.dataInFrozenCache;
           aggStats.aggregatedStats.put(bId, stats);
         }
       }

@@ -92,4 +92,11 @@
     <value>-server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
   </property>
 
+
+  <!-- Settings for ApplicationWithHDSWithoutQuery -->
+  <property>
+    <name>dt.application.ApplicationWithHDSWithoutQuery.operator.Store.fileStore.basePath</name>
+    <value>AdsDimensionsWithHDSDemo/WithoutQuery</value>
+  </property>
+
 </configuration>

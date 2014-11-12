@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.benchmark.hds;
+package com.datatorrent.demos.dimensions.benchmark;
 
 import com.datatorrent.common.util.Slice;
 import com.datatorrent.contrib.hds.AbstractSinglePortHDSWriter;
@@ -25,6 +25,18 @@ import java.util.Arrays;
 
 public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
 {
+  public boolean isReadModifyWriteMode()
+  {
+    return readModifyWriteMode;
+  }
+
+  public void setReadModifyWriteMode(boolean readModifyWriteMode)
+  {
+    this.readModifyWriteMode = readModifyWriteMode;
+  }
+
+  private boolean readModifyWriteMode = false;
+
   public static class MutableKeyValCodec extends KryoSerializableStreamCodec<MutableKeyValue> implements HDSCodec<MutableKeyValue>
   {
     @Override public byte[] getKeyBytes(MutableKeyValue mutableKeyValue)
@@ -59,16 +71,18 @@ public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
 
   @Override protected void processEvent(MutableKeyValue event) throws IOException
   {
-    // do get and then put to simulate read-modify-write workload.
-    byte[] oldval = super.get(getBucketKey(event), new Slice(event.getKey()));
+    if (readModifyWriteMode) {
+      // do get and then put to simulate read-modify-write workload.
+      byte[] oldval = super.get(getBucketKey(event), new Slice(event.getKey()));
 
-    if (oldval != null) {
-      // Modify event.
-      byte[] newval = event.getValue();
-      for (int i = 0; i < newval.length; i++)
-        if (i < newval.length)
-          oldval[i] += newval[i];
-      event.setValue(oldval);
+      if (oldval != null) {
+        // Modify event.
+        byte[] newval = event.getValue();
+        for (int i = 0; i < newval.length; i++)
+          if (i < newval.length)
+            oldval[i] += newval[i];
+        event.setValue(oldval);
+      }
     }
     super.processEvent(event);
   }

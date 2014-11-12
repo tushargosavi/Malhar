@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,7 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
 {
   private static final Logger LOG = LoggerFactory.getLogger(AdsDimensionStoreOperator.class);
 
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<TimeSeriesQueryResult> queryResult = new DefaultOutputPort<TimeSeriesQueryResult>();
 
   @InputPortFieldAnnotation(optional=true)
@@ -135,8 +137,8 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
    * Perform aggregation in memory until HDS flush threshold is reached.
    * Avoids WAL writes for most of the aggregation.
    */
-  @Override
-  protected void processEvent(AdInfoAggregateEvent event) throws IOException
+
+  protected void processEvent1(AdInfoAggregateEvent event) throws IOException
   {
     Map<AdInfoAggregateEvent, AdInfoAggregateEvent> valMap = cache.get(event.getTimestamp());
     if (valMap == null) {
@@ -153,6 +155,51 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDSWriter<AdInf
         aggregator.aggregate(val, event);
       }
     }
+  }
+
+  @Override
+  protected void processEvent(AdInfoAggregateEvent event) throws IOException
+  {
+    AdInfoAggregateEvent old = getEventFromMemCache(event);
+    if (old == null)
+      old = getEventFromHDS(event);
+
+    if (old != null)
+      aggregator.aggregate(old, event);
+    else
+      old = event;
+
+    putEventInMemCache(old);
+  }
+
+  private void putEventInMemCache(AdInfoAggregateEvent event)
+  {
+    Map<AdInfoAggregateEvent, AdInfoAggregateEvent> valMap = cache.get(event.getTimestamp());
+    if (valMap == null) {
+      valMap = new HashMap<AdInfoAggregateEvent, AdInfoAggregateEvent>();
+      valMap.put(event, event);
+      cache.put(event.getTimestamp(), valMap);
+    }
+    valMap.put(event, event);
+  }
+
+  private AdInfoAggregateEvent getEventFromMemCache(AdInfoAggregateEvent event)
+  {
+    Map<AdInfoAggregateEvent, AdInfoAggregateEvent> valMap = cache.get(event.getTimestamp());
+    if (valMap == null)
+      return null;
+    return valMap.get(event);
+  }
+
+  private AdInfoAggregateEvent getEventFromHDS(AdInfoAggregateEvent event) throws IOException
+  {
+    byte[] key = getKey(event);
+    if (key == null)
+      return null;
+    Slice keySlice = new Slice(key, 0, key.length);
+    byte[] val = get(getBucketKey(event), keySlice);
+    AdInfoAggregateEvent old = bytesToAggregate(keySlice, val);
+    return old;
   }
 
   @Override
