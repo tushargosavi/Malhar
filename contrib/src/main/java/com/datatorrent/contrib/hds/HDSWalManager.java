@@ -67,6 +67,8 @@ import com.google.common.collect.Maps;
 public class HDSWalManager implements Closeable
 {
   public static final String WAL_FILE_PREFIX = "_WAL-";
+  private int windowSinceLastFlush = 0;
+  private int walFlushInterval = 1;
 
   public void setBucketKey(long bucketKey)
   {
@@ -222,7 +224,12 @@ public class HDSWalManager implements Closeable
     if (!dirty)
       return;
 
-    flush();
+    windowSinceLastFlush++;
+    if (windowSinceLastFlush == walFlushInterval) {
+      flush();
+      windowSinceLastFlush = 0;
+    }
+
     dirty = false;
     committedLsn = windowId;
     committedLength = writer.logSize();
@@ -283,6 +290,16 @@ public class HDSWalManager implements Closeable
 
   public long getCommittedLSN() {
     return committedLsn;
+  }
+
+  public int getWalFlushInterval()
+  {
+    return walFlushInterval;
+  }
+
+  public void setWalFlushInterval(int walFlushInterval)
+  {
+    this.walFlushInterval = walFlushInterval;
   }
 
   @Override

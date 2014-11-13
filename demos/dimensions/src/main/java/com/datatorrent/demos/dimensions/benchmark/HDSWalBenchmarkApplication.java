@@ -34,15 +34,15 @@ public class HDSWalBenchmarkApplication implements StreamingApplication
     gen.setSleepms(0);
     dag.getOperatorMeta("Generator").getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
 
-    HDSOperator hdsOut = dag.addOperator("HDSStore1", new HDSOperator());
+    HDSOperator hdsOut = dag.addOperator("Store", new HDSOperator());
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     hdsFile.setBasePath("WALBenchMarkDir");
     hdsOut.setFileStore(hdsFile);
     hdsOut.setMaxWalFileSize(64 * 1024 * 1024);
     hdsOut.setMaxFileSize(128 * 1024 * 1024);
-    dag.getOperatorMeta("HDSStore1").getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-    dag.getOperatorMeta("HDSStore1").getAttributes().put(Context.OperatorContext.COUNTERS_AGGREGATOR, new HDSWriter.BucketIOStatAggregator());
-    dag.getOperatorMeta("HDSStore1").getAttributes().put(Context.OperatorContext.MEMORY_MB, 4096);
+    dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
+    dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.COUNTERS_AGGREGATOR, new HDSWriter.BucketIOStatAggregator());
+    dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.MEMORY_MB, 4096);
 
     dag.addStream("s1", gen.out, hdsOut.input).setLocality(DAG.Locality.THREAD_LOCAL);
   }

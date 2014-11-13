@@ -27,6 +27,7 @@ import javax.validation.constraints.Min;
 import com.datatorrent.api.Context;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.eclipse.jetty.security.RunAsToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +75,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
   private int maxWalFileSize = 64 * 1024 * 1024;
   private int flushSize = 1000000;
   private int flushIntervalCount = 120;
+  private int walFlushIntervalCount = 1;
 
   private final HashMap<Long, WalMeta> walMeta = Maps.newHashMap();
   private transient OperatorContext context;
@@ -142,6 +144,16 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     this.flushIntervalCount = flushIntervalCount;
   }
 
+  public int getWalFlushIntervalCount()
+  {
+    return walFlushIntervalCount;
+  }
+
+  public void setWalFlushIntervalCount(int walFlushIntervalCount)
+  {
+    this.walFlushIntervalCount = walFlushIntervalCount;
+  }
+
   /**
    * Write data to size based rolling files
    *
@@ -207,6 +219,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       BucketMeta bmeta = getMeta(bucketKey);
       WalMeta wmeta = getWalMeta(bucketKey);
       bucket.wal = new HDSWalManager(this.store, bucketKey, wmeta.fileId, wmeta.offset);
+      bucket.wal.setWalFlushInterval(walFlushIntervalCount);
       bucket.wal.setMaxWalFileSize(maxWalFileSize);
 
       LOG.debug("Existing walmeta information fileId {} offset {} tailId {} tailOffset {} windowId {} committedWid {} currentWid {}",
@@ -370,19 +383,6 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     bucket.wal.cleanup(walMeta.tailId);
   }
 
-  // TODO: This should be moved to reader and writter, to return number of
-  // bytes read or written.
-  private long getBytesLen(TreeMap<Slice, byte[]> fileData)
-  {
-    long len = 0;
-    for(Map.Entry<Slice, byte[]> entry : fileData.entrySet())
-    {
-      len += entry.getKey().length;
-      len += entry.getValue().length;
-    }
-    return len;
-  }
-
   @Override
   public void setup(OperatorContext context)
   {
@@ -478,6 +478,14 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
   @Override
   public void checkpointed(long arg0)
   {
+    for(Bucket bucket : buckets.values()) {
+      try {
+        LOG.debug("Flushing LOG during operator checkpoint for bucket {}", bucket.bucketKey);
+        bucket.wal.flush();
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to flush WAL");
+      }
+    }
   }
 
   /**
