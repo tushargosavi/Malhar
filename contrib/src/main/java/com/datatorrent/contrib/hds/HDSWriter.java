@@ -341,6 +341,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
         reader.readFully(fileData);
         /* these keys are re-written */
         ioStats.dataKeysRewritten += fileData.size();
+        ioStats.filesRead ++;
         reader.close();
         filesToDelete.add(fileMeta.name);
       }
@@ -349,6 +350,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       fileData.putAll(fileEntry.getValue());
       // new file
       writeFile(bucket, bucketMetaCopy, fileData);
+      ioStats.filesWritten++;
     }
 
     // flush meta data for new files
@@ -579,6 +581,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     /* records in memmory */
     public long dataInWriteCache;
     public long dataInFrozenCache;
+    public int filesWritten;
+    public int filesRead;
 
     @Override public String toString()
     {
@@ -638,6 +642,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
           aggStats.globalStats.dataBytesWritten += stats.dataBytesWritten;
           aggStats.globalStats.dataKeysWritten += stats.dataKeysWritten;
           aggStats.globalStats.dataKeysRewritten += stats.dataKeysRewritten;
+          aggStats.globalStats.filesWritten += stats.filesWritten;
+          aggStats.globalStats.filesRead += stats.filesRead;
 
           aggStats.globalStats.dataInWriteCache += stats.dataInWriteCache;
           aggStats.globalStats.dataInFrozenCache += stats.dataInFrozenCache;
