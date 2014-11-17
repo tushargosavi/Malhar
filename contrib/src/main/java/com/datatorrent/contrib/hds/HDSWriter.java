@@ -337,10 +337,13 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
 
       if (fileMeta.name != null) {
         // load existing file
+        long start = System.currentTimeMillis();
         HDSFileReader reader = store.getReader(bucket.bucketKey, fileMeta.name);
         reader.readFully(fileData);
+        ioStats.dataReadTime += System.currentTimeMillis() - start;
         /* these keys are re-written */
         ioStats.dataKeysRewritten += fileData.size();
+        ioStats.filesReadInCurrent++;
         ioStats.filesRead ++;
         reader.close();
         filesToDelete.add(fileMeta.name);
@@ -351,6 +354,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       // new file
       writeFile(bucket, bucketMetaCopy, fileData);
       ioStats.filesWritten++;
+      ioStats.filesWroteInCurrent++;
     }
 
     // flush meta data for new files
@@ -383,6 +387,8 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     walMeta.tailOffset = bucket.tailOffset;
 
     bucket.wal.cleanup(walMeta.tailId);
+    ioStats.filesReadInCurrent = 0;
+    ioStats.filesWroteInCurrent = 0;
   }
 
   @Override
@@ -583,6 +589,9 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     public long dataInFrozenCache;
     public int filesWritten;
     public int filesRead;
+    public int filesReadInCurrent;
+    public int filesWroteInCurrent;
+    public long dataReadTime;
 
     @Override public String toString()
     {
@@ -638,12 +647,16 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
           aggStats.globalStats.walKeysWritten += stats.walKeysWritten;
 
           aggStats.globalStats.dataWriteTime += stats.dataWriteTime;
+          aggStats.globalStats.dataReadTime += stats.dataReadTime;
           aggStats.globalStats.dataFilesWritten += stats.dataFilesWritten;
           aggStats.globalStats.dataBytesWritten += stats.dataBytesWritten;
           aggStats.globalStats.dataKeysWritten += stats.dataKeysWritten;
           aggStats.globalStats.dataKeysRewritten += stats.dataKeysRewritten;
           aggStats.globalStats.filesWritten += stats.filesWritten;
           aggStats.globalStats.filesRead += stats.filesRead;
+
+          aggStats.globalStats.filesReadInCurrent += stats.filesReadInCurrent;
+          aggStats.globalStats.filesWroteInCurrent += stats.filesWroteInCurrent;
 
           aggStats.globalStats.dataInWriteCache += stats.dataInWriteCache;
           aggStats.globalStats.dataInFrozenCache += stats.dataInFrozenCache;
