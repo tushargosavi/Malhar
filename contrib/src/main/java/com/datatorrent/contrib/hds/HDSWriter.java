@@ -175,7 +175,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       if (fw == null) {
         // next file
         fileMeta = bucketMeta.addFile(bucket.bucketKey, dataEntry.getKey());
-        LOG.debug("writing new data file {} {}", bucket.bucketKey, fileMeta.name);
+        LOG.info("writing new data file {} {}", bucket.bucketKey, fileMeta.name);
         fw = this.store.getWriter(bucket.bucketKey, fileMeta.name + ".tmp");
         keysWritten = 0;
       }
@@ -188,7 +188,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
         // roll file
         fw.close();
         this.store.rename(bucket.bucketKey, fileMeta.name + ".tmp", fileMeta.name);
-        LOG.debug("created data file {} {} with {} entries", bucket.bucketKey, fileMeta.name, keysWritten);
+        LOG.info("created data file {} {} with {} entries", bucket.bucketKey, fileMeta.name, keysWritten);
         fw = null;
         keysWritten = 0;
       }
@@ -199,11 +199,10 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       ioStats.dataFilesWritten++;
       fw.close();
       this.store.rename(bucket.bucketKey, fileMeta.name + ".tmp", fileMeta.name);
-      LOG.debug("created data file {} {} with {} entries", bucket.bucketKey, fileMeta.name, keysWritten);
+      LOG.info("created data file {} {} with {} entries", bucket.bucketKey, fileMeta.name, keysWritten);
     }
 
     ioStats.dataBytesWritten += written;
-    ioStats.dataKeysWritten += keysWritten;
     ioStats.dataWriteTime += System.currentTimeMillis() - startTime;
   }
 
@@ -289,7 +288,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
   private void writeDataFiles(Bucket bucket) throws IOException
   {
     BucketIOStats ioStats = getOrCretaStats(bucket.bucketKey);
-
+    LOG.info("Writing data file in bucket {}", bucket.bucketKey);
     // copy meta data on write
     BucketMeta bucketMetaCopy = kryo.copy(getMeta(bucket.bucketKey));
 
@@ -330,7 +329,10 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
 
     HashSet<String> filesToDelete = Sets.newHashSet();
 
-    // write modified files
+    int filesRead = 0;
+    int filesWrote = 0;
+
+    // write modified fileswrite
     for (Map.Entry<BucketFileMeta, Map<Slice, byte[]>> fileEntry : modifiedFiles.entrySet()) {
       BucketFileMeta fileMeta = fileEntry.getKey();
       TreeMap<Slice, byte[]> fileData = new TreeMap<Slice, byte[]>(getKeyComparator());
@@ -345,6 +347,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
         ioStats.dataKeysRewritten += fileData.size();
         ioStats.filesReadInCurrent++;
         ioStats.filesRead ++;
+        filesRead++;
         reader.close();
         filesToDelete.add(fileMeta.name);
       }
@@ -355,8 +358,10 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       writeFile(bucket, bucketMetaCopy, fileData);
       ioStats.filesWritten++;
       ioStats.filesWroteInCurrent++;
+      filesWrote++;
     }
 
+    LOG.info("Number of file read {} Number of files wrote {} in this write cycle", filesRead, filesWrote);
     // flush meta data for new files
     try {
       LOG.debug("writing {} with {} file entries", FNAME_META, bucketMetaCopy.files.size());
@@ -372,6 +377,7 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
     }
 
     // clear pending changes
+    ioStats.dataKeysWritten += bucket.frozenWriteCache.size();
     bucket.frozenWriteCache.clear();
     // switch to new version
     this.metaCache.put(bucket.bucketKey, bucketMetaCopy);
@@ -619,7 +625,6 @@ public class HDSWriter extends HDSReader implements CheckpointListener, Operator
       ioStats.walKeysWritten = walStats.totalKeys;
       ioStats.dataInWriteCache = bucket.writeCache.size();
       ioStats.dataInFrozenCache = bucket.frozenWriteCache.size();
-      LOG.info("stats for bucket {} is {}", bucket.bucketKey, ioStats);
     }
   }
 

@@ -22,6 +22,7 @@ import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.contrib.hds.HDSWriter;
 import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.file.tfile.DTFile;
 
 @ApplicationAnnotation(name="HDSWalBenchmarkApplication")
 public class HDSWalBenchmarkApplication implements StreamingApplication
@@ -35,11 +36,12 @@ public class HDSWalBenchmarkApplication implements StreamingApplication
     dag.getOperatorMeta("Generator").getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
 
     HDSOperator hdsOut = dag.addOperator("Store", new HDSOperator());
-    TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
-    hdsFile.setBasePath("WALBenchMarkDir");
+    //TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
+    TFileImpl.DTFileImpl hdsFile = new TFileImpl.DTFileImpl();
+    //hdsFile.setBasePath("WALBenchMarkDir");
     hdsOut.setFileStore(hdsFile);
     hdsOut.setMaxWalFileSize(64 * 1024 * 1024);
-    hdsOut.setMaxFileSize(128 * 1024 * 1024);
+    //hdsOut.setMaxFileSize(128 * 1024 * 1024);
     dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
     dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.COUNTERS_AGGREGATOR, new HDSWriter.BucketIOStatAggregator());
     dag.getOperatorMeta("Store").getAttributes().put(Context.OperatorContext.MEMORY_MB, 4096);
