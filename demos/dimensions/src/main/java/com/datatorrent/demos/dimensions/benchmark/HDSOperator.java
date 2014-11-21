@@ -74,7 +74,7 @@ public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
     if (readModifyWriteMode) {
       // do get and then put to simulate read-modify-write workload.
       byte[] oldval = super.get(getBucketKey(event), new Slice(event.getKey()));
-
+      System.out.println("Got key " +  oldval);
       if (oldval != null) {
         // Modify event.
         byte[] newval = event.getValue();
@@ -86,4 +86,5 @@ public class HDSOperator extends AbstractSinglePortHDSWriter<MutableKeyValue>
     }
     super.processEvent(event);
   }
+
 }

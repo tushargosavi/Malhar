@@ -37,12 +37,12 @@ public class InputItemGenerator implements InputOperator
   @Min(1)
   private int numPublishers = 50;
   @Min(1)
-  private int numAdvertisers = 100;
+  private int numAdvertisers = 1000;
   @Min(1)
   private int numAdUnits = 5;
   private double expectedClickThruRate = 0.005;
   @Min(1)
-  private int blastCount = 1000;
+  private int blastCount = 10000;
   private final Random random = new Random();
   public final transient DefaultOutputPort<AdInfo> outputPort = new DefaultOutputPort<AdInfo>();
 

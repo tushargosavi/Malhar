@@ -95,6 +95,10 @@
 
   <!-- Settings for ApplicationWithHDSWithoutQuery -->
   <property>
+    <name>dt.application.ApplicationWithHDSWithoutQuery.attr.CONTAINER_MEMORY_MB</name>
+    <value>2048</value>
+  </property>
+  <property>
     <name>dt.application.ApplicationWithHDSWithoutQuery.operator.Store.fileStore.basePath</name>
     <value>AdsDimensionsWithHDSDemo/WithoutQuery</value>
   </property>

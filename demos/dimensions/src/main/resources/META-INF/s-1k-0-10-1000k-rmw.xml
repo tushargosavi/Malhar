@@ -22,7 +22,7 @@
 
   <property>
     <name>dt.application.HDSWalBenchmarkApplication.operator.Store.fileStore.basePath</name>
-    <value>HDSBenchmark/Test1</value>
+    <value>HDSBenchmark/Test-1k-0-10-1000-rw</value>
   </property>
 
   <property>
