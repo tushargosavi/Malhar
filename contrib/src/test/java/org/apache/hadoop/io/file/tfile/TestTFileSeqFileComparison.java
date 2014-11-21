@@ -528,9 +528,9 @@ public class TestTFileSeqFileComparison extends TestCase {
     int fsOutputBufferSize = 1;
     int fsInputBufferSize = 0;
     // special variable only for unit testing.
-    int fsInputBufferSizeNone = 0;
-    int fsInputBufferSizeGz = 0;
-    int fsInputBufferSizeLzo = 0;
+    int fsInputBufferSizeNone = 256 * 1024;
+    int fsInputBufferSizeGz = 256 * 1024;
+    int fsInputBufferSizeLzo = 256 * 1024;
     int fsOutputBufferSizeNone = 1;
     int fsOutputBufferSizeGz = 1;
     int fsOutputBufferSizeLzo = 1;

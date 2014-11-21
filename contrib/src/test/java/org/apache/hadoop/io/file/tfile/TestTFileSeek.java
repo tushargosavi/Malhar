@@ -251,7 +251,7 @@ public class TestTFileSeek extends TestCase {
     int maxValLength = 200;
     int minBlockSize = 64 * 1024;
     int fsOutputBufferSize = 1;
-    int fsInputBufferSize = 0;
+    int fsInputBufferSize = 256 * 1024;
     long fileSize = 3 * 1024 * 1024;
     long seekCount = 1000;
     long seed;

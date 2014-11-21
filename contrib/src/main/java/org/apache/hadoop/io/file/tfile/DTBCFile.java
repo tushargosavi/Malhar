@@ -519,6 +519,8 @@ final class DTBCFile {
           InputStream in = compressAlgo.createDecompressionStream(new BoundedRangeFileInputStream(fsin, region.getOffset(), region.getCompressedSize()), decompressor, DTFile.getFSInputBufferSize(conf));
           int l = 1;
           r.baos.reset();
+          /* avoid infinite loop, If DTFile.getFSInputBufferSize size is set to zero */
+          assert(DTFile.getFSInputBufferSize(conf) > 0);
           byte[] buf = new byte[DTFile.getFSInputBufferSize(conf)];
           while (l >= 0) {
             l = in.read(buf);
