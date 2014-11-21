@@ -719,7 +719,8 @@ final class DTBCFile {
      */
     @Override
     public void close() {
-      // nothing to be done now
+      // Delete buffers in cache for this reader.
+      CacheManager.readerClosed(this);
     }
 
     /**
@@ -776,7 +777,7 @@ final class DTBCFile {
         if(br==null){
           RBlockState rbs = new RBlockState(compressAlgo, in, region, conf, this);
           br = new BlockReader(rbs);
-          CacheManager.put(region.getOffset() + this.toString(), br);
+          CacheManager.put(region.getOffset() + this.toString(), br, this);
         } else {
          br.renew();
         }

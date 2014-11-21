@@ -17,7 +17,11 @@
 package org.apache.hadoop.io.file.tfile;
 
 import java.lang.management.ManagementFactory;
+import java.util.List;
+import java.util.Map;
 
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 import org.apache.hadoop.io.file.tfile.DTBCFile.Reader.BlockReader;
 
 import com.google.common.cache.Cache;
@@ -43,8 +47,9 @@ public class CacheManager
   public static final float DEFAULT_HEAP_MEMORY_PERCENTAGE = 0.25f;
   
   private static Cache<String, BlockReader> singleCache;
-  
-  
+
+  private static Map<DTBCFile.Reader, List<String>> reverseLookup;
+
   /**
    * (Re)Create the cache by limiting the maximum entries
    * @param concurrencyLevel
@@ -65,10 +70,10 @@ public class CacheManager
    * (Re)Create the cache by limiting the memory(in bytes)
    * @param concurrencyLevel
    * @param initialCapacity
-   * @param maximumWeight
+   * @param maximumMemory
    * @return
    */
-  public static final Cache<String, BlockReader> createCache(int concurrencyLevel,int initialCapacity, long maximumMemory){
+  public static final Cache<String, BlockReader> createCache(int concurrencyLevel,int initialCapacity, long maximumMemory) {
     if (singleCache != null) {
       singleCache.cleanUp();
     }
@@ -105,21 +110,48 @@ public class CacheManager
     singleCache = CacheBuilder.newBuilder().maximumWeight(availableMemory).weigher(new KVWeigher()).build();
   }
   
-  public static final void put(String key, BlockReader blk){
+  public static final void put(String key, BlockReader blk, DTBCFile.Reader reader){
     if (singleCache == null) {
       createDefaultCache();
     }
     singleCache.put(key, blk);
+    putInReverseLookupCache(key, reader);
+
   }
-  
+
+  private static synchronized final void putInReverseLookupCache(String blockKey, DTBCFile.Reader reader) {
+    if (reverseLookup == null) {
+      reverseLookup = Maps.newHashMap();
+    }
+    List<String> keys = reverseLookup.get(reader);
+    if (keys == null) {
+      keys = Lists.newLinkedList();
+      reverseLookup.put(reader, keys);
+    }
+    keys.add(blockKey);
+  }
+
   public static final BlockReader get(String key){
     if (singleCache == null) {
       return null;
     }
     return singleCache.getIfPresent(key);
   }
-  
-  
+
+  /**
+    Invalidate all buffers of the reader, when reader is closed.
+   */
+  public static void readerClosed(DTBCFile.Reader reader)
+  {
+    List<String> keys = reverseLookup.get(reader);
+    if (keys == null)
+      return;
+    for(String key : keys) {
+      singleCache.invalidate(key);
+    }
+    reverseLookup.remove(reader);
+  }
+
   public static final class KVWeigher implements Weigher<String, BlockReader> {
     
     @Override
