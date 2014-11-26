@@ -52,4 +52,9 @@
     <value>9</value>
   </property>
 
+    <property>
+        <name>dt.application.*.operator.*.attr.TIMEOUT_WINDOW_COUNT</name>
+        <value>240</value>
+    </property>
+
 </configuration>

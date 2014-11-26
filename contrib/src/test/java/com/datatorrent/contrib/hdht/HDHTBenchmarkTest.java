@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.TreeMap;
 
+import com.datatorrent.contrib.hdht.tfile.TFileImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -43,8 +44,6 @@ import com.datatorrent.api.StatsListener;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.common.util.Slice;
-import com.datatorrent.contrib.hdht.HDHTFileAccessFSImpl;
-import com.datatorrent.contrib.hdht.HDHTWriter;
 import com.datatorrent.contrib.hdht.hfile.HFileImpl;
 import com.datatorrent.lib.util.KeyValPair;
 import com.datatorrent.lib.util.TestUtils;

@@ -18,28 +18,19 @@ package com.datatorrent.demos.dimensions.ads;
 import com.datatorrent.api.Context;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.DAG.Locality;
-import com.datatorrent.api.Operator;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
+import com.datatorrent.contrib.hdht.HDHTWriter;
 import com.datatorrent.contrib.hdht.tfile.TFileImpl;
-import com.datatorrent.contrib.kafka.KafkaJsonEncoder;
-import com.datatorrent.contrib.kafka.KafkaSinglePortOutputOperator;
-import com.datatorrent.contrib.kafka.KafkaSinglePortStringInputOperator;
-import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregator;
-import com.datatorrent.lib.counters.BasicCounters;
-import com.datatorrent.lib.io.PubSubWebSocketInputOperator;
-import com.datatorrent.lib.io.PubSubWebSocketOutputOperator;
 import com.datatorrent.lib.statistics.DimensionsComputation;
-
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.mutable.MutableLong;
+import com.datatorrent.lib.stream.DevNull;
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- * An AdsDimensionsDemo run with HDHT
+ * An AdsDimensionsDemo run with HDS
  *
  * Example of configuration
  <pre>
@@ -65,8 +56,8 @@ import org.apache.hadoop.conf.Configuration;
  </property>
 
  <property>
- <name>dt.operator.InputGenerator.attr.PARTITIONER</name>
- <value>com.datatorrent.lib.partitioner.StatelessPartitioner:8</value>
+ <name>dt.operator.InputGenerator.attr.INITIAL_PARTITION_COUNT</name>
+ <value>8</value>
  </property>
 
  <property>
@@ -80,8 +71,8 @@ import org.apache.hadoop.conf.Configuration;
  </property>
 
  <property>
- <name>dt.operator.HDSOut.attr.PARTITIONER</name>
- <value>com.datatorrent.lib.partitioner.StatelessPartitioner:4</value>
+ <name>dt.operator.HDSOut.attr.INITIAL_PARTITION_COUNT</name>
+ <value>4</value>
  </property>
 
  <property>
@@ -112,18 +103,23 @@ import org.apache.hadoop.conf.Configuration;
  }
  </pre>
  *
- * @since 2.0.0
  */
-@ApplicationAnnotation(name=ApplicationWithHDHT.APP_NAME)
-public class ApplicationWithHDHT implements StreamingApplication
+@ApplicationAnnotation(name= ApplicationWithHDSWithoutQuery.APP_NAME)
+public class ApplicationWithHDSWithoutQuery implements StreamingApplication
 {
-  public static final String APP_NAME = "AdsDimensionsDemoWithHDHT";
+  public static final String APP_NAME = "AdsDimensionsDemoWithHDHTWithoutQuery";
   public static final String PROP_USE_WEBSOCKETS = "dt.application." + APP_NAME + ".useWebSockets";
 
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
+    input.setRate(1000);
+    input.setNumAdUnits(10);
+    input.setNumAdvertisers(1000);
+    input.setNumPublishers(1000);
+    input.setTimeRange(20);
+
     DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
     dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
     String[] dimensionSpecs = new String[] {
@@ -134,7 +130,7 @@ public class ApplicationWithHDHT implements StreamingApplication
         "time=" + TimeUnit.MINUTES + ":advertiserId:adUnit",
         "time=" + TimeUnit.MINUTES + ":publisherId:adUnit",
         "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId",
-        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit"
+        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit",
     };
 
     AdInfoAggregator[] aggregators = new AdInfoAggregator[dimensionSpecs.length];
@@ -145,38 +141,17 @@ public class ApplicationWithHDHT implements StreamingApplication
     }
     dimensions.setAggregators(aggregators);
 
-    //AdsDimensionStoreOperatorWithoutCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithoutCache.class);
-    AdsDimensionStoreOperator store = dag.addOperator("Store", AdsDimensionStoreOperator.class);
-    TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
+    AdsDimensionStoreOperatorWithCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithCache.class);
+    TFileImpl.DTFileImpl hdsFile = new TFileImpl.DTFileImpl();
     store.setFileStore(hdsFile);
     store.setAggregator(new AdInfoAggregator());
-    dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new BasicCounters.LongAggregator< MutableLong >());
+    hdsFile.setBasePath("PreWalTests");
+    //dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new HDHTWriter.BucketIOStatAggregator());
+    //dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.CacheStatsAggregator());
+    dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
 
-    Operator.OutputPort<String> queryPort;
-    Operator.InputPort<Object> queryResultPort;
-    if (conf.getBoolean(PROP_USE_WEBSOCKETS,  false)) {
-      String gatewayAddress = dag.getValue(DAG.GATEWAY_CONNECT_ADDRESS);
-      URI uri = URI.create("ws://" + gatewayAddress + "/pubsub");
-      //LOG.info("WebSocket with gateway at: {}", gatewayAddress);
-      PubSubWebSocketInputOperator<String> wsIn = dag.addOperator("Query", new PubSubWebSocketInputOperator<String>());
-      wsIn.setUri(uri);
-      queryPort = wsIn.outputPort;
-      PubSubWebSocketOutputOperator<Object> wsOut = dag.addOperator("QueryResult", new PubSubWebSocketOutputOperator<Object>());
-      wsOut.setUri(uri);
-      queryResultPort = wsOut.input;
-    } else {
-      KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
-      queries.setConsumer(new SimpleKafkaConsumer());
-      queryPort = queries.outputPort;
-      KafkaSinglePortOutputOperator<Object, Object> queryResult = dag.addOperator("QueryResult", new KafkaSinglePortOutputOperator<Object, Object>());
-      queryResult.getConfigProperties().put("serializer.class", KafkaJsonEncoder.class.getName());
-      queryResultPort = queryResult.inputPort;
-    }
-
-    dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+    dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.THREAD_LOCAL);
     dag.addStream("DimensionalData", dimensions.output, store.input);
-    dag.addStream("Query", queryPort, store.query);
-    dag.addStream("QueryResult", store.queryResult, queryResultPort);
   }
 
 }
