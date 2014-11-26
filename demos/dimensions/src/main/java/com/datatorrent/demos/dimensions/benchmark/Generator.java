@@ -41,7 +41,7 @@ public class Generator extends BaseOperator implements InputOperator
 
 
   private transient byte[] val;
-
+  private int keyGenType;
 
   public int getTupleBlast()
   {
@@ -85,16 +85,28 @@ public class Generator extends BaseOperator implements InputOperator
     this.cardinality = cardinality;
   }
 
+  public int getKeyGenType()
+  {
+    return keyGenType;
+  }
+
+  public void setKeyGenType(int keyGenType)
+  {
+    this.keyGenType = keyGenType;
+  }
+
   private static final Random random = new Random();
+
+  private transient KeyGenerator keyGen = null;
 
   @Override public void emitTuples()
   {
-    long timestamp = TimeUnit.MINUTES.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    long timestamp = System.currentTimeMillis();
+
     for(int i = 0; i < tupleBlast; i++)
     {
-      long longKey = Math.abs(random.nextLong());
-      longKey = cardinality == 0? longKey : longKey % cardinality;
-      byte[] key = ByteBuffer.allocate(16).putLong(timestamp).putLong(longKey).array();
+
+      byte[] key = keyGen.generateKey(timestamp, i);
       ByteBuffer.wrap(val).putLong(random.nextLong());
       MutableKeyValue pair = new MutableKeyValue(key, val);
       out.emit(pair);
@@ -110,6 +122,77 @@ public class Generator extends BaseOperator implements InputOperator
   @Override public void setup(Context.OperatorContext operatorContext)
   {
     val = ByteBuffer.allocate(valLen).putLong(1234).array();
+    switch (keyGenType) {
+    case 0 : {
+      PureRandomGen gen = new PureRandomGen();
+      gen.setRange(cardinality);
+      keyGen = gen;
+    }
+      break;
+
+    case 1 : {
+      HistoricalOneMinuteGen gen = new HistoricalOneMinuteGen();
+      gen.setRange(cardinality);
+      keyGen = gen;
+    }
+      break;
+    case 2 : {
+      HotKeyGenerator gen = new HotKeyGenerator();
+      gen.setRange(cardinality);
+      keyGen = gen;
+    }
+      break;
+    }
+  }
+
+  
+  static interface KeyGenerator {
+    byte[] generateKey(long timestamp, int i);
+  }
+
+  static abstract class AbstractKeyGenerator implements KeyGenerator {
+    long range;
+
+    public long getRange()
+    {
+      return range;
+    }
+
+    public void setRange(long range)
+    {
+      this.range = range;
+    }
+  }
+
+  static class PureRandomGen extends AbstractKeyGenerator {
+
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      int val = 0;
+      if (range != 0) val = random.nextInt((int)range);
+      else val = random.nextInt();
+      return ByteBuffer.allocate(8).putLong(val).array();
+    }
+  }
+
+  static class HistoricalOneMinuteGen extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      long minute = TimeUnit.MINUTES.convert(timestamp, TimeUnit.MILLISECONDS);
+      long longKey = Math.abs(random.nextLong());
+      longKey = range == 0? longKey : longKey % range;
+      byte[] key = ByteBuffer.allocate(16).putLong(minute).putLong(longKey).array();
+      return key;
+    }
+  }
+
+
+  static class HotKeyGenerator extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      byte[] key = ByteBuffer.allocate(16).putLong((timestamp - timestamp % range) + random.nextInt((int)range)).putLong(i).array();
+      return key;
+    }
   }
 
 }
