@@ -76,7 +76,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   private int flushIntervalCount = 120;
 
   private final HashMap<Long, WalMeta> walMeta = Maps.newHashMap();
-  private transient OperatorContext context;
+  protected transient OperatorContext context;
 
   /**
    * Size limit for data files. Files are rolled once the limit has been exceeded. The final size of a file can be
@@ -729,7 +729,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   }
 
   /* A map holding stats for each bucket written by this partition */
-  private final HashMap<Long, BucketIOStats> bucketStats = Maps.newHashMap();
+  protected final HashMap<Long, BucketIOStats> bucketStats = Maps.newHashMap();
 
   private BucketIOStats getOrCretaStats(long bucketKey)
   {

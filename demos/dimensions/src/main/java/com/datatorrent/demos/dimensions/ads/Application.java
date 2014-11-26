@@ -39,8 +39,6 @@ public class Application implements StreamingApplication
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
-    //dag.setAttribute(DAG.APPLICATION_NAME, "AdsDimension");
-
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
 
     DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());

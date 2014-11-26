@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.TreeMap;
 
+import com.datatorrent.contrib.hdht.tfile.TFileImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;

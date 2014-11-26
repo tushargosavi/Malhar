@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDHTWriter<AdIn
 {
   private static final Logger LOG = LoggerFactory.getLogger(AdsDimensionStoreOperator.class);
 
+  @OutputPortFieldAnnotation(optional=true)
   public final transient DefaultOutputPort<TimeSeriesQueryResult> queryResult = new DefaultOutputPort<TimeSeriesQueryResult>();
 
   @InputPortFieldAnnotation(optional=true)
@@ -86,7 +88,7 @@ public class AdsDimensionStoreOperator extends AbstractSinglePortHDHTWriter<AdIn
   // TODO: should be aggregation interval count
   private int maxCacheSize = 5;
 
-  private AdInfoAggregator aggregator;
+  protected AdInfoAggregator aggregator;
 
   @VisibleForTesting
   protected transient final Map<String, TimeSeriesQuery> timeSeriesQueries = Maps.newConcurrentMap();

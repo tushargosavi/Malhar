@@ -47,7 +47,7 @@ public class Generator extends BaseOperator implements InputOperator
 
 
   private transient byte[] val;
-
+  private int keyGenType = 1;
 
   public int getTupleBlast()
   {
@@ -91,16 +91,28 @@ public class Generator extends BaseOperator implements InputOperator
     this.cardinality = cardinality;
   }
 
+  public int getKeyGenType()
+  {
+    return keyGenType;
+  }
+
+  public void setKeyGenType(int keyGenType)
+  {
+    this.keyGenType = keyGenType;
+  }
+
   private static final Random random = new Random();
+
+  private transient KeyGenerator keyGen = null;
 
   @Override public void emitTuples()
   {
-    long timestamp = TimeUnit.MINUTES.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    long timestamp = System.currentTimeMillis();
+
     for(int i = 0; i < tupleBlast; i++)
     {
-      long longKey = Math.abs(random.nextLong());
-      longKey = cardinality == 0? longKey : longKey % cardinality;
-      byte[] key = ByteBuffer.allocate(16).putLong(timestamp).putLong(longKey).array();
+
+      byte[] key = keyGen.generateKey(timestamp, i);
       ByteBuffer.wrap(val).putLong(random.nextLong());
       MutableKeyValue pair = new MutableKeyValue(key, val);
       out.emit(pair);
@@ -116,6 +128,121 @@ public class Generator extends BaseOperator implements InputOperator
   @Override public void setup(Context.OperatorContext operatorContext)
   {
     val = ByteBuffer.allocate(valLen).putLong(1234).array();
+    keyGen = createGenerator(keyGenType);
+  }
+
+  private KeyGenerator createGenerator(int genType)
+  {
+    switch (genType) {
+    case 0 :
+    {
+      RandomKeyGen gen = new RandomKeyGen();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 1 :
+    {
+      HistoricalOneMinuteGen gen = new HistoricalOneMinuteGen();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 2 :
+    {
+      HotKeyGenerator gen = new HotKeyGenerator();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 3 :
+    {
+      return new SequenceKeyGenerator();
+    }
+    case 4: {
+      SlidingKeyGenerator gen = new SlidingKeyGenerator();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    default:
+      throw new RuntimeException("Not supported Generator" + genType);
+    }
+  }
+  
+  static interface KeyGenerator {
+    byte[] generateKey(long timestamp, int i);
+  }
+
+  static abstract class AbstractKeyGenerator implements KeyGenerator {
+    long range;
+
+    public long getRange()
+    {
+      return range;
+    }
+
+    public void setRange(long range)
+    {
+      this.range = range;
+    }
+  }
+
+  static class RandomKeyGen extends AbstractKeyGenerator {
+
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      long val = random.nextLong();
+      if (range != 0)
+        val = Math.abs(val) % range;
+      return ByteBuffer.allocate(8).putLong(val).array();
+    }
+  }
+
+  static class HistoricalOneMinuteGen extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      long minute = TimeUnit.MINUTES.convert(timestamp, TimeUnit.MILLISECONDS);
+      long longKey = Math.abs(random.nextLong());
+      longKey = range == 0? longKey : longKey % range;
+      byte[] key = ByteBuffer.allocate(16).putLong(minute).putLong(longKey).array();
+      return key;
+    }
+  }
+
+
+  static class HotKeyGenerator extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      byte[] key = ByteBuffer.allocate(16).putLong((timestamp - timestamp % range) + random.nextInt((int)range)).putLong(i).array();
+      return key;
+    }
+  }
+
+  static class SequenceKeyGenerator extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      return ByteBuffer.allocate(16).putLong(timestamp).putInt(i).array();
+    }
+  }
+
+  class SlidingKeyGenerator extends AbstractKeyGenerator {
+
+    Random random = new Random();
+    long lastMinute = 0;
+    long base = 0;
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      // generate a new range every 30 seconds.
+      long minute = TimeUnit.SECONDS.convert(timestamp, TimeUnit.MILLISECONDS) / 30;
+      if (lastMinute == 0) lastMinute = minute;
+      if (lastMinute != minute) {
+        // minute change, change range of keys
+        base += 2 * range / 3;
+        if (base > range * 30)
+          base = 0;
+        lastMinute = minute;
+      }
+      long val = base + random.nextLong() % range;
+      byte[] key = ByteBuffer.allocate(16).putLong(val).array();
+      return key;
+    }
   }
 
 }
