@@ -122,29 +122,38 @@ public class Generator extends BaseOperator implements InputOperator
   @Override public void setup(Context.OperatorContext operatorContext)
   {
     val = ByteBuffer.allocate(valLen).putLong(1234).array();
-    switch (keyGenType) {
-    case 0 : {
-      PureRandomGen gen = new PureRandomGen();
-      gen.setRange(cardinality);
-      keyGen = gen;
-    }
-      break;
-
-    case 1 : {
-      HistoricalOneMinuteGen gen = new HistoricalOneMinuteGen();
-      gen.setRange(cardinality);
-      keyGen = gen;
-    }
-      break;
-    case 2 : {
-      HotKeyGenerator gen = new HotKeyGenerator();
-      gen.setRange(cardinality);
-      keyGen = gen;
-    }
-      break;
-    }
+    keyGen = createGenerator(keyGenType);
   }
 
+  private KeyGenerator createGenerator(int genType)
+  {
+    switch (genType) {
+    case 0 :
+    {
+      PureRandomGen gen = new PureRandomGen();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 1 :
+    {
+      HistoricalOneMinuteGen gen = new HistoricalOneMinuteGen();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 2 :
+    {
+      HotKeyGenerator gen = new HotKeyGenerator();
+      gen.setRange(cardinality);
+      return gen;
+    }
+    case 3 :
+    {
+      return new SequenceKeyGenerator();
+    }
+    default:
+      throw new RuntimeException("Not supported Generator" + genType);
+    }
+  }
   
   static interface KeyGenerator {
     byte[] generateKey(long timestamp, int i);
@@ -192,6 +201,13 @@ public class Generator extends BaseOperator implements InputOperator
     {
       byte[] key = ByteBuffer.allocate(16).putLong((timestamp - timestamp % range) + random.nextInt((int)range)).putLong(i).array();
       return key;
+    }
+  }
+
+  static class SequenceKeyGenerator extends AbstractKeyGenerator {
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      return ByteBuffer.allocate(16).putLong(timestamp).putInt(i).array();
     }
   }
 
