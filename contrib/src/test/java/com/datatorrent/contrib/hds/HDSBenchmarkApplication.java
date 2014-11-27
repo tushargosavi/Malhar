@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.TreeMap;
 
+import com.datatorrent.contrib.hds.tfile.TFileImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -44,7 +45,6 @@ import com.datatorrent.api.StatsListener;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.common.util.Slice;
-import com.datatorrent.contrib.hds.hfile.HFileImpl;
 import com.datatorrent.lib.util.KeyValPair;
 import com.datatorrent.lib.util.TestUtils;
 import com.google.common.collect.Lists;
@@ -61,7 +61,8 @@ public class HDSBenchmarkApplication implements StreamingApplication
     dag.setAttribute(gen, OperatorContext.STATS_LISTENERS, Lists.newArrayList((StatsListener)sl));
     TestStoreOperator store = dag.addOperator("Store", new TestStoreOperator());
     dag.setAttribute(store, OperatorContext.STATS_LISTENERS, Lists.newArrayList((StatsListener)sl));
-    HDSFileAccessFSImpl hfa = new HFileImpl();
+    //HDSFileAccessFSImpl hfa = new HFileImpl();
+    HDSFileAccessFSImpl hfa = new TFileImpl.DTFileImpl();
     hfa.setBasePath(this.getClass().getSimpleName());
     store.setFileStore(hfa);
     dag.setInputPortAttribute(store.input, PortContext.PARTITION_PARALLEL, true);
