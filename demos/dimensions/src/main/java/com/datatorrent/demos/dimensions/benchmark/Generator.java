@@ -177,9 +177,9 @@ public class Generator extends BaseOperator implements InputOperator
 
     @Override public byte[] generateKey(long timestamp, int i)
     {
-      int val = 0;
-      if (range != 0) val = random.nextInt((int)range);
-      else val = random.nextInt();
+      long val = random.nextLong();
+      if (range != 0)
+        val = Math.abs(val) % range;
       return ByteBuffer.allocate(8).putLong(val).array();
     }
   }
