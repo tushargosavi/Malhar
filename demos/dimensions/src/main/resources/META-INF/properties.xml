@@ -92,4 +92,15 @@
     <value>-server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
   </property>
 
+
+
+  <property>
+    <name>dt.application.KafkaInputOperatorPartitionDemo.operator.KafkaBenchmarkConsumer.consumer.topic</name>
+    <value>DTKafka</value>
+  </property>
+  <property>
+    <name>dt.application.KafkaInputOperatorPartitionDemo.operator.KafkaBenchmarkConsumer.consumer.brokerSet</name>
+    <value>node13:9092node10:9092,node11:9092,node12:9092</value>
+  </property>
+
 </configuration>
