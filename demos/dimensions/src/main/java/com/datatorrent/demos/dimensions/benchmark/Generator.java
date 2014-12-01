@@ -130,7 +130,7 @@ public class Generator extends BaseOperator implements InputOperator
     switch (genType) {
     case 0 :
     {
-      PureRandomGen gen = new PureRandomGen();
+      RandomKeyGen gen = new RandomKeyGen();
       gen.setRange(cardinality);
       return gen;
     }
@@ -149,6 +149,11 @@ public class Generator extends BaseOperator implements InputOperator
     case 3 :
     {
       return new SequenceKeyGenerator();
+    }
+    case 4: {
+      SlidingKeyGenerator gen = new SlidingKeyGenerator();
+      gen.setRange(cardinality);
+      return gen;
     }
     default:
       throw new RuntimeException("Not supported Generator" + genType);
@@ -173,7 +178,7 @@ public class Generator extends BaseOperator implements InputOperator
     }
   }
 
-  static class PureRandomGen extends AbstractKeyGenerator {
+  static class RandomKeyGen extends AbstractKeyGenerator {
 
     @Override public byte[] generateKey(long timestamp, int i)
     {
@@ -208,6 +213,29 @@ public class Generator extends BaseOperator implements InputOperator
     @Override public byte[] generateKey(long timestamp, int i)
     {
       return ByteBuffer.allocate(16).putLong(timestamp).putInt(i).array();
+    }
+  }
+
+  class SlidingKeyGenerator extends AbstractKeyGenerator {
+
+    Random random = new Random();
+    long lastMinute = 0;
+    long base = 0;
+    @Override public byte[] generateKey(long timestamp, int i)
+    {
+      // generate a new range every 30 seconds.
+      long minute = TimeUnit.SECONDS.convert(timestamp, TimeUnit.MILLISECONDS) / 30;
+      if (lastMinute == 0) lastMinute = minute;
+      if (lastMinute != minute) {
+        // minute change, change range of keys
+        base += 2 * range / 3;
+        if (base > range * 30)
+          base = 0;
+        lastMinute = minute;
+      }
+      long val = base + random.nextLong() % range;
+      byte[] key = ByteBuffer.allocate(16).putLong(val).array();
+      return key;
     }
   }
 
