@@ -1,7 +1,21 @@
+/*
+ * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.datatorrent.demos.dimensions.ads;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -19,9 +33,13 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 import org.apache.hadoop.io.BytesWritable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestOrcFile
 {
+  private static final Logger LOG = LoggerFactory.getLogger(TestOrcFile.class);
+
   Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test" + File.separator + "tmp"));
 
   public static class SimpleStruct
@@ -50,7 +68,7 @@ public class TestOrcFile
     fs = FileSystem.getLocal(conf);
     testFilePathObject = new Path(workDir, "TestOrcFile." + testCaseName.getMethodName() + ".orc");
     testFilePathBytes = new Path(workDir, "TestOrcByteFile." + testCaseName.getMethodName() + ".orc");
-    System.out.println("testfilepath is" + testFilePathObject.toString());
+    LOG.debug("testfilepath is" + testFilePathObject.toString());
     fs.delete(testFilePathObject, false);
   }
 
@@ -73,6 +91,7 @@ public class TestOrcFile
     return result;
   }
 
+  //Reading and writing adinfo into orc file.
   @Test
   public void test1() throws Exception
   {
@@ -94,7 +113,7 @@ public class TestOrcFile
     adinfo.setRevenue(45.60);
     adinfo.setPublisherId(34);
     adinfo.setTimestamp(1414799L);
-    System.out.println("adrow is" + testFilePathObject.toString());
+    LOG.debug("adrow is {}" , testFilePathObject.toString());
 
     writer.addRow(adinfo);
     adinfo = new AdInfo();
@@ -138,19 +157,18 @@ public class TestOrcFile
     double revenueField = revenue.get(readerInspector.getStructFieldData(row, fields.get(5)));
     Long impressionsField = impressions.get(readerInspector.getStructFieldData(row, fields.get(6)));
     Long clicksField = clicks.get(readerInspector.getStructFieldData(row, fields.get(6)));
-    System.out.println("row 1 is" + "publisher Id is " + publisherId + "advertiserId is " + advertiserId + "adInt is " + adInt + "time is" + time + "cost is" + costField + "revenue is" + revenueField + "impressions is" + impressionsField + "clicks is" + clicksField);
+    LOG.debug("row 1 is" + "publisher Id is " + publisherId + "advertiserId is " + advertiserId + "adInt is " + adInt + "time is" + time + "cost is" + costField + "revenue is" + revenueField + "impressions is" + impressionsField + "clicks is" + clicksField);
 
-
-      row = rows.next(row);
-      publisherId = publisher.get((readerInspector.getStructFieldData(row, fields.get(0))));
-      advertiserId = advertiser.get(readerInspector.getStructFieldData(row, fields.get(1)));
-      adInt = adUnit.get(readerInspector.getStructFieldData(row, fields.get(2)));
-      time = timestamp.get(readerInspector.getStructFieldData(row, fields.get(3)));
-      costField = cost.get(readerInspector.getStructFieldData(row, fields.get(4)));
-      revenueField = revenue.get(readerInspector.getStructFieldData(row, fields.get(5)));
-      impressionsField = impressions.get(readerInspector.getStructFieldData(row, fields.get(6)));
-      clicksField = clicks.get(readerInspector.getStructFieldData(row, fields.get(6)));
-      System.out.println("row 2 is" + "publisher Id is " + publisherId + "advertiserId is " + advertiserId + "adInt is " + adInt + "time is" + time + "cost is" + costField + "revenue is" + revenueField + "impressions is" + impressionsField + "clicks is" + clicksField);
+    row = rows.next(row);
+    publisherId = publisher.get((readerInspector.getStructFieldData(row, fields.get(0))));
+    advertiserId = advertiser.get(readerInspector.getStructFieldData(row, fields.get(1)));
+    adInt = adUnit.get(readerInspector.getStructFieldData(row, fields.get(2)));
+    time = timestamp.get(readerInspector.getStructFieldData(row, fields.get(3)));
+    costField = cost.get(readerInspector.getStructFieldData(row, fields.get(4)));
+    revenueField = revenue.get(readerInspector.getStructFieldData(row, fields.get(5)));
+    impressionsField = impressions.get(readerInspector.getStructFieldData(row, fields.get(6)));
+    clicksField = clicks.get(readerInspector.getStructFieldData(row, fields.get(6)));
+    LOG.debug("row 2 is " + "publisher Id is " + publisherId + "advertiserId is " + advertiserId + "adInt is " + adInt + "time is" + time + "cost is" + costField + "revenue is" + revenueField + "impressions is" + impressionsField + "clicks is" + clicksField);
 
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
@@ -158,7 +176,7 @@ public class TestOrcFile
 
   }
 
-
+  //Reading and writing byte arrays, this test is not required now.
   public void test2() throws Exception
   {
     ObjectInspector inspector;
@@ -181,16 +199,16 @@ public class TestOrcFile
     List<? extends StructField> fields = readerInspector.getAllStructFieldRefs();
     RecordReader rows = reader.rows(null);
     Object row = rows.next(null);
-    System.out.println(bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row, fields.get(0))));
+    LOG.debug("writable object in first row is {}" , bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row, fields.get(0))));
     // System.out.println(bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row,fields.get(1))));
     assertEquals(bytes(0, 1, 2, 3, 4), bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row, fields.get(0))));
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
-    System.out.println("number of values: " + stats[0].getNumberOfValues());
+    LOG.debug("number of values: {}" , stats[0].getNumberOfValues());
     assertEquals(2, stats[0].getNumberOfValues());
     assertEquals("count: 2", stats[0].toString());
     row = rows.next(row);
-    System.out.println(bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row, fields.get(0))));
+    LOG.debug("writables object in second row is {}" ,bi.getPrimitiveWritableObject(readerInspector.getStructFieldData(row, fields.get(0))));
     assertEquals(bytes(0, 1, 2, 3), bi.getPrimitiveWritableObject(
                  readerInspector.getStructFieldData(row, fields.get(0))));
   }
