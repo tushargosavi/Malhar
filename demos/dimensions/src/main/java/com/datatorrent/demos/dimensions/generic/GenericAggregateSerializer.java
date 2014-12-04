@@ -18,6 +18,10 @@ package com.datatorrent.demos.dimensions.generic;
 import com.datatorrent.common.util.Slice;
 import com.google.common.collect.Maps;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -124,6 +128,123 @@ public class GenericAggregateSerializer {
     }
   }
 
+  static class ByteSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      byte b;
+      if (o == null) {
+        b = 0;
+      } else {
+        b = ((Byte)o).byteValue();
+      }
+      bb.put(b);
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      byte b[] = new byte[1];
+      bb.get(b);
+      return b[0];
+    }
+
+    @Override public int dataLength()
+    {
+      return 1;
+    }
+  }
+
+  static class ShortSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putShort((short)0);
+      else
+        bb.putShort(((Short) o).shortValue());
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      short s = bb.getShort();
+      return s;
+    }
+
+    @Override public int dataLength()
+    {
+      return 2;
+    }
+  }
+
+  static class BooleanSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putInt(0);
+      else {
+        int val = ((Boolean) o).booleanValue() ? 1 : 0;
+        bb.putInt(val);
+      }
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      int val = bb.getInt();
+      return (val == 1);
+    }
+
+    @Override public int dataLength()
+    {
+      return 4;
+    }
+  }
+
+  static class CharSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      if (o == null)
+        bb.putChar((char)0);
+      else
+        bb.putChar((Character)o);
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      char c = bb.getChar();
+      return c;
+    }
+
+    @Override public int dataLength()
+    {
+      return 2;
+    }
+  }
+
+  static class StringSerializer implements FieldSerializer {
+    @Override public void putField(ByteBuffer bb, Object o)
+    {
+      byte[] bytes;
+      if (o == null)
+        bytes = "".getBytes();
+      else
+        bytes = ((String) o).getBytes();
+
+      bb.putInt(bytes.length);
+      bb.put(bytes);
+    }
+
+    @Override public Object readField(ByteBuffer bb)
+    {
+      int len = bb.getInt();
+      byte[] bytes = new byte[len];
+      bb.get(bytes);
+      return new String(bytes);
+    }
+
+    @Override public int dataLength()
+    {
+      return 0;
+    }
+  }
+
   static {
     fieldSerializers.put(Integer.class, new IntSerializer());
     fieldSerializers.put(Float.class, new FloatSerializer());
@@ -134,6 +255,11 @@ public class GenericAggregateSerializer {
   byte[] getKey(GenericAggregate event)
   {
     ByteBuffer bb = ByteBuffer.allocate(eventSchema.getKeyLen());
+
+    ByteArrayOutputStream bo = new ByteArrayOutputStream();
+    DataOutputStream dout = new DataOutputStream(bo);
+
+    bo.toByteArray();
 
     // Write timestamp as first field
     fieldSerializers.get(eventSchema.getClass(eventSchema.getTimestamp())).putField(bb, event.timestamp);
