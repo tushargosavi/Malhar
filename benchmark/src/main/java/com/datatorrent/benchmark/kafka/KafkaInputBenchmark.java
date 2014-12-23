@@ -32,6 +32,7 @@ import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.contrib.kafka.HighlevelKafkaConsumer;
 import com.datatorrent.contrib.kafka.KafkaConsumer;
 import com.datatorrent.contrib.kafka.SimpleKafkaConsumer;
+import com.google.common.collect.Sets;
 
 /**
  * The stream app to test the benckmark of kafka
@@ -65,7 +66,7 @@ public class KafkaInputBenchmark implements StreamingApplication
     BenchmarkPartitionableKafkaInputOperator bpkio = new BenchmarkPartitionableKafkaInputOperator();
 
 
-    String type = conf.get("kafka.consumertype");
+    String type = conf.get("kafka.consumertype", "simple");
 
     KafkaConsumer consumer = null;
 
@@ -83,15 +84,15 @@ public class KafkaInputBenchmark implements StreamingApplication
       consumer = new SimpleKafkaConsumer(null, 10000, 100000, "test_kafka_autop_client", new HashSet<Integer>());
     }
 
-
-    bpkio.setTuplesBlast(1024 * 1024);
+    consumer.setBrokerSet(Sets.newHashSet(conf.get("kafka.brokerlist").split("\\s*,\\s*")));
+    bpkio.setInitialPartitionCount(1);
+    //bpkio.setTuplesBlast(1024 * 1024);
     bpkio.setConsumer(consumer);
     bpkio = dag.addOperator("KafkaBenchmarkConsumer", bpkio);
 
     CollectorModule cm = dag.addOperator("DataBlackhole", CollectorModule.class);
     dag.addStream("end", bpkio.oport, cm.inputPort).setLocality(Locality.CONTAINER_LOCAL);
     dag.setInputPortAttribute(cm.inputPort, PortContext.PARTITION_PARALLEL, true);
-    dag.setAttribute(bpkio, OperatorContext.INITIAL_PARTITION_COUNT, 1);
     dag.setAttribute(bpkio, OperatorContext.COUNTERS_AGGREGATOR, new KafkaConsumer.KafkaMeterStatsAggregator());
 //    dag.setAttribute(bpkio, OperatorContext.STATS_LISTENER, KafkaMeterStatsListener.class);
 

@@ -17,15 +17,15 @@ package com.datatorrent.demos.dimensions.benchmark;
 
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.common.util.Slice;
-import com.datatorrent.contrib.hds.AbstractSinglePortHDSWriter;
+import com.datatorrent.contrib.hdht.AbstractSinglePortHDHTWriter;
 import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 import com.datatorrent.lib.util.KeyValPair;
 import com.google.common.base.Preconditions;
 
-public class HDSTestOperator extends AbstractSinglePortHDSWriter<KeyValPair<byte[], byte[]>>
+public class HDSTestOperator extends AbstractSinglePortHDHTWriter<KeyValPair<byte[], byte[]>>
 {
   @Override
-  protected HDSCodec<KeyValPair<byte[], byte[]>> getCodec()
+  protected AbstractSinglePortHDHTWriter.HDSCodec<KeyValPair<byte[], byte[]>> getCodec()
   {
     return new BucketStreamCodec();
   }
