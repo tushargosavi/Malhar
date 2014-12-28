@@ -42,7 +42,7 @@ public class Generator extends BaseOperator implements InputOperator
 
 
   private transient byte[] val;
-  private int keyGenType;
+  private int keyGenType = 1;
 
   public int getTupleBlast()
   {
