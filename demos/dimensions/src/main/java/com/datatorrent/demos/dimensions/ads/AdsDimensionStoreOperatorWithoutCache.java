@@ -91,6 +91,7 @@ public class AdsDimensionStoreOperatorWithoutCache extends AbstractSinglePortHDH
   protected transient final Map<String, TimeSeriesQuery> timeSeriesQueries = Maps.newConcurrentMap();
   private transient ObjectMapper mapper = null;
   private long defaultTimeWindow = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
+  private boolean useCache;
 
   public int getMaxCacheSize()
   {
@@ -110,6 +111,16 @@ public class AdsDimensionStoreOperatorWithoutCache extends AbstractSinglePortHDH
   public void setDefaultTimeWindow(long defaultTimeWindow)
   {
     this.defaultTimeWindow = defaultTimeWindow;
+  }
+
+  public boolean isUseCache()
+  {
+    return useCache;
+  }
+
+  public void setUseCache(boolean useCache)
+  {
+    this.useCache = useCache;
   }
 
   public AdInfoAggregator getAggregator()
@@ -135,6 +146,29 @@ public class AdsDimensionStoreOperatorWithoutCache extends AbstractSinglePortHDH
   @Override
   protected void processEvent(AdInfoAggregateEvent event) throws IOException
   {
+    if (useCache)
+      processEventWithCache(event);
+    else
+      processEventWithoutCache(event);
+  }
+
+  protected void processEventWithCache(AdInfoAggregateEvent event)
+  {
+    AdInfoAggregateEvent old = null;
+    try {
+      old = aggrCache.get(event);
+    } catch (ExecutionException e) {
+      old = null;
+    }
+
+    if (old != null)
+      aggregator.aggregate(old, event);
+    else
+      aggrCache.put(event, event);
+  }
+
+  protected void processEventWithoutCache(AdInfoAggregateEvent event) throws IOException
+  {
     AdInfoAggregateEvent old = getEventFromHDS(event);
 
     if (old != null)
@@ -148,14 +182,18 @@ public class AdsDimensionStoreOperatorWithoutCache extends AbstractSinglePortHDH
   @Override public void setup(Context.OperatorContext arg0)
   {
     super.setup(arg0);
-    LoadingCache<AdInfoAggregateEvent, AdInfoAggregateEvent> aggrCache = CacheBuilder.newBuilder()
+    aggrCache = CacheBuilder.newBuilder()
         .maximumSize(maxCacheSize)
         .removalListener(this)
         .build(new CacheLoader<AdInfoAggregateEvent, AdInfoAggregateEvent>()
         {
           @Override public AdInfoAggregateEvent load(AdInfoAggregateEvent adInfoAggregateEvent) throws Exception
           {
-            return getEventFromHDS(adInfoAggregateEvent);
+            AdInfoAggregateEvent ae = getEventFromHDS(adInfoAggregateEvent);
+            if (ae == null)
+              throw new Exception("Null value");
+
+            return ae;
           }
         });
   }
