@@ -88,4 +88,19 @@
     <value>-server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
   </property>
 
+  <property>
+    <name>dt.application.AdsDimensionsDemoWithHDHTWithoutQuery.operator.Store.fileStore.basePath</name>
+    <value>AdsDimensionsWithHDSDemo/Store</value>
+  </property>
+
+  <property>
+    <name>dt.application.AdsDimensionsDemoWithHDHTWithoutQuery.operator.Store.attr.MEMORY_MB</name>
+    <value>4096</value>
+  </property>
+
+  <property>
+    <name>dt.application.AdsDimensionsDemoWithHDHTWithoutQuery.operator.DimensionsComputation.attr.MEMORY_MB</name>
+    <value>4096</value>
+  </property>
+
 </configuration>

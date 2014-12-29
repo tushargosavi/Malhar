@@ -106,7 +106,7 @@ import java.util.concurrent.TimeUnit;
 @ApplicationAnnotation(name= ApplicationWithHDSWithoutQuery.APP_NAME)
 public class ApplicationWithHDSWithoutQuery implements StreamingApplication
 {
-  public static final String APP_NAME = "ApplicationWithHDSWithoutQuery";
+  public static final String APP_NAME = "AdsDimensionsDemoWithHDHTWithoutQuery";
   public static final String PROP_USE_WEBSOCKETS = "dt.application." + APP_NAME + ".useWebSockets";
 
   @Override
@@ -115,10 +115,11 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
     input.setNumAdUnits(100);
     input.setNumAdvertisers(1000);
-    input.setNumPublishers(10000);
+    input.setNumPublishers(10);
+
 
     DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
-    dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 1);
+    dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
     String[] dimensionSpecs = new String[] {
         "time=" + TimeUnit.MINUTES,
         "time=" + TimeUnit.MINUTES + ":adUnit",
@@ -138,7 +139,7 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     }
     dimensions.setAggregators(aggregators);
 
-    AdsDimensionStoreOperator store = dag.addOperator("Store", AdsDimensionStoreOperator.class);
+    AdsDimensionStoreOperatorWithoutCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithoutCache.class);
     TFileImpl.DTFileImpl hdsFile = new TFileImpl.DTFileImpl();
     store.setFileStore(hdsFile);
     store.setAggregator(new AdInfoAggregator());
