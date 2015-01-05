@@ -81,19 +81,6 @@ public class HDHTWalManager implements Closeable
     }
   }
 
-  private static class WindowEntry {
-    long walFileId;
-    long offset;
-
-    public WindowEntry(long walFileId, long committedLength)
-    {
-      this.walFileId = walFileId;
-      this.offset = committedLength;
-    }
-  }
-
-  public TreeMap<Long, WindowEntry> windowIndex = Maps.newTreeMap();
-
   /* Backing file system for WAL */
   transient HDHTFileAccess bfs;
 
@@ -218,11 +205,6 @@ public class HDHTWalManager implements Closeable
     stats.flushDuration += System.currentTimeMillis() - startTime;
   }
 
-  /* Update WAL meta data after committing window id wid */
-  public void updateWalMeta(long wid) {
-    windowIndex.put(wid, new WindowEntry(walFileId, committedLength));
-  }
-
   /* batch writes, and wait till file is written */
   public void endWindow(long windowId) throws IOException
   {
@@ -235,7 +217,6 @@ public class HDHTWalManager implements Closeable
     dirty = false;
     committedLsn = windowId;
     committedLength = writer.logSize();
-    updateWalMeta(windowId);
 
     /* Roll over log, if we have crossed the log size */
     if (maxWalFileSize > 0 && writer.logSize() > maxWalFileSize) {

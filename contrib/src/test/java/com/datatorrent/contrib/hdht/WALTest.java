@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 public class WALTest
@@ -54,6 +55,7 @@ public class WALTest
     rand.nextBytes(val);
     return new Slice(val);
   }
+
 
   /**
    * - Write some data to WAL
@@ -200,7 +202,7 @@ public class WALTest
     HDHTWriter hds = new HDHTWriter();
     hds.setFileStore(bfs);
     hds.setKeyComparator(new HDHTWriterTest.SequenceComparator());
-    hds.setFlushSize(3);
+    hds.setFlushSize(1);
     hds.setup(null);
     hds.writeExecutor = MoreExecutors.sameThreadExecutor();
 
@@ -218,7 +220,6 @@ public class WALTest
     hds.committed(2);
 
     // Tuples added till this point is written to data files,
-    //
     // Tuples being added in this window, will not be written to data files
     // but will be saved in WAL. These should get recovered when bucket
     // is initialized for use next time.
@@ -226,8 +227,8 @@ public class WALTest
     hds.put(1, genRandomKey(500), genRandomByteArray(500));
     hds.put(1, genRandomKey(500), genRandomByteArray(500));
     hds.endWindow();
-    hds.checkpointed(2);
-    hds.committed(2);
+    hds.checkpointed(3);
+
     hds.forceWal();
     hds.teardown();
 
@@ -244,11 +245,14 @@ public class WALTest
     newOperator.setup(null);
 
     // This should run recovery, as first tuple is added in bucket
-    newOperator.beginWindow(3);
+    newOperator.beginWindow(4);
     newOperator.put(1, genRandomKey(500), genRandomByteArray(500));
 
-    // Number of tuples = tuples recovered (2) + tuple being added (1).
-    Assert.assertEquals("Number of tuples in store ", 3, newOperator.unflushedData(1));
+    // current tuple, being added is put into write cache.
+    Assert.assertEquals("Number of tuples in write cache ", 1, newOperator.unflushedDataSize(1));
+
+    // two tuples are put in to committed write cache.
+    Assert.assertEquals("Number of tuples in committed cache ", 2, newOperator.committedDataSize(1));
 
     newOperator.put(1, genRandomKey(500), genRandomByteArray(500));
     newOperator.put(1, genRandomKey(500), genRandomByteArray(500));

@@ -367,7 +367,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
       writeFile(bucket, bucketMetaCopy, fileData);
     }
 
-    LOG.debug("Number of file read {} Number of files wrote {} in this write cycle", ioStats.filesWroteInCurrentWriteCycle, ioStats.filesReadInCurrentWriteCycle);
+    LOG.debug("Number of file wrote {} Number of files read {} in this write cycle", ioStats.filesWroteInCurrentWriteCycle, ioStats.filesReadInCurrentWriteCycle);
     // flush meta data for new files
     try {
       LOG.debug("writing {} with {} file entries", FNAME_META, bucketMetaCopy.files.size());
@@ -565,10 +565,17 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   }
 
   @VisibleForTesting
-  protected int unflushedData(long bucketKey) throws IOException
+  protected int unflushedDataSize(long bucketKey) throws IOException
   {
     Bucket b = getBucket(bucketKey);
     return b.writeCache.size();
+  }
+
+  @VisibleForTesting
+  protected int committedDataSize(long bucketKey) throws IOException
+  {
+    Bucket b = getBucket(bucketKey);
+    return b.committedWriteCache.size();
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(HDHTWriter.class);
