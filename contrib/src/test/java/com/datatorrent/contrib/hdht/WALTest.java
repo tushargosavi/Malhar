@@ -405,7 +405,7 @@ public class WALTest
 
     // current tuple, being added is put into write cache.
     Assert.assertEquals("Number of tuples in write cache ", 1, newOperator.unflushedDataSize(1));
-    // two tuples are put in to committed write cache.
+    // one tuples are put in to committed write cache.
     Assert.assertEquals("Number of tuples in committed cache ", 1, newOperator.committedDataSize(1));
 
     newOperator.endWindow();

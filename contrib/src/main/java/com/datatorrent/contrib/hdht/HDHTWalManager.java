@@ -116,6 +116,13 @@ public class HDHTWalManager implements Closeable
     this.bucketKey = bucketKey;
   }
 
+  public HDHTWalManager(HDHTFileAccess bfs, long bucketKey, WalPosition walPos) {
+    this(bfs, bucketKey);
+    this.walFileId = walPos == null? 0 : walPos.fileId;
+    this.walSize = walPos == null? 0 : walPos.offset;
+    logger.info("current {}  offset {} ", walFileId, walSize);
+  }
+
   public HDHTWalManager(HDHTFileAccess bfs, long bucketKey, long fileId, long offset) {
     this.bfs = bfs;
     this.bucketKey = bucketKey;
@@ -128,18 +135,18 @@ public class HDHTWalManager implements Closeable
    * Run recovery for bucket, by adding valid data from WAL to
    * store.
    */
-  public void runRecovery(Map<Slice, byte[]> writeCache, long fileId, long offset) throws IOException
-  {
-    if (walFileId == 0 && walSize == 0)
+  public void runRecovery(Map<Slice, byte[]> writeCache, WalPosition start, WalPosition end) throws IOException {
+    if (end.fileId == 0 && end.offset == 0)
       return;
 
-    restoreLastWal();
+    /* Make sure that WAL state is correctly restored */
+    truncateWal(end);
 
-    /* Reconstruct Store cache state, from WAL files */
-    long walid = fileId;
-    logger.info("Recovery of store, start file {} offset {} till file {} offset {}",
-        walid, offset, walFileId, walSize);
-    for (long i = fileId; i <= walFileId; i++) {
+    logger.info("Recovery of store, start {} till {}",
+        start, end);
+
+    long offset = start.offset;
+    for (long i = start.fileId; i <= end.fileId; i++) {
       WALReader wReader = new HDFSWalReader(bfs, bucketKey, WAL_FILE_PREFIX + i);
       wReader.seek(offset);
       offset = 0;
@@ -162,17 +169,17 @@ public class HDHTWalManager implements Closeable
    *  in duplicate tuples in WAL, if we don't restore the WAL just after
    *  checkpoint state.
    */
-  private void restoreLastWal() throws IOException
+  private void truncateWal(WalPosition pos) throws IOException
   {
-    if (walSize == 0)
+    if (pos.offset == 0)
       return;
-    logger.info("recover wal file {}, data valid till offset {}", walFileId, walSize);
-    DataInputStream in = bfs.getInputStream(bucketKey, WAL_FILE_PREFIX + walFileId);
-    DataOutputStream out = bfs.getOutputStream(bucketKey, WAL_FILE_PREFIX + walFileId + "-truncate");
-    IOUtils.copyLarge(in, out, 0, walSize);
+    logger.info("recover wal file {}, data valid till offset {}", pos.fileId, pos.offset);
+    DataInputStream in = bfs.getInputStream(bucketKey, WAL_FILE_PREFIX + pos.fileId);
+    DataOutputStream out = bfs.getOutputStream(bucketKey, WAL_FILE_PREFIX + pos.fileId + "-truncate");
+    IOUtils.copyLarge(in, out, 0, pos.offset);
     in.close();
     out.close();
-    bfs.rename(bucketKey, WAL_FILE_PREFIX + walFileId + "-truncate", WAL_FILE_PREFIX + walFileId);
+    bfs.rename(bucketKey, WAL_FILE_PREFIX + pos.fileId + "-truncate", WAL_FILE_PREFIX + pos.fileId);
   }
 
   public void append(Slice key, byte[] value) throws IOException
@@ -295,6 +302,10 @@ public class HDHTWalManager implements Closeable
     this.bfs = bfs;
   }
 
+  public WalPosition getCurrentPosition() {
+    return new WalPosition(walFileId, walSize);
+  }
+
   private static transient final Logger logger = LoggerFactory.getLogger(HDHTWalManager.class);
 
   /**
@@ -314,6 +325,9 @@ public class HDHTWalManager implements Closeable
   public static class WalPosition {
     long fileId;
     long offset;
+
+    private WalPosition() {
+    }
 
     public WalPosition(long fileId, long offset) {
       this.fileId = fileId;
