@@ -472,8 +472,12 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   {
     for (final Bucket bucket : this.buckets.values()) {
       if (!bucket.writeCache.isEmpty()) {
-       bucket.checkpointedWriteCache.put(windowId, bucket.writeCache);
-       bucket.writeCache = Maps.newHashMap();
+        bucket.checkpointedWriteCache.put(windowId, bucket.writeCache);
+        bucket.walPositions.put(windowId, new HDHTWalManager.WalPosition(
+            bucket.wal.getWalFileId(),
+            bucket.wal.getCommittedLength()
+        ));
+        bucket.writeCache = Maps.newHashMap();
       }
     }
   }
@@ -506,14 +510,23 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         }
       }
 
+      HDHTWalManager.WalPosition position = null;
+      for (Iterator<Map.Entry<Long, HDHTWalManager.WalPosition>> wpIter = bucket.walPositions.entrySet().iterator(); wpIter.hasNext();) {
+        Map.Entry<Long, HDHTWalManager.WalPosition> entry = wpIter.next();
+        if (entry.getKey() <= committedWindowId) {
+          position = entry.getValue();
+          wpIter.remove();
+        }
+      }
+
       if ((bucket.committedWriteCache.size() > this.flushSize || currentWindowId - lastFlushWindowId > flushIntervalCount) && !bucket.committedWriteCache.isEmpty()) {
         // ensure previous flush completed
         if (bucket.frozenWriteCache.isEmpty()) {
           bucket.frozenWriteCache = bucket.committedWriteCache;
 
           bucket.committedLSN = committedWindowId;
-          bucket.tailId = bucket.wal.getWalFileId();
-          bucket.tailOffset = bucket.wal.getCommittedLength();
+          bucket.tailId = position.fileId;
+          bucket.tailOffset = position.offset;
 
           bucket.committedWriteCache = Maps.newHashMap();
           LOG.debug("Flushing data for bucket {} committedWid {}", bucket.bucketKey, bucket.committedLSN);
@@ -547,6 +560,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
     // keys that were modified and written to WAL, but not yet persisted, by checkpoint
     private HashMap<Slice, byte[]> writeCache = Maps.newHashMap();
     private final LinkedHashMap<Long, HashMap<Slice, byte[]>> checkpointedWriteCache = Maps.newLinkedHashMap();
+    public HashMap<Long, HDHTWalManager.WalPosition> walPositions = Maps.newLinkedHashMap();
     private HashMap<Slice, byte[]> committedWriteCache = Maps.newHashMap();
     // keys that are being flushed to data files
     private HashMap<Slice, byte[]> frozenWriteCache = Maps.newHashMap();

@@ -312,6 +312,29 @@ public class HDHTWalManager implements Closeable
 
   private final WalStats stats = new WalStats();
 
+  /* Location of the WAL */
+  public static class WalPosition {
+    long fileId;
+    long offset;
+
+    public WalPosition(long fileId, long offset) {
+      this.fileId = fileId;
+      this.offset = offset;
+    }
+
+    public WalPosition copyOf() {
+      return new WalPosition(fileId, offset);
+    }
+
+    @Override public String toString()
+    {
+      return "WalPosition{" +
+          "fileId=" + fileId +
+          ", offset=" + offset +
+          '}';
+    }
+  }
+
   public WalStats getCounters() {
     return stats;
   }
