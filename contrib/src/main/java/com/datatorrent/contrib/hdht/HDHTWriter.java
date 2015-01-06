@@ -207,21 +207,21 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
 
       BucketMeta bmeta = getMeta(bucketKey);
       WalMeta wmeta = getWalMeta(bucketKey);
-      bucket.wal = new HDHTWalManager(this.store, bucketKey, wmeta.fileId, wmeta.offset);
+      bucket.wal = new HDHTWalManager(this.store, bucketKey, wmeta.recoveryEndWalFileId, wmeta.recoveryEndWalOffset);
       bucket.wal.setMaxWalFileSize(maxWalFileSize);
       BucketIOStats ioStats = getOrCretaStats(bucketKey);
       if (ioStats != null) {
         bucket.wal.restoreStats(ioStats);
       }
-      LOG.debug("Existing walmeta information fileId {} offset {} tailId {} tailOffset {} windowId {} committedWid {} currentWid {}",
-          wmeta.fileId, wmeta.offset, wmeta.tailId, wmeta.tailOffset, wmeta.windowId, bmeta.committedWid, currentWindowId);
+      LOG.debug("Existing walmeta information recoveryEndWalFileId {} recoveryEndWalOffset {} recoveryStartWalFileId {} recoveryStartWalOffset {} windowId {} committedWid {} currentWid {}",
+          wmeta.recoveryEndWalFileId, wmeta.recoveryEndWalOffset, wmeta.recoveryStartWalFileId, wmeta.recoveryStartWalOffset, wmeta.windowId, bmeta.committedWid, currentWindowId);
 
       // bmeta.componentLSN is data which is committed to disks.
       // wmeta.windowId windowId till which data is available in WAL.
       if (bmeta.committedWid < wmeta.windowId && wmeta.windowId != 0) {
         LOG.debug("Recovery for bucket {}", bucketKey);
-        // Get last committed LSN from store, and use that for recovery.
-        bucket.wal.runRecovery(bucket.committedWriteCache, wmeta.tailId, wmeta.tailOffset);
+        // Add tuples from recovery start till recovery end.
+        bucket.wal.runRecovery(bucket.committedWriteCache, wmeta.recoveryStartWalFileId, wmeta.recoveryStartWalOffset);
       }
     }
     return bucket;
@@ -395,10 +395,10 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
     invalidateReader(bucket.bucketKey, filesToDelete);
 
     WalMeta walMeta = getWalMeta(bucket.bucketKey);
-    walMeta.tailId = bucket.tailId;
-    walMeta.tailOffset = bucket.tailOffset;
+    walMeta.recoveryStartWalFileId = bucket.tailId;
+    walMeta.recoveryStartWalOffset = bucket.tailOffset;
 
-    bucket.wal.cleanup(walMeta.tailId);
+    bucket.wal.cleanup(walMeta.recoveryStartWalFileId);
     ioStats.filesReadInCurrentWriteCycle = 0;
     ioStats.filesWroteInCurrentWriteCycle = 0;
   }
@@ -437,8 +437,8 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         if (bucket.wal != null) {
           bucket.wal.endWindow(currentWindowId);
           WalMeta walMeta = getWalMeta(bucket.bucketKey);
-          walMeta.fileId = bucket.wal.getWalFileId();
-          walMeta.offset = bucket.wal.getCommittedLength();
+          walMeta.recoveryEndWalFileId = bucket.wal.getWalFileId();
+          walMeta.recoveryEndWalOffset = bucket.wal.getWalSize();
           walMeta.windowId = currentWindowId;
         }
       } catch (IOException e) {
@@ -475,7 +475,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         bucket.checkpointedWriteCache.put(windowId, bucket.writeCache);
         bucket.walPositions.put(windowId, new HDHTWalManager.WalPosition(
             bucket.wal.getWalFileId(),
-            bucket.wal.getCommittedLength()
+            bucket.wal.getWalSize()
         ));
         bucket.writeCache = Maps.newHashMap();
       }
@@ -594,20 +594,20 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
 
   private static final Logger LOG = LoggerFactory.getLogger(HDHTWriter.class);
 
-  /* Holds current file Id for WAL and current offset for WAL */
+  /* Holds current file Id for WAL and current recoveryEndWalOffset for WAL */
   private static class WalMeta
   {
-    /* The current WAL file and offset */
+    /* The current WAL file and recoveryEndWalOffset */
     // Window Id which is written to the WAL.
     public long windowId;
     // Current Wal File sequence id
-    long fileId;
+    long recoveryEndWalFileId;
     // Offset in current file after writing data for windowId.
-    long offset;
+    long recoveryEndWalOffset;
 
-    /* Flushed WAL file and offset, data till this point is flushed to disk */
-    public long tailId;
-    public long tailOffset;
+    /* Flushed WAL file and recoveryEndWalOffset, data till this point is flushed to disk */
+    public long recoveryStartWalFileId;
+    public long recoveryStartWalOffset;
   }
 
   @JsonSerialize

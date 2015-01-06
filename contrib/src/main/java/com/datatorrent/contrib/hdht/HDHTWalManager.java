@@ -21,7 +21,6 @@ import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -30,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import com.datatorrent.common.util.Slice;
 import com.datatorrent.contrib.hdht.HDHT.WALReader;
 import com.datatorrent.contrib.hdht.HDHT.WALWriter;
-import com.google.common.collect.Maps;
 
 /**
  * Manages WAL for a bucket.
@@ -44,15 +42,15 @@ import com.google.common.collect.Maps;
  * written to data files, the committedWid saved in bucket metadata.
  *
  * The windowId upto which data is available is stored in BucketManager
- * WalMetadata and check pointed with operator state.
+ * WalMetadata and checkpointed with operator state.
  *
  * Recovery After Failure.
  *
  *   If committedWid is smaller than wal windowId.
- *   - Truncate last WAL file to known offset.
- *   - Wal metadata contains file id and offset where committedWid ended,
+ *   - Truncate last WAL file to known offset (recoveryEndWalOffset).
+ *   - Wal metadata contains file id and recoveryEndWalOffset where committedWid ended,
  *     start reading from that location till the end of current WAL file
- *     and adds tuples back to the writeCache in store.
+ *     and adds tuples back to the committed cache in store.
  *
  *   If committedWid is greater than wal windowId
  *   The data was committed to disks after last operator checkpoint. In this
@@ -101,14 +99,14 @@ public class HDHTWalManager implements Closeable
 
   private boolean dirty;
 
+  /* Last committed LSN on disk */
+  private long flushedWid = -1;
+
   /* current active WAL file id, it is read from WAL meta on startup */
   private long walFileId = -1;
 
-  /* Last committed LSN on disk */
-  private long committedLsn = -1;
-
   /* Current WAL size */
-  private long committedLength = 0;
+  private long walSize = 0;
 
   @SuppressWarnings("unused")
   private HDHTWalManager() {}
@@ -122,8 +120,8 @@ public class HDHTWalManager implements Closeable
     this.bfs = bfs;
     this.bucketKey = bucketKey;
     this.walFileId = fileId;
-    this.committedLength = offset;
-    logger.info("current {}  offset {} ", walFileId, committedLength);
+    this.walSize = offset;
+    logger.info("current {}  offset {} ", walFileId, walSize);
   }
 
   /**
@@ -132,7 +130,7 @@ public class HDHTWalManager implements Closeable
    */
   public void runRecovery(Map<Slice, byte[]> writeCache, long fileId, long offset) throws IOException
   {
-    if (walFileId == 0 && committedLength == 0)
+    if (walFileId == 0 && walSize == 0)
       return;
 
     restoreLastWal();
@@ -140,7 +138,7 @@ public class HDHTWalManager implements Closeable
     /* Reconstruct Store cache state, from WAL files */
     long walid = fileId;
     logger.info("Recovery of store, start file {} offset {} till file {} offset {}",
-        walid, offset, walFileId, committedLength);
+        walid, offset, walFileId, walSize);
     for (long i = fileId; i <= walFileId; i++) {
       WALReader wReader = new HDFSWalReader(bfs, bucketKey, WAL_FILE_PREFIX + i);
       wReader.seek(offset);
@@ -166,12 +164,12 @@ public class HDHTWalManager implements Closeable
    */
   private void restoreLastWal() throws IOException
   {
-    if (committedLength == 0)
+    if (walSize == 0)
       return;
-    logger.info("recover wal file {}, data valid till offset {}", walFileId, committedLength);
+    logger.info("recover wal file {}, data valid till offset {}", walFileId, walSize);
     DataInputStream in = bfs.getInputStream(bucketKey, WAL_FILE_PREFIX + walFileId);
     DataOutputStream out = bfs.getOutputStream(bucketKey, WAL_FILE_PREFIX + walFileId + "-truncate");
-    IOUtils.copyLarge(in, out, 0, committedLength);
+    IOUtils.copyLarge(in, out, 0, walSize);
     in.close();
     out.close();
     bfs.rename(bucketKey, WAL_FILE_PREFIX + walFileId + "-truncate", WAL_FILE_PREFIX + walFileId);
@@ -215,8 +213,8 @@ public class HDHTWalManager implements Closeable
     flushWal();
 
     dirty = false;
-    committedLsn = windowId;
-    committedLength = writer.logSize();
+    flushedWid = windowId;
+    walSize = writer.logSize();
 
     /* Roll over log, if we have crossed the log size */
     if (maxWalFileSize > 0 && writer.logSize() > maxWalFileSize) {
@@ -224,27 +222,27 @@ public class HDHTWalManager implements Closeable
       writer.close();
       walFileId++;
       writer = null;
-      committedLength = 0;
+      walSize = 0;
     }
   }
 
   /**
-   * Remove files older than tailId.
-   * @param tailId
+   * Remove files older than recoveryStartWalFileId.
+   * @param recoveryStartWalFileId
    */
-  public void cleanup(long tailId)
+  public void cleanup(long recoveryStartWalFileId)
   {
-    if (tailId == 0)
+    if (recoveryStartWalFileId == 0)
       return;
 
-    tailId--;
+    recoveryStartWalFileId--;
     try {
       while (true) {
-        DataInputStream in = bfs.getInputStream(bucketKey, WAL_FILE_PREFIX + tailId);
+        DataInputStream in = bfs.getInputStream(bucketKey, WAL_FILE_PREFIX + recoveryStartWalFileId);
         in.close();
-        logger.info("deleting WAL file {}", tailId);
-        bfs.delete(bucketKey, WAL_FILE_PREFIX + tailId);
-        tailId--;
+        logger.info("deleting WAL file {}", recoveryStartWalFileId);
+        bfs.delete(bucketKey, WAL_FILE_PREFIX + recoveryStartWalFileId);
+        recoveryStartWalFileId--;
       }
     } catch (FileNotFoundException ex) {
     } catch (IOException ex) {
@@ -271,8 +269,8 @@ public class HDHTWalManager implements Closeable
     this.maxUnflushedBytes = maxUnflushedBytes;
   }
 
-  public long getCommittedLSN() {
-    return committedLsn;
+  public long getFlushedWid() {
+    return flushedWid;
   }
 
   @Override
@@ -287,9 +285,9 @@ public class HDHTWalManager implements Closeable
     return walFileId;
   }
 
-  public long getCommittedLength()
+  public long getWalSize()
   {
-    return committedLength;
+    return walSize;
   }
 
   public void setFileStore(HDHTFileAccess bfs)
