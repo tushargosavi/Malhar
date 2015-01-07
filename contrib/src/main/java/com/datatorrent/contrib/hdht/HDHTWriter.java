@@ -222,6 +222,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         LOG.debug("Recovery for bucket {}", bucketKey);
         // Add tuples from recovery start till recovery end.
         bucket.wal.runRecovery(bucket.committedWriteCache, bmeta.recoveryStartWalPosition, wmeta.cpWalPosition);
+        bucket.walPositions.put(wmeta.windowId, wmeta.cpWalPosition);
       }
     }
     return bucket;
