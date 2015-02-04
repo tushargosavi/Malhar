@@ -105,12 +105,18 @@ public class GenericDimensionsApplication implements StreamingApplication
   {
     JsonSalesGenerator input = dag.addOperator("Input", JsonSalesGenerator.class);
     input.setAddProductCategory(true);
+    input.setMaxChannelId(10);
+    input.setMaxProductCategories(10);
+    input.setMaxRegionId(100);
+
     JsonToMapConverter converter = dag.addOperator("Parse", JsonToMapConverter.class);
     GenericDimensionComputation dimensions = dag.addOperator("Compute", new GenericDimensionComputation());
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
+    store.setMaxCacheSize(1000);
+    /*
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
     KafkaSinglePortOutputOperator<Object, Object> queryResult = dag.addOperator("QueryResult", new KafkaSinglePortOutputOperator<Object, Object>());
-
+    */
     dag.setInputPortAttribute(converter.input, Context.PortContext.PARTITION_PARALLEL, true);
     dag.setInputPortAttribute(dimensions.data, Context.PortContext.PARTITION_PARALLEL, true);
 
@@ -118,8 +124,10 @@ public class GenericDimensionsApplication implements StreamingApplication
     dag.addStream("JSONStream", input.jsonBytes, converter.input).setLocality(DAG.Locality.CONTAINER_LOCAL);
     dag.addStream("MapStream", converter.outputMap, dimensions.data).setLocality(DAG.Locality.CONTAINER_LOCAL);
     dag.addStream("DimensionalData", dimensions.output, store.input);
+    /*
     dag.addStream("Query", queries.outputPort, store.query);
     dag.addStream("QueryResult", store.queryResult, queryResult.inputPort);
+    */
   }
 
 }

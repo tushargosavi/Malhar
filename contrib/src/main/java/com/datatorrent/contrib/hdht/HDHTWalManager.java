@@ -351,4 +351,11 @@ public class HDHTWalManager implements Closeable
   public WalStats getCounters() {
     return stats;
   }
+
+  @Override public String toString()
+  {
+    return "HDHTWalManager{" +
+        "bucketKey=" + bucketKey +
+        '}';
+  }
 }

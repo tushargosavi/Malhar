@@ -5,19 +5,19 @@
 
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.*.attr.MEMORY_MB</name>
-    <value>4096</value>
+    <value>1024</value>
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.port.*.attr.QUEUE_CAPACITY</name>
-    <value>32000</value>
+    <value>3200</value>
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Input.attr.PARTITIONER</name>
-    <value>com.datatorrent.lib.partitioner.StatelessPartitioner:2</value>
+    <value>com.datatorrent.lib.partitioner.StatelessPartitioner:1</value>
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Input.maxTuplesPerWindow</name>
-    <value>40000</value>
+    <value>6000</value>
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Compute.attr.APPLICATION_WINDOW_COUNT</name>
@@ -25,7 +25,7 @@
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Store.attr.PARTITIONER</name>
-    <value>com.datatorrent.lib.partitioner.StatelessPartitioner:4</value>
+    <value>com.datatorrent.lib.partitioner.StatelessPartitioner:1</value>
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Store.fileStore.basePath</name>
@@ -33,8 +33,14 @@
   </property>
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Store.prop.maxCacheSize</name>
-    <value>5</value>
+    <value>2</value>
   </property>
+    
+    <!--property>
+        <name>dt.application.GenericDimensionsApplication.operator.Store.prop.flushIntervalCount</name>
+        <value>30</value>
+    </property-->
+
   <property>
     <name>dt.application.GenericDimensionsApplication.operator.Query.topic</name>
     <value>GenericDimensionsQuery</value>
@@ -91,5 +97,8 @@
     <name>dt.attr.APPLICATION_DATA_LINK</name>
     <value>#/ops/apps/{appId}/appdata</value>
   </property>
-
+    <property>
+        <name>dt.loggers.level</name>
+        <value>com.datatorrent.*:DEBUG</value>
+    </property>
 </configuration>

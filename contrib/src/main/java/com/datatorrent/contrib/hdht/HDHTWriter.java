@@ -398,6 +398,8 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
     }
     invalidateReader(bucket.bucketKey, filesToDelete);
 
+    LOG.debug("cleaning up wal {} committedLSN {} new recovery offset is {}", bucket.wal, bucketMetaCopy.committedWid, bucketMetaCopy.recoveryStartWalPosition);
+
     // cleanup WAL files which are not needed anymore.
     bucket.wal.cleanup(bucketMetaCopy.recoveryStartWalPosition.fileId);
 
@@ -433,6 +435,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   @Override
   public void endWindow()
   {
+    LOG.debug("endWindow called for window {}", currentWindowId);
     super.endWindow();
     for (final Bucket bucket : this.buckets.values()) {
       try {
@@ -471,13 +474,17 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   @Override
   public void checkpointed(long windowId)
   {
+    LOG.debug("checkpointed called for window {}", windowId);
     for (final Bucket bucket : this.buckets.values()) {
+      LOG.debug("size of write cache is {}", bucket.writeCache.size());
       if (!bucket.writeCache.isEmpty()) {
         bucket.checkpointedWriteCache.put(windowId, bucket.writeCache);
-        bucket.walPositions.put(windowId, new HDHTWalManager.WalPosition(
+        HDHTWalManager.WalPosition pos = new HDHTWalManager.WalPosition(
             bucket.wal.getWalFileId(),
             bucket.wal.getWalSize()
-        ));
+        );
+        LOG.debug("Adding wal position array for wid {} position {}", windowId, pos);
+        bucket.walPositions.put(windowId, pos);
         bucket.writeCache = Maps.newHashMap();
       }
     }
@@ -502,6 +509,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
   @Override
   public void committed(long committedWindowId)
   {
+    LOG.debug("committed called for window {}", committedWindowId);
     for (final Bucket bucket : this.buckets.values()) {
       for (Iterator<Map.Entry<Long, HashMap<Slice, byte[]>>> cpIter = bucket.checkpointedWriteCache.entrySet().iterator(); cpIter.hasNext();) {
         Map.Entry<Long, HashMap<Slice, byte[]>> checkpointEntry = cpIter.next();
@@ -514,6 +522,7 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
       HDHTWalManager.WalPosition position = null;
       for (Iterator<Map.Entry<Long, HDHTWalManager.WalPosition>> wpIter = bucket.walPositions.entrySet().iterator(); wpIter.hasNext();) {
         Map.Entry<Long, HDHTWalManager.WalPosition> entry = wpIter.next();
+        LOG.debug("looking for position value {} committedid {} position {}", entry.getKey(), committedWindowId, entry.getValue());
         if (entry.getKey() <= committedWindowId) {
           position = entry.getValue();
           wpIter.remove();
@@ -524,13 +533,13 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         // ensure previous flush completed
         if (bucket.frozenWriteCache.isEmpty()) {
           bucket.frozenWriteCache = bucket.committedWriteCache;
+          bucket.committedWriteCache = Maps.newHashMap();
 
           bucket.committedLSN = committedWindowId;
           bucket.recoveryStartWalPosition = position;
 
 
-          bucket.committedWriteCache = Maps.newHashMap();
-          LOG.debug("Flushing data for bucket {} committedWid {}", bucket.bucketKey, bucket.committedLSN);
+          LOG.debug("Flushing data for bucket {} committedWid {} recovery start {}", bucket.bucketKey, bucket.committedLSN, bucket.recoveryStartWalPosition);
           Runnable flushRunnable = new Runnable() {
             @Override
             public void run()
