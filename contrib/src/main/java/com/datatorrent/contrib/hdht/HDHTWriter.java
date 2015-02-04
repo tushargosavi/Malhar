@@ -519,12 +519,11 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
         }
       }
 
-      HDHTWalManager.WalPosition position = null;
       for (Iterator<Map.Entry<Long, HDHTWalManager.WalPosition>> wpIter = bucket.walPositions.entrySet().iterator(); wpIter.hasNext();) {
         Map.Entry<Long, HDHTWalManager.WalPosition> entry = wpIter.next();
         LOG.debug("looking for position value {} committedid {} position {}", entry.getKey(), committedWindowId, entry.getValue());
         if (entry.getKey() <= committedWindowId) {
-          position = entry.getValue();
+          bucket.recoveryStartWalPosition = entry.getValue();
           wpIter.remove();
         }
       }
@@ -536,10 +535,8 @@ public class HDHTWriter extends HDHTReader implements CheckpointListener, Operat
           bucket.committedWriteCache = Maps.newHashMap();
 
           bucket.committedLSN = committedWindowId;
-          bucket.recoveryStartWalPosition = position;
 
-
-          LOG.debug("Flushing data for bucket {} committedWid {} recovery start {}", bucket.bucketKey, bucket.committedLSN, bucket.recoveryStartWalPosition);
+          LOG.debug("Flushing data for bucket {} committedWid {} recoveryStartWalPosition {}", bucket.bucketKey, bucket.committedLSN, bucket.recoveryStartWalPosition);
           Runnable flushRunnable = new Runnable() {
             @Override
             public void run()
