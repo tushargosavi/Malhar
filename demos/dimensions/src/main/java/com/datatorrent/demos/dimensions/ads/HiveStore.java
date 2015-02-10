@@ -15,7 +15,7 @@
  */
 package com.datatorrent.demos.dimensions.ads;
 
-import com.datatorrent.contrib.hds.HDSFileAccess;
+import com.datatorrent.contrib.hdht.HDHTFileAccess;
 import com.datatorrent.lib.db.jdbc.JdbcStore;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HiveStore implements HDSFileAccess
+public abstract class HiveStore implements HDHTFileAccess
 {
   private static final String driverName = "org.apache.hive.jdbc.HiveDriver";
   private static final Logger logger = LoggerFactory.getLogger(HiveStore.class);

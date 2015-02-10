@@ -20,7 +20,7 @@ import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.StreamCodec;
 import com.datatorrent.common.util.Slice;
 
-import com.datatorrent.contrib.hds.HDSWriter;
+import com.datatorrent.contrib.hdht.HDHTWriter;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregateEvent;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregator;
 import com.google.common.collect.Maps;
@@ -39,7 +39,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HiveOperator extends HDSWriter
+public class HiveOperator extends HDHTWriter
 {
   private String filepath;
   private AdInfoAggregator aggregator;
