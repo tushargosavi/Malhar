@@ -73,7 +73,7 @@
        <artifactId>maven-javadoc-plugin</artifactId>
        <executions>
          <!-- generate xml javadoc -->
-         <execution>
+         <!--<execution>
            <id>xml-doclet</id>
            <phase>generate-resources</phase>
            <goals>
@@ -89,7 +89,7 @@
                <version>1.0.4</version>
              </docletArtifact>
            </configuration>
-         </execution>
+         </execution>-->
          <!-- generate default javadoc jar with custom tags -->
          <execution>
            <id>attach-sources</id>

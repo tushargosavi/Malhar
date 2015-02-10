@@ -18,7 +18,10 @@ package com.datatorrent.benchmark.fs;
 
 import com.datatorrent.lib.io.fs.AbstractFileOutputOperator;
 import java.util.Arrays;
+
 import javax.validation.constraints.Min;
+
+import com.datatorrent.lib.io.fs.AbstractFSWriter;
 
 /**
  * This output operator receives

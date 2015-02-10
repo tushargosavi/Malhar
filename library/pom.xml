@@ -55,11 +55,10 @@
           </executions>
        </plugin>
       <!-- generate javdoc -->
-      <plugin>
+      <!--<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <executions>
-          <!-- generate xml javadoc -->
           <execution>
             <id>xml-doclet</id>
             <phase>generate-resources</phase>
@@ -77,7 +76,6 @@
               </docletArtifact>
             </configuration>
           </execution>
-          <!-- generate default javadoc jar with custom tags -->
           <execution>
             <id>attach-sources</id>
             <goals>
@@ -105,7 +103,7 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
       <!-- Transform xml javadoc to stripped down version containing only class/interface comments and tags-->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
