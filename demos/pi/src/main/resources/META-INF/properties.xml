@@ -52,4 +52,11 @@
     <value>9</value>
   </property>
 
+    <property>
+        <name>dt.application.FsWriterTest.operator.*.attr.MEMORY_MB</name>
+        <value>2048</value>
+    </property>
+
+
+
 </configuration>
