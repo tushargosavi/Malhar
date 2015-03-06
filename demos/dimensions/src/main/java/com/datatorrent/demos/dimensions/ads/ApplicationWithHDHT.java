@@ -146,7 +146,8 @@ public class ApplicationWithHDHT implements StreamingApplication
     dimensions.setAggregators(aggregators);
 
     //AdsDimensionStoreOperatorWithoutCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithoutCache.class);
-    AdsDimensionStoreOperator store = dag.addOperator("Store", AdsDimensionStoreOperator.class);
+    AdsDimensionStoreOperatorWithCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithCache.class);
+    //AdsDimensionStoreOperator store = dag.addOperator("Store", AdsDimensionStoreOperator.class);
     TFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     store.setFileStore(hdsFile);
     store.setAggregator(new AdInfoAggregator());
