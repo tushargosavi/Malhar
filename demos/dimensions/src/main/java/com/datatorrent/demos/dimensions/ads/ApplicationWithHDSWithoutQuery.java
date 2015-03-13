@@ -114,11 +114,11 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
   public void populateDAG(DAG dag, Configuration conf)
   {
     InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
-    input.setRate(100);
+    input.setRate(1000);
     input.setNumAdUnits(10);
-    input.setNumAdvertisers(100);
-    input.setNumPublishers(100);
-    input.setTimeRange(10);
+    input.setNumAdvertisers(1000);
+    input.setNumPublishers(1000);
+    input.setTimeRange(0);
 
     DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
     dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
