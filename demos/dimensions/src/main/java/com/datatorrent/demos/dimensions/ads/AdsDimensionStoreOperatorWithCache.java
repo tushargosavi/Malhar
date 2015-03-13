@@ -98,9 +98,10 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
 
     if (old != null)
       aggregator.aggregate(old, event);
-    else
+    else {
       old = event;
-
+      c.hdhtMisses++;
+    }
     super.put(getBucketKey(old), new Slice(getKey(old)), getValue(old));
   }
 
@@ -166,6 +167,7 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
       return null;
 
     AdInfoAggregateEvent old = bytesToAggregate(keySlice, val);
+    c.hdhtHits++;
     return old;
   }
 
@@ -173,6 +175,8 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
   public static class CacheCounters implements Serializable {
     public long hit;
     public long miss;
+    public long hdhtHits;
+    public long hdhtMisses;
     public Object hdhtCounters;
 
     public CacheCounters() { }

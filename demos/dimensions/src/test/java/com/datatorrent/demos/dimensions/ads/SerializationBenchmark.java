@@ -3,8 +3,11 @@ package com.datatorrent.demos.dimensions.ads;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 import com.datatorrent.lib.testbench.CollectorTestSink;
 import com.datatorrent.lib.util.TestUtils;
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class SerializationBenchmark
@@ -17,10 +20,10 @@ public class SerializationBenchmark
     TestUtils.setSink(gen.outputPort, sink);
     gen.setBlastCount(1000);
     gen.setRate(1000);
-    gen.setNumAdvertisers(2000);
-    gen.setNumPublishers(100);
-    gen.setNumAdUnits(100);
-    gen.setTimeRange(20);
+    gen.setNumAdvertisers(100);
+    gen.setNumPublishers(50);
+    gen.setNumAdUnits(5);
+    gen.setTimeRange(0);
     gen.beginWindow(1);
     gen.emitTuples();
     gen.endWindow();
@@ -58,14 +61,34 @@ public class SerializationBenchmark
     CollectorTestSink<AdInfo.AdInfoAggregateEvent> sink2 = new CollectorTestSink<AdInfo.AdInfoAggregateEvent>();
     TestUtils.setSink(dimensions.output, sink2);
 
+    Set<Integer> pubSet = Sets.newHashSet();
+    Set<Integer> adSet = Sets.newHashSet();
+    Set<Integer> unitSet = Sets.newHashSet();
+    Set<Long> minuteSet = Sets.newHashSet();
+
+    for(AdInfo ai : sink.collectedTuples) {
+      pubSet.add(ai.getPublisherId());
+      adSet.add(ai.getAdvertiserId());
+      unitSet.add(ai.getAdUnit());
+      TimeUnit time = TimeUnit.MINUTES;
+      long minutes = TimeUnit.MILLISECONDS.convert(time.convert(ai.timestamp, TimeUnit.MILLISECONDS), time);
+      minuteSet.add(minutes);
+    }
+
+    System.out.println("cardinality");
+    System.out.println("publishers " + pubSet.size());
+    System.out.println("adSet " + adSet.size());
+    System.out.println("unitSize " + unitSet.size());
+    System.out.println("Minutes " + minuteSet.size());
+    System.out.println("total " + pubSet.size() * adSet.size() * unitSet.size() + minuteSet.size());
+
+
     dimensions.beginWindow(1);
-    int count = 0;
     for(AdInfo ai : sink.collectedTuples) {
       dimensions.data.process(ai);
-      System.out.println(count++);
     }
     dimensions.endWindow();
-    System.out.println("Emmitted tuples " + sink2.collectedTuples.size());
+    System.out.println("Emitted tuples " + sink2.collectedTuples.size());
 
     /*
     AdsDimensionStoreOperator.AdInfoAggregateCodec codec = new AdsDimensionStoreOperator.AdInfoAggregateCodec();

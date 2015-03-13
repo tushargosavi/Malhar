@@ -146,8 +146,6 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     store.setFileStore(hdsFile);
     store.setAggregator(new AdInfoAggregator());
     hdsFile.setBasePath("PreWalTests");
-    //dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new HDHTWriter.BucketIOStatAggregator());
-    //dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.CacheStatsAggregator());
     dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
 
     dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.THREAD_LOCAL);
