@@ -160,9 +160,12 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
       return null;
     Slice keySlice = new Slice(key, 0, key.length);
     byte[] val = getUncommitted(getBucketKey(event), keySlice);
+
     if (val == null)
       val = get(getBucketKey(event), keySlice);
-
+    else
+      c.hdhtMemHits++;
+    
     if (val == null)
       return null;
 
@@ -178,6 +181,7 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
     public long hdhtHits;
     public long hdhtMisses;
     public Object hdhtCounters;
+    public long hdhtMemHits;
 
     public CacheCounters() { }
 
