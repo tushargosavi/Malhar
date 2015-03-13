@@ -82,7 +82,9 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
     AdInfoAggregateEvent old = null;
     try {
       old = aggrCache.get(event);
+      c.hdhtHits++;
     } catch (ExecutionException e) {
+      c.hdhtMisses++;
       old = null;
     }
 
@@ -165,7 +167,7 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
       val = get(getBucketKey(event), keySlice);
     else
       c.hdhtMemHits++;
-    
+
     if (val == null)
       return null;
 
@@ -189,6 +191,9 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
       hit = h;
       miss = m;
       hdhtCounters = o;
+      hdhtHits = 0;
+      hdhtMemHits = 0;
+      hdhtMisses = 0;
     }
 
     @Override public String toString()
