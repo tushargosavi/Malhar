@@ -182,8 +182,8 @@ public class AdsDimensionStoreOperatorWithCache extends AdsDimensionStoreOperato
     public long miss;
     public long hdhtHits;
     public long hdhtMisses;
-    public Object hdhtCounters;
     public long hdhtMemHits;
+    public Object hdhtCounters;
 
     public CacheCounters() { }
 
