@@ -181,6 +181,14 @@ public class CacheStore implements CacheManager.Primary
   }
 
   /**
+   * Remove all keys from memory.
+   */
+  @Override public void reset()
+  {
+    cache.cleanUp();
+  }
+
+  /**
    * Strategies for time-based expiration of entries.
    */
   public static enum ExpiryType

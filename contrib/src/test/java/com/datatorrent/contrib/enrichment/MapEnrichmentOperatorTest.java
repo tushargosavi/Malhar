@@ -16,8 +16,8 @@ public class MapEnrichmentOperatorTest
   {
     MapEnrichmentOperator oper = new MapEnrichmentOperator();
     oper.setStore(new MemoryStore());
-    oper.setup(null);
     oper.setLookupFieldsStr("In1");
+    oper.setup(null);
 
     CollectorTestSink sink = new CollectorTestSink();
     TestUtils.setSink(oper.output, sink);
@@ -40,9 +40,9 @@ public class MapEnrichmentOperatorTest
   {
     MapEnrichmentOperator oper = new MapEnrichmentOperator();
     oper.setStore(new MemoryStore());
-    oper.setup(null);
     oper.setLookupFieldsStr("In1");
     oper.setIncludeFieldsStr("A,B");
+    oper.setup(null);
 
     CollectorTestSink sink = new CollectorTestSink();
     TestUtils.setSink(oper.output, sink);

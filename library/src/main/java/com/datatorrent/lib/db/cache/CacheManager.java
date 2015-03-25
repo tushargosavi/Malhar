@@ -186,6 +186,12 @@ public class CacheManager implements Closeable
      * @return all present keys.
      */
     Set<Object> getKeys();
+
+    /**
+     * Clear all the keys in the store.
+     *
+     */
+    public void reset();
   }
 
   /**
