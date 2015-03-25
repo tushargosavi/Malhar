@@ -6,7 +6,6 @@ import com.datatorrent.lib.util.TestUtils;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +17,8 @@ public class MapEnrichmentOperatorTest
     MapEnrichmentOperator oper = new MapEnrichmentOperator();
     oper.setStore(new MemoryStore());
     oper.setup(null);
+    oper.setLookupFieldsStr("In1");
 
-    List<String> keys = new ArrayList<String>();
-    keys.add("In1");
-    oper.setKeys(keys);
     CollectorTestSink sink = new CollectorTestSink();
     TestUtils.setSink(oper.output, sink);
 
@@ -44,16 +41,8 @@ public class MapEnrichmentOperatorTest
     MapEnrichmentOperator oper = new MapEnrichmentOperator();
     oper.setStore(new MemoryStore());
     oper.setup(null);
-
-    List<String> keys = new ArrayList<String>();
-    keys.add("In2");
-    oper.setKeys(keys);
-
-
-    List<String> includeKeys = new ArrayList<String>();
-    includeKeys.add("A");
-    includeKeys.add("B");
-    oper.setIncludeKeys(includeKeys);
+    oper.setLookupFieldsStr("In1");
+    oper.setIncludeFieldsStr("A,B");
 
     CollectorTestSink sink = new CollectorTestSink();
     TestUtils.setSink(oper.output, sink);
@@ -70,7 +59,7 @@ public class MapEnrichmentOperatorTest
     System.out.println(sink.collectedTuples.get(0));
   }
 
-  private static class MemoryStore implements com.datatorrent.lib.db.cache.CacheManager.Backup
+  private static class MemoryStore implements EnrichmentBackup
   {
     static Map<String, Map> returnData = Maps.newHashMap();
 
@@ -134,6 +123,16 @@ public class MapEnrichmentOperatorTest
     @Override public boolean isConnected()
     {
       return false;
+    }
+
+    @Override public void setLookupFields(List<String> lookupFields)
+    {
+
+    }
+
+    @Override public void setIncludeFields(List<String> includeFields)
+    {
+
     }
   }
 }

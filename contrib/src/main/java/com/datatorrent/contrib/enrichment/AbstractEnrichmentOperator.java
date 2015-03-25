@@ -7,8 +7,12 @@ import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.lib.db.cache.CacheManager;
 import com.datatorrent.lib.db.cache.CacheStore;
 import com.datatorrent.lib.db.cache.CacheStore.ExpiryType;
-import java.io.IOException;
+import com.esotericsoftware.kryo.NotNull;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOperator
 {
@@ -28,7 +32,15 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
       processTuple(tuple);
     }
   };
-  private CacheManager.Backup store;
+  private EnrichmentBackup store;
+
+  @NotNull
+  protected String lookupFieldsStr;
+
+  protected String includeFieldsStr;
+
+  protected List<String> lookupFields;
+  protected List<String> includeFields;
 
   protected void processTuple(INPUT tuple) {
     Object result = cacheManager.get(getKey(tuple));
@@ -57,11 +69,18 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
     primaryCache.setEntryExpiryStrategy(ExpiryType.EXPIRE_AFTER_WRITE);
     primaryCache.setMaxCacheSize(16 * 1024 * 1024);
 
+    lookupFields = Arrays.asList(lookupFieldsStr.split(","));
+    if (includeFieldsStr != null) {
+      includeFields = Arrays.asList(includeFieldsStr.split(","));
+    }
+
     try {
       primaryCache.connect();
       store.connect();
-      cacheManager.setPrimary(primaryCache);
+      store.setIncludeFields(includeFields);
+      store.setLookupFields(lookupFields);
 
+      cacheManager.setPrimary(primaryCache);
       cacheManager.setBackup(store);
 
     } catch (IOException e) {
@@ -69,11 +88,11 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
     }
   }
 
-  public void setStore(CacheManager.Backup store) {
+  public void setStore(EnrichmentBackup store) {
     this.store = store;
   }
 
-  public CacheManager.Backup getStore() {
+  public EnrichmentBackup getStore() {
     return store;
   }
 
@@ -82,4 +101,23 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
     return primaryCache;
   }
 
+  public String getLookupFieldsStr()
+  {
+    return lookupFieldsStr;
+  }
+
+  public void setLookupFieldsStr(String lookupFieldsStr)
+  {
+    this.lookupFieldsStr = lookupFieldsStr;
+  }
+
+  public String getIncludeFieldsStr()
+  {
+    return includeFieldsStr;
+  }
+
+  public void setIncludeFieldsStr(String includeFieldsStr)
+  {
+    this.includeFieldsStr = includeFieldsStr;
+  }
 }
