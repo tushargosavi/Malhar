@@ -17,6 +17,8 @@ package com.datatorrent.demos.dimensions.generic;
 
 import com.datatorrent.api.Context;
 
+import com.datatorrent.contrib.enrichment.FsBackupStore;
+import com.datatorrent.contrib.enrichment.MapEnrichmentOperator;
 import org.apache.hadoop.conf.Configuration;
 
 import com.datatorrent.api.DAG;
@@ -106,8 +108,13 @@ public class GenericDimensionsApplication implements StreamingApplication
   public void populateDAG(DAG dag, Configuration conf)
   {
     JsonSalesGenerator input = dag.addOperator("Input", JsonSalesGenerator.class);
-    input.setAddProductCategory(true);
+    //input.setAddProductCategory(true);
     JsonToMapConverter converter = dag.addOperator("Parse", JsonToMapConverter.class);
+    MapEnrichmentOperator enrichmentOperator = new MapEnrichmentOperator();
+    FsBackupStore fsstore = new FsBackupStore();
+    fsstore.setFileName("projectmapping.json");
+    enrichmentOperator.setStore(fsstore);
+
     GenericDimensionComputation dimensions = dag.addOperator("Compute", new GenericDimensionComputation());
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
@@ -119,7 +126,8 @@ public class GenericDimensionsApplication implements StreamingApplication
 
     // Removing setLocality(Locality.CONTAINER_LOCAL) from JSONStream and MapStream to isolate performance bottleneck
     dag.addStream("JSONStream", input.jsonBytes, converter.input).setLocality(DAG.Locality.CONTAINER_LOCAL);
-    dag.addStream("MapStream", converter.outputMap, dimensions.data).setLocality(DAG.Locality.CONTAINER_LOCAL);
+    dag.addStream("MapStream", converter.outputMap, enrichmentOperator.input).setLocality(DAG.Locality.CONTAINER_LOCAL);
+    dag.addStream("Enrich", enrichmentOperator.output, dimensions.data).setLocality(DAG.Locality.CONTAINER_LOCAL);
     dag.addStream("DimensionalData", dimensions.output, store.input);
     dag.addStream("Query", queries.outputPort, store.query);
     dag.addStream("QueryResult", store.queryResult, queryResult.inputPort);
