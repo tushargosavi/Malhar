@@ -75,14 +75,12 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
     }
 
     try {
-      primaryCache.connect();
-      store.connect();
       store.setIncludeFields(includeFields);
       store.setLookupFields(lookupFields);
 
       cacheManager.setPrimary(primaryCache);
       cacheManager.setBackup(store);
-
+      cacheManager.initialize();
     } catch (IOException e) {
       throw new RuntimeException("Unable to initialize primary cache", e);
     }

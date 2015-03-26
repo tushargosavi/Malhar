@@ -48,8 +48,9 @@ public class FsBackupStore extends ReadOnlyBackup
 
   @Override public Map<Object, Object> loadInitialData()
   {
+    Map<Object, Object> result = null;
     try {
-      Map<Object, Object> result = Maps.newHashMap();
+      result = Maps.newHashMap();
       FSDataInputStream in = fs.open(filePath);
       BufferedReader bin = new BufferedReader(new InputStreamReader(in));
       String line;
@@ -66,14 +67,16 @@ public class FsBackupStore extends ReadOnlyBackup
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return null;
+    System.out.println("loading initial data " + result.size());
+    System.out.println(result);
+    return result;
   }
 
   private Object getKey(Map<String, Object> tuple)
   {
-    ArrayList<String> lst = new ArrayList<String>();
+    ArrayList<Object> lst = new ArrayList<Object>();
     for(String key : lookupFields) {
-      lst.add(key);
+      lst.add(tuple.get(key));
     }
     return lst;
   }
@@ -108,5 +111,6 @@ public class FsBackupStore extends ReadOnlyBackup
   {
     return connected;
   }
+
 
 }
