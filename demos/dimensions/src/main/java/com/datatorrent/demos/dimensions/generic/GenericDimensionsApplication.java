@@ -19,6 +19,7 @@ import com.datatorrent.api.Context;
 
 import com.datatorrent.contrib.enrichment.FsBackupStore;
 import com.datatorrent.contrib.enrichment.MapEnrichmentOperator;
+import com.datatorrent.lib.io.ConsoleOutputOperator;
 import org.apache.hadoop.conf.Configuration;
 
 import com.datatorrent.api.DAG;
@@ -116,11 +117,14 @@ public class GenericDimensionsApplication implements StreamingApplication
     enrichmentOperator.setStore(fsstore);
 
     GenericDimensionComputation dimensions = dag.addOperator("Compute", new GenericDimensionComputation());
+    /*
     DimensionStoreOperator store = dag.addOperator("Store", DimensionStoreOperator.class);
+
+
     KafkaSinglePortStringInputOperator queries = dag.addOperator("Query", new KafkaSinglePortStringInputOperator());
     KafkaSinglePortOutputOperator<Object, Object> queryResult = dag.addOperator("QueryResult", new KafkaSinglePortOutputOperator<Object, Object>());
     queryResult.getConfigProperties().put("serializer.class", KafkaJsonEncoder.class.getName());
-
+    */
     dag.setInputPortAttribute(converter.input, Context.PortContext.PARTITION_PARALLEL, true);
     dag.setInputPortAttribute(dimensions.data, Context.PortContext.PARTITION_PARALLEL, true);
 
@@ -128,9 +132,13 @@ public class GenericDimensionsApplication implements StreamingApplication
     dag.addStream("JSONStream", input.jsonBytes, converter.input).setLocality(DAG.Locality.CONTAINER_LOCAL);
     dag.addStream("MapStream", converter.outputMap, enrichmentOperator.input).setLocality(DAG.Locality.CONTAINER_LOCAL);
     dag.addStream("Enrich", enrichmentOperator.output, dimensions.data).setLocality(DAG.Locality.CONTAINER_LOCAL);
+
+    ConsoleOutputOperator store = dag.addOperator("Console", new ConsoleOutputOperator());
     dag.addStream("DimensionalData", dimensions.output, store.input);
+    /*
     dag.addStream("Query", queries.outputPort, store.query);
     dag.addStream("QueryResult", store.queryResult, queryResult.inputPort);
+    */
   }
 
 }

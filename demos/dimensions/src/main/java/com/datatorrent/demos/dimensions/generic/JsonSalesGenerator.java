@@ -162,15 +162,20 @@ public class JsonSalesGenerator implements InputOperator
   @Override
   public void emitTuples()
   {
-    while (tuplesCounter++ < tuplesPerCurrentWindow) {
+    // while (tuplesCounter++ < tuplesPerCurrentWindow) {
+    for (int i = 0; i < 10; i++)
+    {
       try {
-
         SalesEvent salesEvent = generateSalesEvent();
         this.jsonBytes.emit(mapper.writeValueAsBytes(salesEvent));
-
       } catch (Exception ex) {
         throw new RuntimeException(ex);
       }
+    }
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
   }
 

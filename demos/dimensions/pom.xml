@@ -4,10 +4,10 @@
 
   <groupId>com.datatorrent</groupId>
   <version>2.1.0-SNAPSHOT</version>
-  <artifactId>dimensions-demo</artifactId>
+  <artifactId>dimensions-demo-tushar</artifactId>
   <packaging>jar</packaging>
 
-  <name>DataTorrent Dimensions Demos</name>
+  <name>DataTorrent Dimensions Demos Tushar</name>
   <description>DataTorrent demo applications that demonstrates how DataTorrent is used to build applications for massive multi-dimensional computations with very low latency.</description>
 
   <parent>

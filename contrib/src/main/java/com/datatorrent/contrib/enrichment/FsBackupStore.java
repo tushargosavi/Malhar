@@ -1,7 +1,7 @@
 package com.datatorrent.contrib.enrichment;
 
-import com.beust.jcommander.internal.Maps;
 import com.esotericsoftware.kryo.NotNull;
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;

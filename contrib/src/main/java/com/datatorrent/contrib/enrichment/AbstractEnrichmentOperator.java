@@ -4,6 +4,7 @@ import com.datatorrent.api.BaseOperator;
 import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.lib.db.cache.CacheManager;
 import com.datatorrent.lib.db.cache.CacheStore;
 import com.datatorrent.lib.db.cache.CacheStore.ExpiryType;
@@ -21,10 +22,11 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
    */
   private transient CacheManager cacheManager;
 
-  private CacheStore primaryCache = new CacheStore();
+  private transient CacheStore primaryCache = new CacheStore();
 
   public transient DefaultOutputPort<OUTPUT> output = new DefaultOutputPort<OUTPUT>();
 
+  @InputPortFieldAnnotation(optional = true)
   public transient DefaultInputPort<INPUT> input = new DefaultInputPort<INPUT>()
   {
     @Override public void process(INPUT tuple)
@@ -39,8 +41,8 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
 
   protected String includeFieldsStr;
 
-  protected List<String> lookupFields;
-  protected List<String> includeFields;
+  protected transient List<String> lookupFields;
+  protected transient List<String> includeFields;
 
   protected void processTuple(INPUT tuple) {
     Object result = cacheManager.get(getKey(tuple));

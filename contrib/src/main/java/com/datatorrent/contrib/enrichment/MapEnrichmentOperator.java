@@ -48,6 +48,9 @@ public class MapEnrichmentOperator extends AbstractEnrichmentOperator<Map<String
 
   @Override protected Map<String, Object> convert(Map<String, Object> in, Object cached)
   {
+    if (cached == null)
+      return in;
+
     Map<String, Object> newAttributes = (Map<String, Object>)cached;
     if (includeFieldsStr != null && includeFieldsStr.length() != 0) {
       newAttributes = Maps.filterKeys(newAttributes, Predicates.in(includeFields));
