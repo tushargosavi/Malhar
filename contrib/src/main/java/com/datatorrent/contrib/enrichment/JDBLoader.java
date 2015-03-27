@@ -52,14 +52,16 @@ public class JDBLoader extends DBLoader
   {
     try {
       ResultSet resultSet = (ResultSet) result;
-      resultSet.next();
-      ResultSetMetaData rsdata = resultSet.getMetaData();
-      Map<String, Object> columnInfo = new HashMap<String, Object>();
-      int columnCount = rsdata.getColumnCount();
-      for (int i = 1; i <= columnCount; i++) {
-        columnInfo.put(rsdata.getColumnName(i), resultSet.getObject(i));
-      }
-      return columnInfo;
+      if (resultSet.next()) {
+        ResultSetMetaData rsdata = resultSet.getMetaData();
+        Map<String, Object> columnInfo = new HashMap<String, Object>();
+        int columnCount = rsdata.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+          columnInfo.put(rsdata.getColumnName(i), resultSet.getObject(i));
+        }
+        return columnInfo;
+      } else
+        return null;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -70,7 +72,7 @@ public class JDBLoader extends DBLoader
     String stmt = "select * from " + tableName + " where ";
     ArrayList<Object> keys = (ArrayList<Object>) key;
     for (int i = 0; i < keys.size(); i++) {
-      stmt = stmt + lookupKeys[i] + " = " + keys.get(i);
+      stmt = stmt + lookupKeys.get(i) + " = " + keys.get(i);
       if(i != keys.size() - 1) {
         stmt = stmt + " and ";
       }

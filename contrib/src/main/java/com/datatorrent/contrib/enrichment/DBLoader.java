@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class DBLoader implements CacheManager.Backup {
+public abstract class DBLoader implements EnrichmentBackup {
   protected static final Logger logger = LoggerFactory.getLogger(DBLoader.class);
   @NotNull
   protected String userName;
@@ -27,7 +27,7 @@ public abstract class DBLoader implements CacheManager.Backup {
 
   String queryStmt = "";
 
-  String[] lookupKeys;
+  List<String> lookupKeys;
 
   protected abstract void createDatabase();
   protected abstract Object getQueryResult(Object key);
@@ -120,11 +120,6 @@ public abstract class DBLoader implements CacheManager.Backup {
     this.tableName = tableName;
   }
 
-  public void setLookupkey(String lookupkey)
-  {
-    lookupKeys = lookupkey.split(",");
-  }
-
   public String getQueryStmt()
   {
     return queryStmt;
@@ -148,5 +143,15 @@ public abstract class DBLoader implements CacheManager.Backup {
   public void setDbType(String dbType)
   {
     this.dbType = DBType.valueOf(dbType.toUpperCase());
+  }
+
+  @Override public void setLookupFields(List<String> lookupFields)
+  {
+    lookupKeys = lookupFields;
+  }
+
+  @Override public void setIncludeFields(List<String> includeFields)
+  {
+
   }
 }
