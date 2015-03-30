@@ -115,7 +115,9 @@ public class JDBLoaderTest
   {
     CountDownLatch latch = new CountDownLatch(1);
 
-    testMeta.dbloader.setLookupkey("ID");
+    ArrayList<String> lookupKeys = new ArrayList<String>();
+    lookupKeys.add("ID");
+    testMeta.dbloader.setLookupFields(lookupKeys);
 
     latch.await(1000, TimeUnit.MILLISECONDS);
 
