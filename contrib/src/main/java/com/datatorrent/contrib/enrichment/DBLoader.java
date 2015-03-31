@@ -2,6 +2,7 @@ package com.datatorrent.contrib.enrichment;
 
 import com.datatorrent.lib.db.cache.CacheManager;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +30,11 @@ public abstract class DBLoader implements EnrichmentBackup {
 
   List<String> lookupKeys;
 
+  List<String> includeKeys;
+
   protected abstract void createDatabase();
   protected abstract Object getQueryResult(Object key);
-  protected abstract Map<String, Object> getMapColumnInfo(Object stmt);
+  protected abstract ArrayList<Object> getDataFrmResult(Object stmt);
 
 
   @Override
@@ -41,7 +44,7 @@ public abstract class DBLoader implements EnrichmentBackup {
 
   @Override
   public Object get(Object key) {
-     return getMapColumnInfo(getQueryResult(key));
+     return getDataFrmResult(getQueryResult(key));
   }
 
   @Override
@@ -55,17 +58,17 @@ public abstract class DBLoader implements EnrichmentBackup {
 
   @Override
   public void put(Object key, Object value) {
-
+    throw new RuntimeException("Put Operation not supported");
   }
 
   @Override
   public void putAll(Map<Object, Object> m) {
-
+    throw new RuntimeException("PutAll Operation not supported");
   }
 
   @Override
   public void remove(Object key) {
-
+    throw new RuntimeException("remove Operation not supported");
   }
 
   @Override
@@ -152,6 +155,6 @@ public abstract class DBLoader implements EnrichmentBackup {
 
   @Override public void setIncludeFields(List<String> includeFields)
   {
-
+    includeKeys = includeFields;
   }
 }

@@ -51,11 +51,12 @@ public class MapEnrichmentOperator extends AbstractEnrichmentOperator<Map<String
     if (cached == null)
       return in;
 
-    Map<String, Object> newAttributes = (Map<String, Object>)cached;
-    if (includeFieldsStr != null && includeFieldsStr.length() != 0) {
-      newAttributes = Maps.filterKeys(newAttributes, Predicates.in(includeFields));
+    ArrayList<Object> newAttributes = (ArrayList<Object>)cached;
+    if(newAttributes != null) {
+      for (int i = 0; i < includeFields.size(); i++) {
+        in.put(includeFields.get(i), newAttributes.get(i));
+      }
     }
-    in.putAll(newAttributes);
     return in;
   }
 }
