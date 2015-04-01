@@ -33,7 +33,6 @@ import java.util.Map;
  * @displayName MapEnrichment
  * @category Database
  * @tags enrichment, lookup
- *
  * @since 2.0.0
  */
 public class MapEnrichmentOperator extends AbstractEnrichmentOperator<Map<String, Object>, Map<String, Object>>

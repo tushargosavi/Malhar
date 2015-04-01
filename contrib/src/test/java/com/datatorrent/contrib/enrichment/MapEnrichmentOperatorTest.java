@@ -134,5 +134,10 @@ public class MapEnrichmentOperatorTest
     {
 
     }
+
+    @Override
+    public boolean needRefresh() {
+      return false;
+    }
   }
 }
