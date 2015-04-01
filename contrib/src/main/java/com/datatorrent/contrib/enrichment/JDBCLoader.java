@@ -137,6 +137,7 @@ public class JDBCLoader extends DBLoader
   @Override
   public boolean isConnected() {
     try {
+      if (connection == null) return false;
       return !connection.isClosed();
     }
     catch (SQLException e) {

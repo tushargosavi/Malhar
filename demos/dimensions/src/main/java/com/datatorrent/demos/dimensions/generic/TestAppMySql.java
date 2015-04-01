@@ -3,6 +3,7 @@ package com.datatorrent.demos.dimensions.generic;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
+import com.datatorrent.contrib.enrichment.DBLoader;
 import com.datatorrent.contrib.enrichment.JDBCLoader;
 import com.datatorrent.contrib.enrichment.MapEnrichmentOperator;
 import com.datatorrent.lib.io.ConsoleOutputOperator;
@@ -25,7 +26,7 @@ public class TestAppMySql implements StreamingApplication
     store.setHostName("localhost");
     store.setUserName("root");
     store.setPassword("quantum");
-    store.setDbType("mysql");
+    store.setDbType(DBLoader.DBType.MYSQL);
     store.setTableName("productmapping");
 
     enrichmentOperator.setStore(store);

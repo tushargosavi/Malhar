@@ -27,7 +27,7 @@ public class JDBLoaderTest
     {
         try {
           dbloader = new JDBCLoader();
-          dbloader.setDbType("hsql");
+          dbloader.setDbType(DBLoader.DBType.HSQL);
           dbloader.setTableName("COMPANY");
 
           dbloader.connect();
@@ -120,10 +120,7 @@ public class JDBLoaderTest
     includeKeys.add("NAME");
     includeKeys.add("AGE");
     includeKeys.add("ADDRESS");
-    testMeta.dbloader.setIncludeFields(includeKeys);
-
-    testMeta.dbloader.setLookupFields(lookupKeys);
-
+    testMeta.dbloader.configureFields(lookupKeys, includeKeys);
     latch.await(1000, TimeUnit.MILLISECONDS);
 
     ArrayList<Object> keys = new ArrayList<Object>();

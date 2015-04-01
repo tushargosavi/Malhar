@@ -59,7 +59,7 @@ public class MapEnrichmentOperatorTest
     System.out.println(sink.collectedTuples.get(0));
   }
 
-  private static class MemoryStore implements EnrichmentBackup
+  private static class MemoryStore extends ReadOnlyEnrichmentBackup
   {
     static Map<String, Map> returnData = Maps.newHashMap();
 
@@ -95,21 +95,6 @@ public class MapEnrichmentOperatorTest
       return null;
     }
 
-    @Override public void put(Object key, Object value)
-    {
-
-    }
-
-    @Override public void putAll(Map<Object, Object> m)
-    {
-
-    }
-
-    @Override public void remove(Object key)
-    {
-
-    }
-
     @Override public void connect() throws IOException
     {
 
@@ -123,16 +108,6 @@ public class MapEnrichmentOperatorTest
     @Override public boolean isConnected()
     {
       return false;
-    }
-
-    @Override public void setLookupFields(List<String> lookupFields)
-    {
-
-    }
-
-    @Override public void setIncludeFields(List<String> includeFields)
-    {
-
     }
 
     @Override

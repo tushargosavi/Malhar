@@ -9,6 +9,7 @@ import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.api.annotation.Stateless;
 import com.datatorrent.common.util.DTThrowable;
 import com.datatorrent.contrib.enrichment.BeanEnrichmentOperator;
+import com.datatorrent.contrib.enrichment.DBLoader;
 import com.datatorrent.contrib.enrichment.JDBCLoader;
 import com.datatorrent.lib.io.ConsoleOutputOperator;
 import org.apache.hadoop.conf.Configuration;
@@ -36,7 +37,7 @@ public class TestBeanAppMySql implements StreamingApplication
     store.setHostName("localhost");
     store.setUserName("root");
     store.setPassword("test");
-    store.setDbType("mysql");
+    store.setDbType(DBLoader.DBType.MYSQL);
     store.setTableName("productmapping");
 
     //Map<String, Object> ob = new HashMap<String, Object>();
