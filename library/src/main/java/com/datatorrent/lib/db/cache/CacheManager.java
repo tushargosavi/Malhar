@@ -87,15 +87,7 @@ public class CacheManager implements Closeable
         @Override
         public void run()
         {
-          List<Object> keysToRefresh = Lists.newArrayList(primary.getKeys());
-          if (keysToRefresh.size() > 0) {
-            List<Object> refreshedValues = backup.getAll(keysToRefresh);
-            if (refreshedValues != null) {
-              for (int i = 0; i < keysToRefresh.size(); i++) {
-                primary.put(keysToRefresh.get(i), refreshedValues.get(i));
-              }
-            }
-          }
+          refreshKeys();
         }
       };
 
@@ -106,6 +98,18 @@ public class CacheManager implements Closeable
         initialDelay = timeToRefresh.getTimeInMillis();
       }
       refresher.scheduleAtFixedRate(task, initialDelay, 86400000);
+    }
+  }
+
+  protected void refreshKeys() {
+    List<Object> keysToRefresh = Lists.newArrayList(primary.getKeys());
+    if (keysToRefresh.size() > 0) {
+      List<Object> refreshedValues = backup.getAll(keysToRefresh);
+      if (refreshedValues != null) {
+        for (int i = 0; i < keysToRefresh.size(); i++) {
+          primary.put(keysToRefresh.get(i), refreshedValues.get(i));
+        }
+      }
     }
   }
 

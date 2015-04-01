@@ -1,6 +1,5 @@
 package com.datatorrent.contrib.enrichment;
 
-import com.datatorrent.lib.db.cache.CacheManager;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

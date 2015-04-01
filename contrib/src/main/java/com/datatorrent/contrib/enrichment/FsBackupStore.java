@@ -112,5 +112,8 @@ public class FsBackupStore extends ReadOnlyBackup
     return connected;
   }
 
-
+  @Override
+  public boolean needRefresh() {
+    return false;
+  }
 }

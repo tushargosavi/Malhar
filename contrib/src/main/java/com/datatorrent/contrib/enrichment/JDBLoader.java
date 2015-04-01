@@ -105,4 +105,8 @@ public class JDBLoader extends DBLoader
     throw new RuntimeException("Invalid DBType");
   }
 
+  @Override
+  public boolean needRefresh() {
+    return false;
+  }
 }

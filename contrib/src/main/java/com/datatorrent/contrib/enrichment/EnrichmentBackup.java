@@ -8,4 +8,5 @@ public interface EnrichmentBackup extends CacheManager.Backup
 {
   public void setLookupFields(List<String> lookupFields);
   public void setIncludeFields(List<String> includeFields);
+  public boolean needRefresh();
 }
