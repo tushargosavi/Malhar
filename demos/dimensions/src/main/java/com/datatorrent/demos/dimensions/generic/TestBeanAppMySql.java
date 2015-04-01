@@ -9,7 +9,7 @@ import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.api.annotation.Stateless;
 import com.datatorrent.common.util.DTThrowable;
 import com.datatorrent.contrib.enrichment.BeanEnrichmentOperator;
-import com.datatorrent.contrib.enrichment.JDBLoader;
+import com.datatorrent.contrib.enrichment.JDBCLoader;
 import com.datatorrent.lib.io.ConsoleOutputOperator;
 import org.apache.hadoop.conf.Configuration;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -65,7 +65,7 @@ public class TestBeanAppMySql implements StreamingApplication
 
     //MapEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new MapEnrichmentOperator());
     BeanEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new BeanEnrichmentOperator());
-    JDBLoader store = new JDBLoader();
+    JDBCLoader store = new JDBCLoader();
     store.setDbName("enrichment");
     store.setHostName("localhost");
     store.setUserName("root");

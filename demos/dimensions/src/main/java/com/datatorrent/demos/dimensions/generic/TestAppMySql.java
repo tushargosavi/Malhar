@@ -3,8 +3,7 @@ package com.datatorrent.demos.dimensions.generic;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
-import com.datatorrent.contrib.enrichment.FsBackupStore;
-import com.datatorrent.contrib.enrichment.JDBLoader;
+import com.datatorrent.contrib.enrichment.JDBCLoader;
 import com.datatorrent.contrib.enrichment.MapEnrichmentOperator;
 import com.datatorrent.lib.io.ConsoleOutputOperator;
 import org.apache.hadoop.conf.Configuration;
@@ -21,7 +20,7 @@ public class TestAppMySql implements StreamingApplication
     JsonToMapConverter converter = dag.addOperator("Parse", JsonToMapConverter.class);
 
     MapEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new MapEnrichmentOperator());
-    JDBLoader store = new JDBLoader();
+    JDBCLoader store = new JDBCLoader();
     store.setDbName("enrichment");
     store.setHostName("localhost");
     store.setUserName("root");

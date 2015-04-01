@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JDBLoader extends DBLoader
+public class JDBCLoader extends DBLoader
 {
 
   protected transient Connection connection = null;

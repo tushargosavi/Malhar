@@ -10,7 +10,6 @@ import org.junit.runner.Description;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.LoggerFactory;
@@ -22,12 +21,12 @@ public class JDBLoaderTest
   public static class TestMeta extends TestWatcher
   {
 
-    JDBLoader dbloader;
+    JDBCLoader dbloader;
     @Override
     protected void starting(Description description)
     {
         try {
-          dbloader = new JDBLoader();
+          dbloader = new JDBCLoader();
           dbloader.setDbType("hsql");
           dbloader.setTableName("COMPANY");
 
