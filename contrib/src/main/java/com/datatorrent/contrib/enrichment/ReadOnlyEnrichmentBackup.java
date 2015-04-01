@@ -5,7 +5,7 @@ import com.datatorrent.lib.db.cache.CacheManager;
 import java.util.List;
 import java.util.Map;
 
-public abstract class ReadOnlyBackup implements EnrichmentBackup
+public abstract class ReadOnlyEnrichmentBackup implements EnrichmentBackup
 {
 
   protected transient List<String> includeFields;
@@ -26,14 +26,9 @@ public abstract class ReadOnlyBackup implements EnrichmentBackup
     throw new RuntimeException("Not supported operation");
   }
 
-
-  @Override public void setLookupFields(List<String> lookupFields)
-  {
+  @Override
+  public void configureFields(List<String> lookupFields, List<String> includeFields) {
     this.lookupFields = lookupFields;
-  }
-
-  @Override public void setIncludeFields(List<String> includeFields)
-  {
     this.includeFields = includeFields;
   }
 }

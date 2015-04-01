@@ -84,4 +84,36 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
       }
     }
   }
+
+  public Class getInputClass() {
+    return inputClass;
+  }
+
+  public void setInputClass(Class inputClass) {
+    this.inputClass = inputClass;
+  }
+
+  public Class getOutputClass() {
+    return outputClass;
+  }
+
+  public void setOutputClass(Class outputClass) {
+    this.outputClass = outputClass;
+  }
+
+  public List<Field> getFields() {
+    return fields;
+  }
+
+  public void setFields(List<Field> fields) {
+    this.fields = fields;
+  }
+
+  public List<Field> getUpdates() {
+    return updates;
+  }
+
+  public void setUpdates(List<Field> updates) {
+    this.updates = updates;
+  }
 }

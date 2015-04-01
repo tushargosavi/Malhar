@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class DBLoader extends ReadOnlyBackup {
+public abstract class DBLoader extends ReadOnlyEnrichmentBackup {
   protected static final Logger logger = LoggerFactory.getLogger(DBLoader.class);
   @NotNull
   protected String userName;
@@ -124,8 +124,7 @@ public abstract class DBLoader extends ReadOnlyBackup {
     this.hostName = hostName;
   }
 
-  public void setDbType(String dbType)
-  {
-    this.dbType = DBType.valueOf(dbType.toUpperCase());
+  public void setDbType(DBType dbType) {
+    this.dbType = dbType;
   }
 }

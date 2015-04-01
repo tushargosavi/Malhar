@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class FsBackupStore extends ReadOnlyBackup
+public class FsBackupStore extends ReadOnlyEnrichmentBackup
 {
   @NotNull
   private String fileName;

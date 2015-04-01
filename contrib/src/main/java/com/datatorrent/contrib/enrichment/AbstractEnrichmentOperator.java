@@ -77,9 +77,7 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
     }
 
     try {
-      store.setIncludeFields(includeFields);
-      store.setLookupFields(lookupFields);
-
+      store.configureFields(lookupFields, includeFields);
       cacheManager.setPrimary(primaryCache);
       cacheManager.setBackup(store);
       cacheManager.initialize();
