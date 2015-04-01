@@ -117,6 +117,12 @@ public class JDBLoaderTest
 
     ArrayList<String> lookupKeys = new ArrayList<String>();
     lookupKeys.add("ID");
+    ArrayList<String> includeKeys = new ArrayList<String>();
+    includeKeys.add("NAME");
+    includeKeys.add("AGE");
+    includeKeys.add("ADDRESS");
+    testMeta.dbloader.setIncludeFields(includeKeys);
+
     testMeta.dbloader.setLookupFields(lookupKeys);
 
     latch.await(1000, TimeUnit.MILLISECONDS);
@@ -124,13 +130,11 @@ public class JDBLoaderTest
     ArrayList<Object> keys = new ArrayList<Object>();
     keys.add("4");
 
-    Map<String, Object> columnInfo = (Map<String, Object>) testMeta.dbloader.get(keys);
+    ArrayList<Object> columnInfo = (ArrayList<Object>) testMeta.dbloader.get(keys);
 
-    Assert.assertEquals("ID", 4, columnInfo.get("ID"));
-    Assert.assertEquals("NAME", "Mark", columnInfo.get("NAME").toString().trim());
-    Assert.assertEquals("AGE", 25, columnInfo.get("AGE"));
-    Assert.assertEquals("ADDRESS", "Rich-Mond", columnInfo.get("ADDRESS").toString().trim());
-    Assert.assertEquals("SALARY", 65000.0, columnInfo.get("SALARY"));
+    Assert.assertEquals("NAME", "Mark", columnInfo.get(0).toString().trim());
+    Assert.assertEquals("AGE", 25, columnInfo.get(1));
+    Assert.assertEquals("ADDRESS", "Rich-Mond", columnInfo.get(2).toString().trim());
   }
 
   @Test
@@ -146,9 +150,9 @@ public class JDBLoaderTest
     keys.add("25");
     keys.add("Texas");
 
-    Map<String, Object> columnInfo = (Map<String, Object>) testMeta.dbloader.get(keys);
+    ArrayList<Object> columnInfo = (ArrayList<Object>) testMeta.dbloader.get(keys);
 
-    Assert.assertEquals("ID", 2, columnInfo.get("ID"));
-    Assert.assertEquals("NAME", "Allen", columnInfo.get("NAME").toString().trim());
+    Assert.assertEquals("ID", 2, columnInfo.get(0));
+    Assert.assertEquals("NAME", "Allen", columnInfo.get(1).toString().trim());
   }
 }

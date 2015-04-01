@@ -22,9 +22,10 @@ public class TestApp implements StreamingApplication
 
     MapEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new MapEnrichmentOperator());
     FsBackupStore fsstore = new FsBackupStore();
-    fsstore.setFileName("projectmapping.json");
+    fsstore.setFileName("file:///home/chaitanya/Downloads/projectmapping.json");
     enrichmentOperator.setStore(fsstore);
     enrichmentOperator.setLookupFieldsStr("productId");
+    enrichmentOperator.setIncludeFieldsStr("productCategory");
 
     ConsoleOutputOperator out1 = dag.addOperator("Console1", new ConsoleOutputOperator());
     ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());

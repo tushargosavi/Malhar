@@ -57,7 +57,11 @@ public class FsBackupStore extends ReadOnlyBackup
       while ((line = bin.readLine()) != null) {
         try {
           Map<String, Object> tuple = reader.readValue(line);
-          result.put(getKey(tuple), tuple);
+          ArrayList<Object> includeTuple = new ArrayList<Object>();
+          for(String s: includeFields) {
+            includeTuple.add(tuple.get(s));
+          }
+          result.put(getKey(tuple), includeTuple);
         } catch (JsonProcessingException parseExp) {
           logger.info("Unable to parse line {}", line);
         }

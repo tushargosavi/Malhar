@@ -48,18 +48,24 @@ public class JDBLoader extends DBLoader
     }
   }
 
-  @Override protected Map<String, Object> getMapColumnInfo(Object result) throws RuntimeException
+  @Override protected ArrayList<Object> getDataFrmResult(Object result) throws RuntimeException
   {
     try {
       ResultSet resultSet = (ResultSet) result;
       if (resultSet.next()) {
-        ResultSetMetaData rsdata = resultSet.getMetaData();
-        Map<String, Object> columnInfo = new HashMap<String, Object>();
-        int columnCount = rsdata.getColumnCount();
-        for (int i = 1; i <= columnCount; i++) {
-          columnInfo.put(rsdata.getColumnName(i), resultSet.getObject(i));
+        ArrayList<Object> res = new ArrayList<Object>();
+        if(queryStmt == "") {
+          for(String key : includeKeys) {
+            res.add(resultSet.getObject(key));
+          }
+        } else {
+          ResultSetMetaData rsdata = resultSet.getMetaData();
+          int columnCount = rsdata.getColumnCount();
+          for (int i = 1; i <= columnCount; i++) {
+            res.add(resultSet.getObject(i));
+          }
         }
-        return columnInfo;
+        return res;
       } else
         return null;
     } catch (SQLException e) {
