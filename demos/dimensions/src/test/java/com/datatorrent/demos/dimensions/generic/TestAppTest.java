@@ -16,7 +16,7 @@ public class TestAppTest
   {
     LocalMode lma = LocalMode.newInstance();
     Configuration conf = new Configuration(false);
-    lma.prepareDAG(new TestAppMySql(), conf);
+    lma.prepareDAG(new TestBeanAppMySql(), conf);
     LocalMode.Controller lc = lma.getController();
     lc.run(10000);
   }

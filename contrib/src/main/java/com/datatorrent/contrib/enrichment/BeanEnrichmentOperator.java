@@ -28,22 +28,25 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
 
   @Override
   protected Object convert(Object in, Object cached) {
-    Object o = null;
-    if (cached == null)
-      return in;
-
-    ArrayList<Object> newAttributes = (ArrayList<Object>)cached;
     try {
-      o = outputClass.newInstance();
+      Object o = outputClass.newInstance();
+      // Copy the fields from input to output
+      Field[] fields = inputClass.getFields();
+      for(Field f : fields) {
+        f.set(o, f.get(in));
+      }
+      if (cached == null)
+        return o;
 
-      // TODO copy fields from input to output.
-
+      if(updates.size() == 0 && includeFields.size() != 0) {
+        populateUpdatesFrmIncludeFields();
+      }
+      ArrayList<Object> newAttributes = (ArrayList<Object>)cached;
       int idx = 0;
       for(Field f : updates) {
         f.set(o, newAttributes.get(idx));
         idx++;
       }
-
       return o;
     } catch (InstantiationException e) {
       throw new RuntimeException(e);
@@ -55,6 +58,11 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
   @Override
   public void setup(Context.OperatorContext context) {
     super.setup(context);
+    populateFieldsFrmLookup();
+    populateUpdatesFrmIncludeFields();
+  }
+
+  private void populateFieldsFrmLookup() {
     for (String fName : lookupFields) {
       try {
         Field f = inputClass.getField(fName);
@@ -64,8 +72,9 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
         throw new RuntimeException(e);
       }
     }
+  }
 
-
+  private void populateUpdatesFrmIncludeFields() {
     for (String fName : includeFields) {
       try {
         Field f = outputClass.getField(fName);
@@ -74,7 +83,5 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
         throw new RuntimeException(e);
       }
     }
-
-
   }
 }

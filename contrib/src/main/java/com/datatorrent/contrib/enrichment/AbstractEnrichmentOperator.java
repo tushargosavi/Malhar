@@ -41,8 +41,8 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
 
   protected String includeFieldsStr;
 
-  protected transient List<String> lookupFields;
-  protected transient List<String> includeFields;
+  protected transient List<String> lookupFields = new ArrayList<String>();
+  protected transient List<String> includeFields = new ArrayList<String>();
 
   protected void processTuple(INPUT tuple) {
     Object result = cacheManager.get(getKey(tuple));
