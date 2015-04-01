@@ -2,30 +2,35 @@ package com.datatorrent.contrib.enrichment;
 
 import com.datatorrent.common.util.DTThrowable;
 
+import com.datatorrent.lib.db.jdbc.JdbcStore;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import javax.validation.constraints.NotNull;
 
 public class JDBLoader extends DBLoader
 {
-
   protected transient Connection connection = null;
 
-  @Override protected void createDatabase()
-  {
-    try {
-      // This will load the JDBC driver, each DB has its own driver
-      String dbDriver = getDriver();
-      String dbUrl = getDriverURL();
-      Class.forName(dbDriver).newInstance();
-      connection = DriverManager.getConnection(dbUrl, userName, password);
+  protected final JdbcStore store;
 
-      logger.debug("JDBC connection Success");
-    }
-    catch (Throwable t) {
-      DTThrowable.rethrow(t);
+  protected String queryStmt;
+
+  protected String tableName;
+
+  public JDBLoader() {
+    store = new JdbcStore();
+  }
+
+  @Override
+  public void connect() throws IOException {
+    store.connect();
+    connection = store.getConnection();
+    if(connection == null) {
+      logger.error("JDBC connection Failure");
     }
   }
 
@@ -62,7 +67,9 @@ public class JDBLoader extends DBLoader
           ResultSetMetaData rsdata = resultSet.getMetaData();
           int columnCount = rsdata.getColumnCount();
           // If the includefields is empty, populate it from ResultSetMetaData
-          if(includeFields.size() == 0) {
+          if(includeFields == null || includeFields.size() == 0) {
+            if(includeFields == null)
+              includeFields = new ArrayList<String>();
             for (int i = 1; i <= columnCount; i++) {
               includeFields.add(rsdata.getColumnName(i));
             }
@@ -93,50 +100,59 @@ public class JDBLoader extends DBLoader
     return stmt;
   }
 
-  private String getDriver()
-  {
-    if(dbType.equals(DBType.MYSQL)) {
-      return "org.gjt.mm.mysql.Driver";
-    } else if(dbType.equals(DBType.ORACLE)) {
-      return "oracle.jdbc.driver.OracleDriver";
-    } else if(dbType.equals(DBType.HSQL)) {
-        return "org.hsqldb.jdbcDriver";
-    }
-
-    throw new RuntimeException("Invalid DBType");
-  }
-
-  private String getDriverURL()
-  {
-    if(dbType.equals(DBType.MYSQL)) {
-      return "jdbc:mysql://"  + hostName + "/" + dbName;
-    } else if(dbType.equals(DBType.ORACLE)) {
-      return "jdbc:oracle:thin:@" + hostName + ":" + dbName;
-    } else if(dbType.equals(DBType.HSQL)) {
-        return "jdbc:hsqldb:mem:test;sql.syntax_mys=true";
-    }
-    throw new RuntimeException("Invalid DBType");
-  }
-
   @Override
   public void disconnect() throws IOException
   {
-    try {
-      connection.close();
-    }
-    catch (SQLException ex) {
-      throw new RuntimeException("closing database resource", ex);
-    }
+    store.disconnect();
   }
 
   @Override
   public boolean isConnected() {
-    try {
-      return !connection.isClosed();
-    }
-    catch (SQLException e) {
-      throw new RuntimeException("is isConnected", e);
-    }
+   return store.isConnected();
   }
 
+  public String getQueryStmt()
+  {
+    return queryStmt;
+  }
+
+  public void setQueryStmt(String queryStmt)
+  {
+    this.queryStmt = queryStmt;
+  }
+
+  public String getTableName()
+  {
+    return tableName;
+  }
+
+  public void setTableName(String tableName)
+  {
+    this.tableName = tableName;
+  }
+
+  public void setDbUrl(String dbUrl)
+  {
+    store.setDbUrl(dbUrl);
+  }
+
+  public void setDbDriver(String dbDriver)
+  {
+    store.setDbDriver(dbDriver);
+  }
+
+  public void setUserName(String userName)
+  {
+    store.setUserName(userName);
+  }
+
+  public void setPassword(String password)
+  {
+    store.setPassword(password);
+  }
+
+  public void setConnectionProperties(String connectionProperties)
+  {
+    store.setConnectionProperties(connectionProperties);
+  }
 }
