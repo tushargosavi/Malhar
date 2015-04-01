@@ -2,6 +2,7 @@ package com.datatorrent.contrib.enrichment;
 
 import com.datatorrent.common.util.DTThrowable;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +19,6 @@ public class JDBLoader extends DBLoader
       // This will load the JDBC driver, each DB has its own driver
       String dbDriver = getDriver();
       String dbUrl = getDriverURL();
-
       Class.forName(dbDriver).newInstance();
       connection = DriverManager.getConnection(dbUrl, userName, password);
 
@@ -33,7 +33,7 @@ public class JDBLoader extends DBLoader
   {
     try {
       PreparedStatement getStatement ;
-      if(queryStmt == "") {
+      if(queryStmt == null) {
         getStatement = connection.prepareStatement(generateQueryStmt(key));
       } else {
         getStatement = connection.prepareStatement(queryStmt);
@@ -54,13 +54,20 @@ public class JDBLoader extends DBLoader
       ResultSet resultSet = (ResultSet) result;
       if (resultSet.next()) {
         ArrayList<Object> res = new ArrayList<Object>();
-        if(queryStmt == "") {
-          for(String key : includeKeys) {
-            res.add(resultSet.getObject(key));
+        if(queryStmt == null) {
+          for(String f : includeFields) {
+            res.add(resultSet.getObject(f));
           }
         } else {
           ResultSetMetaData rsdata = resultSet.getMetaData();
           int columnCount = rsdata.getColumnCount();
+          // If the includefields is empty, populate it from ResultSetMetaData
+          if(includeFields.size() == 0) {
+            for (int i = 1; i <= columnCount; i++) {
+              includeFields.add(rsdata.getColumnName(i));
+            }
+          }
+
           for (int i = 1; i <= columnCount; i++) {
             res.add(resultSet.getObject(i));
           }
@@ -78,7 +85,7 @@ public class JDBLoader extends DBLoader
     String stmt = "select * from " + tableName + " where ";
     ArrayList<Object> keys = (ArrayList<Object>) key;
     for (int i = 0; i < keys.size(); i++) {
-      stmt = stmt + lookupKeys.get(i) + " = " + keys.get(i);
+      stmt = stmt + lookupFields.get(i) + " = " + keys.get(i);
       if(i != keys.size() - 1) {
         stmt = stmt + " and ";
       }
@@ -115,4 +122,25 @@ public class JDBLoader extends DBLoader
   public boolean needRefresh() {
     return false;
   }
+
+  public void disconnect() throws IOException
+  {
+    try {
+      connection.close();
+    }
+    catch (SQLException ex) {
+      throw new RuntimeException("closing database resource", ex);
+    }
+  }
+
+  @Override
+  public boolean isConnected() {
+    try {
+      return !connection.isClosed();
+    }
+    catch (SQLException e) {
+      throw new RuntimeException("is isConnected", e);
+    }
+  }
+
 }

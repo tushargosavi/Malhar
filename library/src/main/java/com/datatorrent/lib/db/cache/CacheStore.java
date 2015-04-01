@@ -16,6 +16,7 @@
 package com.datatorrent.lib.db.cache;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +73,8 @@ public class CacheStore implements CacheManager.Primary
   @Override
   public Set<Object> getKeys()
   {
+    if (cache == null)
+      return null;
     return cache.asMap().keySet();
   }
 
@@ -90,12 +93,16 @@ public class CacheStore implements CacheManager.Primary
   @Override
   public Object get(Object key)
   {
+    if (cache == null)
+      return null;
     return cache.getIfPresent(key);
   }
 
   @Override
   public List<Object> getAll(List<Object> keys)
   {
+    if (cache == null)
+      return null;
     List<Object> values = Lists.newArrayList();
     for (Object key : keys) {
       values.add(cache.getIfPresent(key));

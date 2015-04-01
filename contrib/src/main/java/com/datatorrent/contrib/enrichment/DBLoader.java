@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class DBLoader implements EnrichmentBackup {
+public abstract class DBLoader extends ReadOnlyBackup {
   protected static final Logger logger = LoggerFactory.getLogger(DBLoader.class);
   @NotNull
   protected String userName;
@@ -25,11 +25,8 @@ public abstract class DBLoader implements EnrichmentBackup {
   @NotNull
   protected DBType dbType;
 
-  String queryStmt = "";
+  protected String queryStmt;
 
-  List<String> lookupKeys;
-
-  List<String> includeKeys;
 
   protected abstract void createDatabase();
   protected abstract Object getQueryResult(Object key);
@@ -53,21 +50,6 @@ public abstract class DBLoader implements EnrichmentBackup {
       values.add(get(key));
     }
     return values;
-  }
-
-  @Override
-  public void put(Object key, Object value) {
-    throw new RuntimeException("Put Operation not supported");
-  }
-
-  @Override
-  public void putAll(Map<Object, Object> m) {
-    throw new RuntimeException("PutAll Operation not supported");
-  }
-
-  @Override
-  public void remove(Object key) {
-    throw new RuntimeException("remove Operation not supported");
   }
 
   @Override
@@ -145,15 +127,5 @@ public abstract class DBLoader implements EnrichmentBackup {
   public void setDbType(String dbType)
   {
     this.dbType = DBType.valueOf(dbType.toUpperCase());
-  }
-
-  @Override public void setLookupFields(List<String> lookupFields)
-  {
-    lookupKeys = lookupFields;
-  }
-
-  @Override public void setIncludeFields(List<String> includeFields)
-  {
-    includeKeys = includeFields;
   }
 }

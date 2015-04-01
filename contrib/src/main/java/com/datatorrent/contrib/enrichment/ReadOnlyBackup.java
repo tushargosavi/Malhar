@@ -8,8 +8,8 @@ import java.util.Map;
 public abstract class ReadOnlyBackup implements EnrichmentBackup
 {
 
-  protected List<String> includeFields;
-  protected List<String> lookupFields;
+  protected transient List<String> includeFields;
+  protected transient List<String> lookupFields;
 
   @Override public void put(Object key, Object value)
   {

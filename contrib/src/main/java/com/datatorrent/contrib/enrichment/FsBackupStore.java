@@ -71,8 +71,8 @@ public class FsBackupStore extends ReadOnlyBackup
     } catch (IOException e) {
       e.printStackTrace();
     }
-    System.out.println("loading initial data " + result.size());
-    System.out.println(result);
+    logger.debug("loading initial data {}", result.size());
+    logger.debug("{}", result);
     return result;
   }
 
