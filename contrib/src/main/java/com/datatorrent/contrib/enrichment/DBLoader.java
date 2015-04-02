@@ -1,5 +1,7 @@
 package com.datatorrent.contrib.enrichment;
 
+import com.datatorrent.lib.db.Connectable;
+import com.datatorrent.lib.db.jdbc.JdbcStore;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import org.slf4j.Logger;
@@ -12,26 +14,9 @@ import java.util.Map;
 
 public abstract class DBLoader extends ReadOnlyEnrichmentBackup {
   protected static final Logger logger = LoggerFactory.getLogger(DBLoader.class);
-  @NotNull
-  protected String userName;
-  @NotNull
-  protected String password;
-  @NotNull
-  protected String tableName;
-  @NotNull
-  protected String dbName;
-  @NotNull
-  protected String hostName;
-  @NotNull
-  protected DBType dbType;
 
-  protected String queryStmt;
-
-
-  protected abstract void createDatabase();
   protected abstract Object getQueryResult(Object key);
   protected abstract ArrayList<Object> getDataFrmResult(Object stmt);
-
 
   @Override
   public Map<Object, Object> loadInitialData() {
@@ -40,7 +25,7 @@ public abstract class DBLoader extends ReadOnlyEnrichmentBackup {
 
   @Override
   public Object get(Object key) {
-     return getDataFrmResult(getQueryResult(key));
+    return getDataFrmResult(getQueryResult(key));
   }
 
   @Override
@@ -53,13 +38,7 @@ public abstract class DBLoader extends ReadOnlyEnrichmentBackup {
   }
 
   @Override
-  public void connect() throws IOException {
-    createDatabase();
-  }
-
-  @Override
   public void disconnect() throws IOException {
-
   }
 
   @Override

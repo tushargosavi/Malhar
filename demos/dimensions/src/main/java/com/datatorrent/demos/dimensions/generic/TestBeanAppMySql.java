@@ -33,11 +33,10 @@ public class TestBeanAppMySql implements StreamingApplication
     //MapEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new MapEnrichmentOperator());
     BeanEnrichmentOperator enrichmentOperator = dag.addOperator("Enrichment", new BeanEnrichmentOperator());
     JDBCLoader store = new JDBCLoader();
-    store.setDbName("enrichment");
-    store.setHostName("localhost");
+    store.setDbDriver("org.gjt.mm.mysql.Driver");
+    store.setDbUrl("jdbc:mysql://localhost/enrichment");
     store.setUserName("root");
     store.setPassword("test");
-    store.setDbType(DBLoader.DBType.MYSQL);
     store.setTableName("productmapping");
 
     //Map<String, Object> ob = new HashMap<String, Object>();
