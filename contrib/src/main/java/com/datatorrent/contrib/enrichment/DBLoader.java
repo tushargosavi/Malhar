@@ -41,69 +41,10 @@ public abstract class DBLoader extends ReadOnlyEnrichmentBackup {
   public void disconnect() throws IOException {
   }
 
-  @Override
-  public boolean isConnected() {
-    return false;
-  }
-
   public static enum DBType
   {
     MYSQL,
     ORACLE,
     HSQL
-  }
-
-  public String getUserName()
-  {
-    return userName;
-  }
-
-  public void setUserName(String userName)
-  {
-    this.userName = userName;
-  }
-
-  public String getPassword()
-  {
-    return password;
-  }
-
-  public void setPassword(String password)
-  {
-    this.password = password;
-  }
-
-  public String getTableName()
-  {
-    return tableName;
-  }
-
-  public void setTableName(String tableName)
-  {
-    this.tableName = tableName;
-  }
-
-  public String getQueryStmt()
-  {
-    return queryStmt;
-  }
-
-  public void setQueryStmt(String queryStmt)
-  {
-    this.queryStmt = queryStmt;
-  }
-
-  public void setDbName(String dbName)
-  {
-    this.dbName = dbName;
-  }
-
-  public void setHostName(String hostName)
-  {
-    this.hostName = hostName;
-  }
-
-  public void setDbType(DBType dbType) {
-    this.dbType = dbType;
   }
 }
