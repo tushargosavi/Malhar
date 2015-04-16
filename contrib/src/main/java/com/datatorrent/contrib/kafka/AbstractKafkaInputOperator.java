@@ -44,17 +44,8 @@ import com.google.common.collect.Sets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -134,6 +125,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implements InputOperator, ActivationListener<OperatorContext>, CheckpointListener, Partitioner<AbstractKafkaInputOperator<K>>, StatsListener
 {
   private static final Logger logger = LoggerFactory.getLogger(AbstractKafkaInputOperator.class);
+  private static final long ONE_SECOND = 1000;
 
   @Min(1)
   private int maxTuplesPerWindow = Integer.MAX_VALUE;
@@ -216,6 +208,22 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
     this.context = context;
     operatorId = context.getId();
     idempotentStorageManager.setup(context);
+    availableCount = new AtomicInteger(0);
+    startRateLimitTask();
+  }
+
+  private transient Timer timer = null;
+
+  private void startRateLimitTask() {
+    if (maxTuplesPerSecond > 0) {
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                availableCount.set(maxTuplesPerSecond);
+            }
+        }, ONE_SECOND, ONE_SECOND);
+    }
   }
 
   @Override
@@ -223,6 +231,8 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
   {
     idempotentStorageManager.teardown();
     consumer.teardown();
+    if (timer != null)
+      timer.cancel();
   }
 
   @Override
@@ -355,6 +365,9 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
     consumer.stop();
   }
 
+  private transient AtomicInteger availableCount = new AtomicInteger();
+  private int maxTuplesPerSecond = -1;
+
   @Override
   public void emitTuples()
   {
@@ -364,6 +377,12 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
     int count = consumer.messageSize();
     if (maxTuplesPerWindow > 0) {
       count = Math.min(count, maxTuplesPerWindow - emitCount);
+      // If per second rate limit is also enabled.
+      if (maxTuplesPerSecond > 0) {
+        int available = availableCount.get();
+        count = Math.min(count, available);
+        if (count < 0) count = 0;
+      }
     }
     for (int i = 0; i < count; i++) {
       KafkaConsumer.KafkaMessage message = consumer.pollMessage();
@@ -379,6 +398,7 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
         offsetAndCount.setRight(offsetAndCount.right+1);
       }
     }
+    availableCount.addAndGet(-count);
     emitCount += count;
   }
 
@@ -948,5 +968,13 @@ public abstract class AbstractKafkaInputOperator<K extends KafkaConsumer> implem
   public void setIdempotent(boolean idempotent)
   {
     this.idempotent = idempotent;
+  }
+
+  public int getMaxTuplesPerSecond() {
+    return maxTuplesPerSecond;
+  }
+
+  public void setMaxTuplesPerSecond(int maxTuplesPerSecond) {
+    this.maxTuplesPerSecond = maxTuplesPerSecond;
   }
 }
