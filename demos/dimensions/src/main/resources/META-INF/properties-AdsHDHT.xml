@@ -1,0 +1,8 @@
+
+<!-- properties for the GenericDimensionsWithCsvMapParser demo -->
+<configuration>
+  <property>
+    <name>dt.application.AdsHDHT.operator.*.attr.MEMORY_MB</name>
+    <value>2048</value>
+  </property>
+</configuration>
