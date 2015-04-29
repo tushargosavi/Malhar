@@ -146,7 +146,7 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     dimensions.setAggregators(aggregators);
 
     AdsDimensionStoreOperatorWithCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithCache.class);
-    TFileImpl.DTFileImpl hdsFile = new TFileImpl.DTFileImpl();
+    TFileImpl.DefaultTFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
     store.setFileStore(hdsFile);
     store.setAggregator(new AdInfoAggregator());
     hdsFile.setBasePath("PreWalTests");

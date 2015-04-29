@@ -5,6 +5,7 @@ import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
 
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -15,6 +16,8 @@ public class QueryGenerator extends BaseOperator implements InputOperator {
     private String queryStr = "{ \"id\": 1024, \"keys\": { \"publisherId\": \"4\" }}";
 
     private transient Timer timer;
+    private transient Random rand;
+    private int queriesPerSecond = 10;
 
     @Override
     public void setup(Context.OperatorContext context) {
@@ -26,6 +29,7 @@ public class QueryGenerator extends BaseOperator implements InputOperator {
                 emitted = false;
             }
         }, 1000, 1000);
+        rand = new Random();
     }
 
     @Override
@@ -36,8 +40,15 @@ public class QueryGenerator extends BaseOperator implements InputOperator {
     @Override
     public void emitTuples() {
         if (!emitted) {
-            out.emit(queryStr);
+            for(int i = 0; i < queriesPerSecond; i++) {
+                out.emit(generateQuery());
+            }
             emitted = true;
         }
+    }
+
+    String generateQuery() {
+        String str = "{ \"id\": " + rand.nextInt(10240) + ", \"keys\": { \"publisherId\": \"" + rand.nextInt(10)  + "\" }}";
+        return str;
     }
 }
