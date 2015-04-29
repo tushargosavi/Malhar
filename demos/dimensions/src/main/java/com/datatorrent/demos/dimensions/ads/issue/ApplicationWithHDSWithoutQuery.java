@@ -152,12 +152,12 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     hdsFile.setBasePath("PreWalTests");
     dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
 
-      QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
-      ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
-      dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
-      dag.addStream("DimensionalData", dimensions.output, store.input);
-      dag.addStream("Query", query.out, store.query).setLocality(Locality.CONTAINER_LOCAL);
-      dag.addStream("Result", store.queryResult, console.input).setLocality(Locality.CONTAINER_LOCAL);
+    QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
+    ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
+    dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+    dag.addStream("DimensionalData", dimensions.output, store.input);
+    dag.addStream("Query", query.out, store.query).setLocality(Locality.CONTAINER_LOCAL);
+    dag.addStream("Result", store.queryResult, console.input).setLocality(Locality.CONTAINER_LOCAL);
 
   }
 
