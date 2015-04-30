@@ -85,7 +85,11 @@ public class TFileReader implements HDSFileReader
   @Override
   public boolean seek(Slice key) throws IOException
   {
-    return scanner.seekTo(key.buffer, key.offset, key.length);
+    try {
+      return scanner.seekTo(key.buffer, key.offset, key.length);
+    } catch (NullPointerException ex) {
+      throw new IOException("Converting NPE to IOException");
+    }
   }
 
   @Override
