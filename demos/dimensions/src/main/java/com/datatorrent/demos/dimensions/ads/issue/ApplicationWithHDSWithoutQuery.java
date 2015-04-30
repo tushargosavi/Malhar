@@ -35,131 +35,131 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * An AdsDimensionsDemo run with HDS
- *
+ * <p/>
  * Example of configuration
- <pre>
- {@code
- <property>
- <name>dt.application.AdsDimensionsWithHDSDemo.class</name>
- <value>com.datatorrent.demos.adsdimension.ApplicationWithHDS</value>
- </property>
-
- <property>
- <name>dt.application.AdsDimensionsWithHDSDemo.attr.containerMemoryMB</name>
- <value>8192</value>
- </property>
-
- <property>
- <name>dt.application.AdsDimensionsWithHDSDemo.attr.containerJvmOpts</name>
- <value>-Xmx6g -server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
- </property>
-
- <property>
- <name>dt.application.AdsDimensionsWithHDSDemo.port.*.attr.QUEUE_CAPACITY</name>
- <value>32000</value>
- </property>
-
- <property>
- <name>dt.operator.InputGenerator.attr.INITIAL_PARTITION_COUNT</name>
- <value>8</value>
- </property>
-
- <property>
- <name>dt.operator.DimensionsComputation.attr.APPLICATION_WINDOW_COUNT</name>
- <value>4</value>
- </property>
-
- <property>
- <name>dt.operator.DimensionsComputation.port.data.attr.PARTITION_PARALLEL</name>
- <value>true</value>
- </property>
-
- <property>
- <name>dt.operator.HDSOut.attr.INITIAL_PARTITION_COUNT</name>
- <value>4</value>
- </property>
-
- <property>
- <name>dt.operator.HDSOut.fileStore.basePath</name>
- <value>AdsDimensionWithHDS</value>
- </property>
-
- <property>
- <name>dt.operator.Query.topic</name>
- <value>HDSQuery</value>
- </property>
-
- <property>
- <name>dt.operator.QueryResult.topic</name>
- <value>HDSQueryResult</value>
- </property>
-
- <property>
- <name>dt.operator.Query.brokerSet</name>
- <value>localhost:9092</value>
- </property>
-
- <property>
- <name>dt.operator.QueryResult.prop.configProperties(metadata.broker.list)</name>
- <value>localhost:9092</value>
- </property>
-
- }
- </pre>
+ * <pre>
+ * {@code
+ * <property>
+ * <name>dt.application.AdsDimensionsWithHDSDemo.class</name>
+ * <value>com.datatorrent.demos.adsdimension.ApplicationWithHDS</value>
+ * </property>
  *
+ * <property>
+ * <name>dt.application.AdsDimensionsWithHDSDemo.attr.containerMemoryMB</name>
+ * <value>8192</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.application.AdsDimensionsWithHDSDemo.attr.containerJvmOpts</name>
+ * <value>-Xmx6g -server -Dlog4j.debug=true -Xloggc:&lt;LOG_DIR&gt;/gc.log -verbose:gc -XX:+PrintGCDateStamps</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.application.AdsDimensionsWithHDSDemo.port.*.attr.QUEUE_CAPACITY</name>
+ * <value>32000</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.InputGenerator.attr.INITIAL_PARTITION_COUNT</name>
+ * <value>8</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.DimensionsComputation.attr.APPLICATION_WINDOW_COUNT</name>
+ * <value>4</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.DimensionsComputation.port.data.attr.PARTITION_PARALLEL</name>
+ * <value>true</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.HDSOut.attr.INITIAL_PARTITION_COUNT</name>
+ * <value>4</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.HDSOut.fileStore.basePath</name>
+ * <value>AdsDimensionWithHDS</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.Query.topic</name>
+ * <value>HDSQuery</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.QueryResult.topic</name>
+ * <value>HDSQueryResult</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.Query.brokerSet</name>
+ * <value>localhost:9092</value>
+ * </property>
+ *
+ * <property>
+ * <name>dt.operator.QueryResult.prop.configProperties(metadata.broker.list)</name>
+ * <value>localhost:9092</value>
+ * </property>
+ *
+ * }
+ * </pre>
  */
-@ApplicationAnnotation(name= ApplicationWithHDSWithoutQuery.APP_NAME)
-public class ApplicationWithHDSWithoutQuery implements StreamingApplication
-{
-  public static final String APP_NAME = "AdsDimensionsDemoWithHDHTWithoutQuery";
-  public static final String PROP_USE_WEBSOCKETS = "dt.application." + APP_NAME + ".useWebSockets";
+@ApplicationAnnotation(name = ApplicationWithHDSWithoutQuery.APP_NAME)
+public class ApplicationWithHDSWithoutQuery implements StreamingApplication {
+    public static final String APP_NAME = "AdsDimensionsDemoWithHDHTWithoutQuery";
+    public static final String PROP_USE_WEBSOCKETS = "dt.application." + APP_NAME + ".useWebSockets";
 
-  @Override
-  public void populateDAG(DAG dag, Configuration conf)
-  {
-    InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
-    input.setRate(100);
-    input.setNumAdUnits(10);
-    input.setNumAdvertisers(100);
-    input.setNumPublishers(100);
-    input.setTimeRange(0);
+    @Override
+    public void populateDAG(DAG dag, Configuration conf) {
+        InputItemGenerator input = dag.addOperator("InputGenerator", InputItemGenerator.class);
+        input.setRate(300);
+        input.setNumAdUnits(10);
+        input.setNumAdvertisers(100);
+        input.setNumPublishers(1000);
+        input.setTimeRange(0);
 
-    DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
-    dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
-    String[] dimensionSpecs = new String[] {
-        "time=" + TimeUnit.MINUTES,
-        "time=" + TimeUnit.MINUTES + ":adUnit",
-        "time=" + TimeUnit.MINUTES + ":advertiserId",
-        "time=" + TimeUnit.MINUTES + ":publisherId",
-        "time=" + TimeUnit.MINUTES + ":advertiserId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":publisherId:adUnit",
-        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId",
-        "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit",
-    };
+        DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
+        dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
+        String[] dimensionSpecs = new String[]{
+                "time=" + TimeUnit.MINUTES,
+                "time=" + TimeUnit.MINUTES + ":adUnit",
+                "time=" + TimeUnit.MINUTES + ":advertiserId",
+                "time=" + TimeUnit.MINUTES + ":publisherId",
+                "time=" + TimeUnit.MINUTES + ":advertiserId:adUnit",
+                "time=" + TimeUnit.MINUTES + ":publisherId:adUnit",
+                "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId",
+                "time=" + TimeUnit.MINUTES + ":publisherId:advertiserId:adUnit",
+        };
 
-    AdInfoAggregator[] aggregators = new AdInfoAggregator[dimensionSpecs.length];
-    for (int i = dimensionSpecs.length; i-- > 0;) {
-      AdInfoAggregator aggregator = new AdInfoAggregator();
-      aggregator.init(dimensionSpecs[i]);
-      aggregators[i] = aggregator;
+        AdInfoAggregator[] aggregators = new AdInfoAggregator[dimensionSpecs.length];
+        for (int i = dimensionSpecs.length; i-- > 0; ) {
+            AdInfoAggregator aggregator = new AdInfoAggregator();
+            aggregator.init(dimensionSpecs[i]);
+            aggregators[i] = aggregator;
+        }
+        dimensions.setAggregators(aggregators);
+
+        AdsDimensionStoreOperatorWithCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithCache.class);
+        TFileImpl.DefaultTFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
+        store.setFileStore(hdsFile);
+        store.setAggregator(new AdInfoAggregator());
+        store.setUseCache(false);
+        store.setFlushSize(1000);
+        store.setFlushIntervalCount(20);
+        hdsFile.setBasePath("PreWalTests");
+        dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
+
+        QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
+        ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
+        dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+        dag.addStream("DimensionalData", dimensions.output, store.input);
+        dag.addStream("Query", query.out, store.query).setLocality(Locality.CONTAINER_LOCAL);
+        dag.addStream("Result", store.queryResult, console.input).setLocality(Locality.CONTAINER_LOCAL);
+
     }
-    dimensions.setAggregators(aggregators);
-
-    AdsDimensionStoreOperatorWithCache store = dag.addOperator("Store", AdsDimensionStoreOperatorWithCache.class);
-    TFileImpl.DefaultTFileImpl hdsFile = new TFileImpl.DefaultTFileImpl();
-    store.setFileStore(hdsFile);
-    store.setAggregator(new AdInfoAggregator());
-    hdsFile.setBasePath("PreWalTests");
-    dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
-
-    QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
-    ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
-    dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
-    dag.addStream("DimensionalData", dimensions.output, store.input);
-    dag.addStream("Query", query.out, store.query).setLocality(Locality.CONTAINER_LOCAL);
-    dag.addStream("Result", store.queryResult, console.input).setLocality(Locality.CONTAINER_LOCAL);
-
-  }
 
 }
 
