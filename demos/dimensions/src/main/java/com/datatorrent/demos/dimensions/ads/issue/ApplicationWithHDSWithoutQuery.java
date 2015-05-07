@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.datatorrent.demos.dimensions.ads;
+package com.datatorrent.demos.dimensions.ads.issue;
 
 import com.datatorrent.api.Context;
 import com.datatorrent.api.DAG;
@@ -22,7 +22,11 @@ import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
 import com.datatorrent.contrib.hdht.HDHTWriter;
 import com.datatorrent.contrib.hdht.tfile.TFileImpl;
+import com.datatorrent.demos.dimensions.ads.AdInfo;
 import com.datatorrent.demos.dimensions.ads.AdInfo.AdInfoAggregator;
+import com.datatorrent.demos.dimensions.ads.AdsDimensionStoreOperatorWithCache;
+import com.datatorrent.demos.dimensions.ads.InputItemGenerator;
+import com.datatorrent.lib.io.ConsoleOutputOperator;
 import com.datatorrent.lib.statistics.DimensionsComputation;
 import com.datatorrent.lib.stream.DevNull;
 import org.apache.hadoop.conf.Configuration;
@@ -118,7 +122,7 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     input.setNumAdUnits(10);
     input.setNumAdvertisers(100);
     input.setNumPublishers(100);
-    input.setTimeRange(10);
+    input.setTimeRange(0);
 
     DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent> dimensions = dag.addOperator("DimensionsComputation", new DimensionsComputation<AdInfo, AdInfo.AdInfoAggregateEvent>());
     dag.getMeta(dimensions).getAttributes().put(Context.OperatorContext.APPLICATION_WINDOW_COUNT, 4);
@@ -148,8 +152,13 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication
     hdsFile.setBasePath("PreWalTests");
     dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
 
-    dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.THREAD_LOCAL);
-    dag.addStream("DimensionalData", dimensions.output, store.input);
+      QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
+      ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
+      dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
+      dag.addStream("DimensionalData", dimensions.output, store.input);
+      dag.addStream("Query", query.out, store.query).setLocality(Locality.CONTAINER_LOCAL);
+      dag.addStream("Result", store.queryResult, console.input).setLocality(Locality.CONTAINER_LOCAL);
+
   }
 
 }
