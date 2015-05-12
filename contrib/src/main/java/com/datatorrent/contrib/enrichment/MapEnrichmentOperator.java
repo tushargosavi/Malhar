@@ -1,6 +1,7 @@
 package com.datatorrent.contrib.enrichment;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  *

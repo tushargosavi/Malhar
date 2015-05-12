@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, Object> {
 
   private transient static final Logger logger = LoggerFactory.getLogger(BeanEnrichmentOperator.class);
-  public Class inputClass;
-  public Class outputClass;
+  protected Class inputClass;
+  protected Class outputClass;
   private transient List<Field> fields = new ArrayList<Field>();
   private transient List<Field> updates = new ArrayList<Field>();
 

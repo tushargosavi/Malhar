@@ -75,8 +75,6 @@ public class FSLoader extends ReadOnlyBackup
           logger.info("Unable to parse line {}", line);
         }
       }
-      IOUtils.closeQuietly(bin);
-      IOUtils.closeQuietly(in);
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {

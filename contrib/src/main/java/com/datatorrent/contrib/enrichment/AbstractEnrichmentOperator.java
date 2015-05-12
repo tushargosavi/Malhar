@@ -19,8 +19,8 @@ import java.util.List;
  * The operator receives a tuple and emits enriched tuple based on includeFields and lookupFields. <br/>
  *
  * Properties:<br>
- * <b>lookupFieldsStr</b>: List of comma seperated keys for quick searching. Ex: Field1,Field2,Field3<br>
- * <b>includeFieldsStr</b>: List of comma seperated fields to be replaced/added to the input tuple. Ex: Field1,Field2,Field3<br>
+ * <b>lookupFieldsStr</b>: List of comma separated keys for quick searching. Ex: Field1,Field2,Field3<br>
+ * <b>includeFieldsStr</b>: List of comma separated fields to be replaced/added to the input tuple. Ex: Field1,Field2,Field3<br>
  * <b>store</b>: Specify the type of loader for looking data<br>
  * <br>
  *
@@ -42,7 +42,7 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
 
   private int entryExpiryDurationInMillis = 24 * 60 * 60 * 1000;
   private int cacheCleanupInMillis = 24 * 60 * 60 * 1000;
-  private int cacheSize = 16 * 1024 * 1024;
+  private int cacheSize = 1024;
 
   public transient DefaultOutputPort<OUTPUT> output = new DefaultOutputPort<OUTPUT>();
 
@@ -65,9 +65,12 @@ public abstract class AbstractEnrichmentOperator<INPUT, OUTPUT> extends BaseOper
   protected transient List<String> includeFields = new ArrayList<String>();
 
   protected void processTuple(INPUT tuple) {
-    Object result = cacheManager.get(getKey(tuple));
-    OUTPUT out = convert(tuple, result);
-    emitTuple(out);
+    Object key = getKey(tuple);
+    if(key != null) {
+      Object result = cacheManager.get(key);
+      OUTPUT out = convert(tuple, result);
+      emitTuple(out);
+    }
   }
 
   protected abstract Object getKey(INPUT tuple);
