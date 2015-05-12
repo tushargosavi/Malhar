@@ -18,6 +18,7 @@ package com.datatorrent.contrib.hdht.tfile;
 import java.io.IOException;
 import java.util.TreeMap;
 
+import com.datatorrent.common.util.DTThrowable;
 import com.datatorrent.common.util.Slice;
 
 import org.apache.hadoop.conf.Configuration;
@@ -39,12 +40,14 @@ public class TFileReader implements HDSFileReader
   private final Reader reader;
   private final Scanner scanner;
   private final FSDataInputStream fsdis;
+  private boolean closed = false;
 
   public TFileReader(FSDataInputStream fsdis, long fileLength, Configuration conf) throws IOException
   {
     this.fsdis = fsdis;
     reader = new Reader(fsdis, fileLength, conf);
     scanner = reader.createScanner();
+    closed = false;
   }
 
   /**
@@ -54,6 +57,7 @@ public class TFileReader implements HDSFileReader
   @Override
   public void close() throws IOException
   {
+    closed = true;
     scanner.close();
     reader.close();
     fsdis.close();
@@ -88,7 +92,10 @@ public class TFileReader implements HDSFileReader
     try {
       return scanner.seekTo(key.buffer, key.offset, key.length);
     } catch (NullPointerException ex) {
-      throw new IOException("Converting NPE to IOException");
+      if (closed)
+        throw new IOException("Converting NPE to IOException");
+      else
+        throw ex;
     }
   }
 
