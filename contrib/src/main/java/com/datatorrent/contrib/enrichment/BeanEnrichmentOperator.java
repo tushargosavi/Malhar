@@ -1,12 +1,14 @@
 package com.datatorrent.contrib.enrichment;
 
-
 import com.datatorrent.api.Context;
+import com.datatorrent.lib.util.PojoUtils;
+import com.datatorrent.lib.util.PojoUtils.GetterObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -44,18 +46,14 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
   private transient static final Logger logger = LoggerFactory.getLogger(BeanEnrichmentOperator.class);
   protected Class inputClass;
   protected Class outputClass;
-  private transient List<Field> fields = new ArrayList<Field>();
   private transient List<Field> updates = new ArrayList<Field>();
+  private transient List<GetterObject> getters = new ArrayList<GetterObject>();
 
   @Override
   protected Object getKey(Object tuple) {
     ArrayList<Object> keyList = new ArrayList<Object>();
-    for(Field f: fields) {
-      try {
-        keyList.add(f.get(tuple));
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
+    for(GetterObject g : getters) {
+        keyList.add(g.get(tuple));
     }
     return keyList;
   }
@@ -95,19 +93,14 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
   @Override
   public void setup(Context.OperatorContext context) {
     super.setup(context);
-    populateFieldsFrmLookup();
     populateUpdatesFrmIncludeFields();
   }
 
-  private void populateFieldsFrmLookup() {
+  private void populateGettersFrmLookup()
+  {
     for (String fName : lookupFields) {
-      try {
-        Field f = inputClass.getField(fName);
-        f.setAccessible(true);
-        fields.add(f);
-      } catch (NoSuchFieldException e) {
-        throw new RuntimeException(e);
-      }
+        GetterObject f = PojoUtils.createGetterObject(inputClass, fName);
+        getters.add(f);
     }
   }
 
@@ -123,15 +116,6 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
     }
   }
 
-  public void setInputClass(String inputClass)
-  {
-    try {
-      this.inputClass = this.getClass().getClassLoader().loadClass(inputClass);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public void setOutputClass(String outputClass)
   {
     try {
@@ -139,5 +123,14 @@ public class BeanEnrichmentOperator extends AbstractEnrichmentOperator<Object, O
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override protected void processTuple(Object tuple)
+  {
+    if (inputClass == null) {
+      inputClass = tuple.getClass();
+      populateGettersFrmLookup();
+    }
+    super.processTuple(tuple);
   }
 }
