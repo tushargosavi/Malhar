@@ -47,7 +47,6 @@ public class TFileReader implements HDSFileReader
     this.fsdis = fsdis;
     reader = new Reader(fsdis, fileLength, conf);
     scanner = reader.createScanner();
-    closed = false;
   }
 
   /**
@@ -93,7 +92,7 @@ public class TFileReader implements HDSFileReader
       return scanner.seekTo(key.buffer, key.offset, key.length);
     } catch (NullPointerException ex) {
       if (closed)
-        throw new IOException("Converting NPE to IOException");
+        throw new IOException("Stream was closed");
       else
         throw ex;
     }
