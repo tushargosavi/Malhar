@@ -43,6 +43,18 @@ public class AdInfo implements Serializable
   {
   }
 
+  public AdInfo(AdInfo ai)
+  {
+    this.publisherId = ai.publisherId;
+    this.advertiserId = ai.advertiserId;
+    this.adUnit = ai.adUnit;
+    this.timestamp = ai.timestamp;
+    this.cost = ai.cost;
+    this.revenue = ai.revenue;
+    this.impressions = ai.impressions;
+    this.clicks = ai.clicks;
+  }
+
   public Integer getPublisherId()
   {
     return publisherId;
