@@ -16,6 +16,7 @@
 package com.datatorrent.demos.dimensions.ads;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
 
@@ -43,6 +44,13 @@ public class InputItemGenerator implements InputOperator
   private double expectedClickThruRate = 0.005;
   @Min(1)
   private int blastCount = 10000;
+  @Min(1)
+  private int rate = 1;
+  transient private int count;
+
+  /* Generate data for older timestamp */
+  private transient int timeRange = 0;
+
   private final Random random = new Random();
   public final transient DefaultOutputPort<AdInfo> outputPort = new DefaultOutputPort<AdInfo>();
 
@@ -96,9 +104,30 @@ public class InputItemGenerator implements InputOperator
     this.numAdUnits = numAdUnits;
   }
 
+  public int getRate()
+  {
+    return rate;
+  }
+
+  public void setRate(int rate)
+  {
+    this.rate = rate;
+  }
+
+  public int getTimeRange()
+  {
+    return timeRange;
+  }
+
+  public void setTimeRange(int timeRange)
+  {
+    this.timeRange = timeRange;
+  }
+
   @Override
   public void beginWindow(long windowId)
   {
+    count = rate;
   }
 
   @Override
@@ -126,28 +155,49 @@ public class InputItemGenerator implements InputOperator
     return id;
   }
 
+  private AdInfo generateAdInfo()
+  {
+    AdInfo adInfo = new AdInfo();
+    adInfo.setPublisherId(nextRandomId(numPublishers) + 1);
+    adInfo.setAdvertiserId(nextRandomId(numAdvertisers) + 1);
+    adInfo.setAdUnit(random.nextInt(numAdUnits) + 1);
+    adInfo.cost = 0.5 + 0.25 * random.nextDouble();
+    adInfo.impressions = 1;
+
+    long timestamp = System.currentTimeMillis();
+    /* Generate timestamp with normal distribution */
+    long minDiff = (long)(Math.abs(random.nextGaussian()) * (double)timeRange/2.0);
+    long delta = TimeUnit.MILLISECONDS.convert(minDiff, TimeUnit.MINUTES);
+    timestamp -= delta;
+    adInfo.setTimestamp(timestamp);
+
+    /* 0 (zero) is used as the invalid value */
+    return adInfo;
+  }
+
+  private AdInfo generateClickEvent(AdInfo ai)
+  {
+    AdInfo adInfo = new AdInfo(ai);
+    adInfo.revenue = 0.5 + 0.5 * random.nextDouble();
+    adInfo.clicks = 1;
+    adInfo.cost = 0;
+    adInfo.impressions = 0;
+    return adInfo;
+  }
+
   @Override
   public void emitTuples()
   {
     try {
-      long timestamp;
-      for (int i = 0; i < blastCount; ++i) {
-        int advertiserId = nextRandomId(numAdvertisers);
-        //int publisherId = (advertiserId * 10 / numAdvertisers) * numPublishers / 10 + nextRandomId(numPublishers / 10);
-        int publisherId = nextRandomId(numPublishers);
-        int adUnit = random.nextInt(numAdUnits);
-
-        double cost = 0.5 + 0.25 * random.nextDouble();
-        timestamp = System.currentTimeMillis();
-
-        /* 0 (zero) is used as the invalid value */
-        buildAndSend(false, publisherId + 1, advertiserId + 1, adUnit + 1, cost, timestamp);
-
+      int numTuples = Math.min(blastCount, count);
+      count -= numTuples;
+      for (int i = 0; i < numTuples; ++i) {
+        AdInfo ai = generateAdInfo();
+        emitTuple(ai);
         if (random.nextDouble() < expectedClickThruRate) {
-          double revenue = 0.5 + 0.5 * random.nextDouble();
-          timestamp = System.currentTimeMillis();
-          // generate fake click
-          buildAndSend(true, publisherId + 1, advertiserId + 1, adUnit + 1, revenue, timestamp);
+          ai = generateClickEvent(ai);
+          emitTuple(ai);
+          i++;
         }
       }
     }
@@ -159,24 +209,6 @@ public class InputItemGenerator implements InputOperator
 
   public void emitTuple(AdInfo adInfo) {
     this.outputPort.emit(adInfo);
-  }
-
-  private void buildAndSend(boolean click, int publisherId, int advertiserId, int adUnit, double value, long timestamp)
-  {
-    AdInfo adInfo = new AdInfo();
-    adInfo.setPublisherId(publisherId);
-    adInfo.setAdvertiserId(advertiserId);
-    adInfo.setAdUnit(adUnit);
-    if (click) {
-      adInfo.revenue = value;
-      adInfo.clicks = 1;
-    }
-    else {
-      adInfo.cost = value;
-      adInfo.impressions = 1;
-    }
-    adInfo.setTimestamp(timestamp);
-    emitTuple(adInfo);
   }
 
 }

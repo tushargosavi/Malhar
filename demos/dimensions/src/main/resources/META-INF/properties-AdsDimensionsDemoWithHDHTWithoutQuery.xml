@@ -1,0 +1,18 @@
+<configuration>
+
+<property>
+    <name>dt.operator.Store.attr.MEMORY_MB</name>
+    <value>8000</value>
+</property>
+
+<property>
+    <name>dt.operator.DimensionsComputation.attr.MEMORY_MB</name>
+    <value>8000</value>
+</property>
+
+    <property>
+		<name>dt.operator.InputGenerator.attr.PARTITIONER</name>
+        <value>com.datatorrent.lib.partitioner.StatelessPartitioner:2</value>
+    </property>
+
+</configuration>

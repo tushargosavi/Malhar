@@ -349,8 +349,6 @@ public class DimensionStoreOperator extends AbstractSinglePortHDHTWriter<Generic
     }
   }
 
-
-
   @Override public void setup(Context.OperatorContext arg0)
   {
     super.setup(arg0);
