@@ -46,6 +46,7 @@ public class DTFileReader implements HDSFileReader
   private final Reader reader;
   private final Scanner scanner;
   private final FSDataInputStream fsdis;
+  private boolean closed = false;
 
   public DTFileReader(FSDataInputStream fsdis, long fileLength, Configuration conf) throws IOException
   {
@@ -61,6 +62,7 @@ public class DTFileReader implements HDSFileReader
   @Override
   public void close() throws IOException
   {
+    closed = true;
     scanner.close();
     reader.close();
     fsdis.close();
@@ -88,7 +90,14 @@ public class DTFileReader implements HDSFileReader
   @Override
   public boolean seek(Slice key) throws IOException
   {
-    return scanner.seekTo(key.buffer, key.offset, key.length);
+    try {
+      return scanner.seekTo(key.buffer, key.offset, key.length);
+    } catch (NullPointerException ex) {
+      if (closed)
+        throw new IOException("Stream was closed");
+      else
+        throw ex;
+    }
   }
 
   @Override
