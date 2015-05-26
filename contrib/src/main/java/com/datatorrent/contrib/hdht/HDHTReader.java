@@ -264,7 +264,7 @@ public class HDHTReader implements Operator, HDHT.Reader
         HDSFileReader reader = bucket.readers.get(floorEntry.getValue().name);
         if (reader == null) {
           LOG.debug("Opening file {} {}", bucketKey, floorEntry.getValue().name);
-          bucket.readers.put(floorEntry.getValue().name, reader = store.getReader(bucketKey, floorEntry.getValue().name));
+          bucket.readers.put(floorEntry.getValue().name, reader = new WrappedReader(store.getReader(bucketKey, floorEntry.getValue().name)));
         }
         Slice value = new Slice(null, 0,0);
         if (reader.seek(key)) {
