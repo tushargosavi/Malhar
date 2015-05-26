@@ -155,7 +155,7 @@ public class ApplicationWithHDSWithoutQuery implements StreamingApplication {
         dag.setAttribute(store, Context.OperatorContext.COUNTERS_AGGREGATOR, new AdsDimensionStoreOperatorWithCache.StatAggregator());
 
         QueryGenerator query = dag.addOperator("Query", new QueryGenerator());
-        query.setQueriesPerSecond(0);
+        query.setQueriesPerSecond(10);
         ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
         dag.addStream("InputStream", input.outputPort, dimensions.data).setLocality(Locality.CONTAINER_LOCAL);
         dag.addStream("DimensionalData", dimensions.output, store.input);
