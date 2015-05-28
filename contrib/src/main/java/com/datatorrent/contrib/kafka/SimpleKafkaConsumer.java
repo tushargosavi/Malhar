@@ -323,60 +323,75 @@ public class SimpleKafkaConsumer extends KafkaConsumer
       @Override
       public void run()
       {
-        if (isAlive && (metadataRefreshRetryLimit == -1 || retryCounter.get() < metadataRefreshRetryLimit)) {
-          logger.debug("{}: Update metadata for topic {}", Thread.currentThread().getName(), topic);
-          Map<String, List<PartitionMetadata>> pms = KafkaMetadataUtil.getPartitionsForTopic(brokers, topic);
-          if (pms == null) {
-            // retrieve metadata fail add retry count and return
-            retryCounter.getAndAdd(1);
-            return;
-          }
+        try {
+          logger.info("isAlive {} metadataRefreshInterval {} metadataRefreshRetryLimit {} ", isAlive, metadataRefreshInterval, metadataRefreshRetryLimit);
+          if (isAlive && (metadataRefreshRetryLimit == -1 || retryCounter.get() < metadataRefreshRetryLimit)) {
+            logger.info("{}: Update metadata for topic {}", Thread.currentThread().getName(), topic);
+            Map<String, List<PartitionMetadata>> pms = KafkaMetadataUtil.getPartitionsForTopic(brokers, topic);
+            if (pms == null) {
+              // retrieve metadata fail add retry count and return
+              retryCounter.getAndAdd(1);
+              logger.info("pms is null");
+              return;
+            }
 
-          for (Entry<String, List<PartitionMetadata>> pmLEntry : pms.entrySet()) {
-            for (PartitionMetadata pm : pmLEntry.getValue()) {
-              KafkaPartition kp = new KafkaPartition(pmLEntry.getKey(), topic, pm.partitionId());
-              if (!kps.contains(kp)) {
-                // Out of this consumer's scope
-                continue;
+            logger.info("{}: before pms entry loop {} size {}", Thread.currentThread().getName(), pms.size());
+            for (Entry<String, List<PartitionMetadata>> pmLEntry : pms.entrySet()) {
+              for (PartitionMetadata pm : pmLEntry.getValue()) {
+                KafkaPartition kp = new KafkaPartition(pmLEntry.getKey(), topic, pm.partitionId());
+                if (!kps.contains(kp)) {
+                  // Out of this consumer's scope
+                  continue;
+                }
+                logger.info("getting leader for broker ");
+                Broker b = pm.leader();
+                Broker oldB = partitionToBroker.put(kp, b);
+                if (b.equals(oldB)) {
+                  continue;
+                }
+                // add to positive
+                logger.info("{}: adding into delta positive {}", Thread.currentThread().getName(), b);
+                deltaPositive.put(b, kp);
+
+                // always update the latest connection information
+                stats.updatePartitionStats(kp, pm.leader().id(), pm.leader().host() + ":" + pm.leader().port());
               }
-              Broker b = pm.leader();
-              Broker oldB = partitionToBroker.put(kp, b);
-              if(b.equals(oldB)) {
-                continue;
+            }
+
+            // remove from map if the thread is done (partitions on this broker has all been reassigned to others(or temporarily not available) for
+            // example)
+            logger.info("{}: before simpleComsumerThreads loop {}", Thread.currentThread().getName());
+            for (Iterator<Entry<Broker, ConsumerThread>> iterator = simpleConsumerThreads.entrySet().iterator(); iterator.hasNext(); ) {
+              Entry<Broker, ConsumerThread> item = iterator.next();
+              if (item.getValue().getThreadItSelf().isDone()) {
+                logger.debug("removing from failed threads ");
+                iterator.remove();
               }
-              // add to positive
-              deltaPositive.put(b,kp);
-
-              // always update the latest connection information
-              stats.updatePartitionStats(kp, pm.leader().id(), pm.leader().host() + ":" + pm.leader().port());
             }
-          }
 
-          // remove from map if the thread is done (partitions on this broker has all been reassigned to others(or temporarily not available) for
-          // example)
-          for (Iterator<Entry<Broker, ConsumerThread>> iterator = simpleConsumerThreads.entrySet().iterator(); iterator.hasNext();) {
-            Entry<Broker, ConsumerThread> item = iterator.next();
-            if (item.getValue().getThreadItSelf().isDone()) {
-              iterator.remove();
+            logger.info("{}: before delataPositiveloop {}", Thread.currentThread().getName());
+            for (Broker b : deltaPositive.keySet()) {
+              if (!simpleConsumerThreads.containsKey(b)) {
+                // start thread for new broker
+                ConsumerThread ct = new ConsumerThread(b, deltaPositive.get(b), ref);
+                ct.setThreadItSelf(kafkaConsumerExecutor.submit(ct));
+                simpleConsumerThreads.put(b, ct);
+
+              } else {
+                simpleConsumerThreads.get(b).addPartitions(deltaPositive.get(b));
+              }
             }
+
+            deltaPositive.clear();
+
+            // reset to 0 if it reconnect to the broker which has current broker metadata
+            retryCounter.set(0);
+            logger.info("finishing a monitoring task 1 ");
           }
-
-          for (Broker b : deltaPositive.keySet()) {
-            if (!simpleConsumerThreads.containsKey(b)) {
-              // start thread for new broker
-              ConsumerThread ct = new ConsumerThread(b, deltaPositive.get(b), ref);
-              ct.setThreadItSelf(kafkaConsumerExecutor.submit(ct));
-              simpleConsumerThreads.put(b, ct);
-
-            } else {
-              simpleConsumerThreads.get(b).addPartitions(deltaPositive.get(b));
-            }
-          }
-
-          deltaPositive.clear();
-
-          // reset to 0 if it reconnect to the broker which has current broker metadata
-          retryCounter.set(0);
+          logger.info("finishing a monitoring task 2");
+        } catch(Exception ex) {
+          /* don't allow to leak any exception else monitor task will stop, log the error but */
+          logger.error("Exception {}", ex);
         }
       }
     }, 0, metadataRefreshInterval, TimeUnit.MILLISECONDS);
@@ -390,6 +405,7 @@ public class SimpleKafkaConsumer extends KafkaConsumer
       ct.getThreadItSelf().cancel(true);
     }
     simpleConsumerThreads.clear();
+    logger.info("Shutting down executors ");
     metadataRefreshExecutor.shutdownNow();
     kafkaConsumerExecutor.shutdownNow();
   }
