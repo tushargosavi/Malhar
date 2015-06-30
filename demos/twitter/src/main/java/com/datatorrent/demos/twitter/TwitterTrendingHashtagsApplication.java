@@ -15,22 +15,23 @@
  */
 package com.datatorrent.demos.twitter;
 
-import java.net.URI;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-
-import com.datatorrent.lib.algo.UniqueCounter;
-import com.datatorrent.lib.io.ConsoleOutputOperator;
-import com.datatorrent.lib.io.PubSubWebSocketOutputOperator;
-
-import com.datatorrent.contrib.twitter.TwitterSampleInput;
-
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.DAG.Locality;
-import com.datatorrent.api.Operator.InputPort;
+import com.datatorrent.api.Operator;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
+import com.datatorrent.contrib.twitter.TwitterSampleInput;
+import com.datatorrent.lib.algo.UniqueCounter;
+import com.datatorrent.lib.appdata.schemas.SchemaUtils;
+import com.datatorrent.lib.appdata.snapshot.AppDataSnapshotServerMap;
+import com.datatorrent.lib.io.PubSubWebSocketAppDataQuery;
+import com.datatorrent.lib.io.PubSubWebSocketAppDataResult;
+import com.google.common.collect.Maps;
+import java.net.URI;
+import org.apache.hadoop.conf.Configuration;
+
+import java.util.Map;
+
 
 
 /**
@@ -141,52 +142,56 @@ import com.datatorrent.api.annotation.ApplicationAnnotation;
 @ApplicationAnnotation(name="TwitterTrendingDemo")
 public class TwitterTrendingHashtagsApplication implements StreamingApplication
 {
+  public static final String TABULAR_SCHEMA = "twitterHashTagDataSchema.json";
+  public static final String CONVERSION_SCHEMA = "twitterHashTagConverterSchema.json";
+
   private final Locality locality = null;
 
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
+    Operator.OutputPort<String> queryPort = null;
+    Operator.InputPort<String> queryResultPort = null;
+
+    String gatewayAddress = dag.getValue(DAG.GATEWAY_CONNECT_ADDRESS);
+    URI uri = URI.create("ws://" + gatewayAddress + "/pubsub");
+    //LOG.info("WebSocket with gateway at: {}", gatewayAddress);
+    PubSubWebSocketAppDataQuery wsIn = dag.addOperator("Query", new PubSubWebSocketAppDataQuery());
+    wsIn.setUri(uri);
+    queryPort = wsIn.outputPort;
+    PubSubWebSocketAppDataResult wsOut = dag.addOperator("QueryResult", new PubSubWebSocketAppDataResult());
+    wsOut.setUri(uri);
+    queryResultPort = wsOut.input;
+
     // Setup the operator to get the data from twitter sample stream injected into the system.
     TwitterSampleInput twitterFeed = new TwitterSampleInput();
     twitterFeed = dag.addOperator("TweetSampler", twitterFeed);
-
-    //  Setup the operator to get the Hashtags extracted from the twitter statuses
-    TwitterStatusHashtagExtractor HashtagExtractor = dag.addOperator("HashtagExtractor", TwitterStatusHashtagExtractor.class);
 
     // Setup a node to count the unique Hashtags within a window.
     UniqueCounter<String> uniqueCounter = dag.addOperator("UniqueHashtagCounter", new UniqueCounter<String>());
 
     // Get the aggregated Hashtag counts and count them over last 5 mins.
     WindowedTopCounter<String> topCounts = dag.addOperator("TopCounter", new WindowedTopCounter<String>());
+    AppDataSnapshotServerMap tabularServer = dag.addOperator("Tabular Server", new AppDataSnapshotServerMap());
+
+    Map<String, String> conversionMap = Maps.newHashMap();
+    conversionMap.put("hashtag", WindowedTopCounter.FIELD_TYPE);
+
+    String tabularSchema = SchemaUtils.jarResourceFileToString(TABULAR_SCHEMA);
+
+    tabularServer.setTabularSchemaJSON(tabularSchema);
+    tabularServer.setTableFieldToMapField(conversionMap);
+
     topCounts.setTopCount(10);
-    topCounts.setSlidingWindowWidth(600, 1);
+    topCounts.setSlidingWindowWidth(600);
+    topCounts.setDagWindowWidth(1);
 
-    // Feed the statuses from feed into the input of the Hashtag extractor.
-    dag.addStream("TweetStream", twitterFeed.status, HashtagExtractor.input).setLocality(Locality.CONTAINER_LOCAL);
-    //  Start counting the Hashtags coming out of Hashtag extractor
-    dag.addStream("TwittedHashtags", HashtagExtractor.hashtags, uniqueCounter.data).setLocality(locality);
+    dag.addStream("TwittedHashtags", twitterFeed.hashtag, uniqueCounter.data).setLocality(locality);
     // Count unique Hashtags
-    dag.addStream("UniqueHashtagCounts", uniqueCounter.count, topCounts.input).setLocality(locality);
+    dag.addStream("UniqueHashtagCounts", uniqueCounter.count, topCounts.input);
+    dag.addStream("MapProvider", topCounts.output, tabularServer.input);
     // Count top 10
-    dag.addStream("TopHashtags", topCounts.output, consoleOutput(dag, "topHashtags")).setLocality(locality);
-
+    dag.addStream("TopURLQuery", queryPort, tabularServer.query);
+    dag.addStream("TopURLResult", tabularServer.queryResult, queryResultPort);
   }
-
-  private InputPort<Object> consoleOutput(DAG dag, String operatorName)
-  {
-    String gatewayAddress = dag.getValue(DAG.GATEWAY_CONNECT_ADDRESS);
-    if (!StringUtils.isEmpty(gatewayAddress)) {
-      URI uri = URI.create("ws://" + gatewayAddress + "/pubsub");
-      String topic = "demos.twitter." + operatorName;
-      //LOG.info("WebSocket with gateway at: {}", gatewayAddress);
-      PubSubWebSocketOutputOperator<Object> wsOut = dag.addOperator(operatorName, new PubSubWebSocketOutputOperator<Object>());
-      wsOut.setUri(uri);
-      wsOut.setTopic(topic);
-      return wsOut.input;
-    }
-    ConsoleOutputOperator operator = dag.addOperator(operatorName, new ConsoleOutputOperator());
-    operator.setStringFormat(operatorName + ": %s");
-    return operator.input;
-  }
-
 }
