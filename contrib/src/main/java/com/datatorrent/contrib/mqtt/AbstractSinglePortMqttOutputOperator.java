@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,11 @@
 package com.datatorrent.contrib.mqtt;
 
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import org.fusesource.mqtt.client.Message;
 
 /**
- * MQTT output adapter operator, which send data to MQTT.<p><br>
- *
+ * This is the base implementation for a single port MQTT output operator.&nbsp;
+ * Subclasses should implement the conversion of a tuple to an MQTT message.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: Can have one input port<br>
@@ -37,8 +36,10 @@ import org.fusesource.mqtt.client.Message;
  * None<br>
  * <br>
  * <b>Benchmarks</b>:TBD
- * <br>
- *
+ * </p>
+ * @displayName Abstract Single Port MQTT Output
+ * @category Messaging
+ * @tags output operator
  * @since 0.9.3
  */
 public abstract class AbstractSinglePortMqttOutputOperator<T> extends AbstractMqttOutputOperator
@@ -50,9 +51,8 @@ public abstract class AbstractSinglePortMqttOutputOperator<T> extends AbstractMq
   public abstract void processTuple(T tuple);
 
   /**
-   * The input port
+   * This input port receives tuples, which will be written out to MQTT.
    */
-  @InputPortFieldAnnotation(name = "in")
   public final transient DefaultInputPort<T> inputPort = new DefaultInputPort<T>()
   {
     @Override

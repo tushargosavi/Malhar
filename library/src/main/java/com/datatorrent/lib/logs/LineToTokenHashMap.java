@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +15,21 @@
  */
 package com.datatorrent.lib.logs;
 
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.BaseLineTokenizer;
-import com.datatorrent.lib.util.UnifierHashMap;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+import com.datatorrent.api.annotation.Stateless;
+
+import com.datatorrent.lib.util.BaseLineTokenizer;
+import com.datatorrent.lib.util.UnifierHashMap;
+
 /**
+ * This operator splits string objects into tokens.&nbsp;
+ * A key value pair is emitted where the key is the first token in an input tuple
+ * and the value is a list of the other tokens in an input tuple., and emits as a HashMap where the first token.
  * <p>
- * Splits String objects into tokens, and emits as HashMap.
- * First token in line is treated as key and rest are put into values array list. <br>
- * HashMap of token and array values are emitted on output port.
  * This module is a pass through<br>
  * <br>
  * <b>StateFull : No, </b> tokens are processed in current window. <br>
@@ -40,13 +42,21 @@ import java.util.HashMap;
  * <b>Properties</b>:<br>
  * <b>splitby</b>: The characters used to split the line. Default is ";\t "<br>
  * <b>splittokenby</b>: The characters used to split a token into key,val1,val2,.... Default is "", i.e. tokens are not split, and key=token, val=""<br>
- * <br>
+ * </p>
+ *
+ * @displayName Line To Token (HashMap)
+ * @category Tuple Converters
+ * @tags string, hashmap
  *
  * @since 0.3.2
  */
+@Stateless
+@OperatorAnnotation(partitionable=true)
 public class LineToTokenHashMap extends BaseLineTokenizer
 {
-  @OutputPortFieldAnnotation(name = "tokens")
+  /**
+   * This output port emits the split strings.
+   */
   public final transient DefaultOutputPort<HashMap<String, ArrayList<String>>> tokens = new DefaultOutputPort<HashMap<String, ArrayList<String>>>()
   {
     @Override

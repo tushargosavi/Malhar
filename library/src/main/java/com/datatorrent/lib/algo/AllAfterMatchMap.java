@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,25 +15,26 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OperatorAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.BaseMatchOperator;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+
+import com.datatorrent.lib.util.BaseMatchOperator;
+
 /**
+ * This operator takes Maps, whose values are numbers, as input tuples.&nbsp;
+ * It then performs a numeric comparison on the values corresponding to one of the keys in the input tuple maps.&nbsp;
+ * All tuples processed by the operator before the first successful comparison are not output by the operator,
+ * all tuples processed by the operator after and including a successful comparison are output by the operator.
+ *
  * <p>
  * A compare metric is done on input tuple based on the property "key",
  * "value", and "cmp" type. All tuples are emitted (inclusive) once a match is made.
  * The comparison is done by getting double value from the Number.
  * This module is a pass through<br>
- * <br>
- * <b> StateFull : Yes, </b> Count is aggregated over application window(s). <br>
- * <b> Partitions : No, </b> will yield wrong result. <br>
- * <br>
  * <br>
  * <b> StateFull : Yes, </b> Count is aggregated over application window(s). <br>
  * <b> Partitions : No, </b> will yield wrong result. <br>
@@ -57,6 +58,11 @@ import java.util.Map;
  * "gte"<br>
  * <b>Specific run time checks</b>: None<br>
  * <br>
+ * </p>
+ *
+ * @displayName Emit All After Match (Number)
+ * @category Rules and Alerts
+ * @tags filter, compare, numeric, key value
  *
  * @since 0.3.2
  */
@@ -64,7 +70,9 @@ import java.util.Map;
 public class AllAfterMatchMap<K, V extends Number> extends
     BaseMatchOperator<K, V>
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * The input port on which tuples are received.
+   */
   public final transient DefaultInputPort<Map<K, V>> data = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -88,13 +96,15 @@ public class AllAfterMatchMap<K, V extends Number> extends
     }
   };
 
-  @OutputPortFieldAnnotation(name = "allafter")
+  /**
+   * The output port on which all tuples after a match are emitted.
+   */
   public final transient DefaultOutputPort<HashMap<K, V>> allafter = new DefaultOutputPort<HashMap<K, V>>();
   boolean doemit = false;
 
   /**
    * Resets the matched variable
-   * 
+   *
    * @param windowId
    */
   @Override

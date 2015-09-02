@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,11 +20,14 @@ import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.commons.lang.mutable.MutableInt;
 
 /**
- * Information needed to calculate simple moving average.
+ * Provides information needed to calculate simple moving average.
  *
+ * @displayName Simple Moving Average Object
+ * @category Stats and Aggregations
+ * @tags average, sum, count
  * @since 0.3.2
  */
-public class SimpleMovingAverageObject implements SlidingWindowObject
+public class SimpleMovingAverageObject
 {
   private MutableDouble sum;
   private MutableInt count;
@@ -51,7 +54,6 @@ public class SimpleMovingAverageObject implements SlidingWindowObject
     count.add(1);
   }
 
-  @Override
   public void clear()
   {
     sum.setValue(0);

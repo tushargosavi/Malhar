@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.script;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
@@ -26,13 +26,21 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
+ * A base implementation of a BaseOperator for language script operator.&nbsp; Subclasses should provide the 
+   implementation of getting the bindings and process method. 
  * Interface for language script operator.
- *
+ * <p>
+ * @displayName Script
+ * @category Scripting
+ * @tags script operator, map, string
  * @since 0.3.2
  */
 public abstract class ScriptOperator extends BaseOperator
 {
-  @InputPortFieldAnnotation(name = "inBindings", optional = true)
+  /**
+   * Input inBindings port that takes in a map of &lt;String, Object&gt.
+   */
+  @InputPortFieldAnnotation(optional = true)
   public final transient DefaultInputPort<Map<String, Object>> inBindings = new DefaultInputPort<Map<String, Object>>()
   {
     @Override
@@ -42,9 +50,17 @@ public abstract class ScriptOperator extends BaseOperator
     }
 
   };
-  @OutputPortFieldAnnotation(name = "outBindings", optional = true)
+  
+  /**
+   * Output outBindings port that emits a map of &lt;String, Object&gt.
+   */
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<Map<String, Object>> outBindings = new DefaultOutputPort<Map<String, Object>>();
-  @OutputPortFieldAnnotation(name = "result", optional = true)
+  
+  /**
+   * Output result port that emits an object as the result.
+   */
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<Object> result = new DefaultOutputPort<Object>();
   protected boolean isPassThru = true;
   @NotNull

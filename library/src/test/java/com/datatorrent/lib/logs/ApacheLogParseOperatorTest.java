@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,12 @@
  */
 package com.datatorrent.lib.logs;
 
-import com.datatorrent.lib.logs.ApacheLogParseOperator;
-import com.datatorrent.lib.testbench.CollectorTestSink;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.datatorrent.lib.testbench.CollectorTestSink;
 
 /**
  * Functional tests for {@link com.datatorrent.lib.logs.ApacheLogParseOperator}.
@@ -71,7 +71,7 @@ public class ApacheLogParseOperatorTest
 		Assert.assertEquals("number emitted tuples", 1,
 				agentSink.collectedTuples.size());
 
-		log.debug(String.format("\nLine is \"%s\"", token.toString()));
+		log.debug(String.format("\nLine is \"%s\"", token));
 		log.debug(String.format("IP is %s\n", ipSink.collectedTuples.toString()));
 		log.debug(String.format("Url is %s\n", urlSink.collectedTuples.toString()));
 		log.debug(String.format("Status code is %s\n",

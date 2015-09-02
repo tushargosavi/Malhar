@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,14 +19,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
 
 /**
- * <p>CountOccurance class.</p>
- *
+ * <p>A base implementation of an operator which does count occurrence.</p>
+ * <p>
+ * @displayName Count Occurrence
+ * @category Test Bench
+ * @tags count
  * @since 0.3.2
  */
 public class CountOccurance<k> extends BaseOperator
@@ -60,12 +63,22 @@ public class CountOccurance<k> extends BaseOperator
 	{
 		collect  = new HashMap<k, Integer>();
 	}
-	
-	// out port
+
+	/**
+	 * Output port that emits a map of integer values.
+	 */
 	public final transient DefaultOutputPort<Map<k, Integer>> outport = new DefaultOutputPort<Map<k, Integer>>();
+
+        /**
+	 * Output dimensions port that emits a map of &lt;string,object&gt; values.
+	 */
 	public final transient DefaultOutputPort<Map<String, Object>> dimensionOut = new DefaultOutputPort<Map<String, Object>>();
-	public final transient DefaultOutputPort<Map<String,Integer>> total = new DefaultOutputPort<Map<String,Integer>>();
-	
+
+        /**
+	 * Output total port that emits a map of &lt;string,integer&gt; count values.
+	 */
+        public final transient DefaultOutputPort<Map<String,Integer>> total = new DefaultOutputPort<Map<String,Integer>>();
+
 	@Override
 	public void endWindow()
 	{

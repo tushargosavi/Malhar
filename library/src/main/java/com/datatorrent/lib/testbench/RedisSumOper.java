@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,19 +19,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
 
 /**
- * <p>RedisSumOper class.</p>
+ * This operator collects integer tuples, then emits their sum at the end of the window.
  *
+ * @displayName Redis Sum Operator
+ * @category Test Bench
+ * @tags count
  * @since 0.3.2
  */
 public class RedisSumOper extends BaseOperator
 {
 	private ArrayList<Integer> collect;
+
+  /**
+   * This is the input port which receives integer tuples to be summed.
+   */
 	public final transient DefaultInputPort<Integer> inport = new DefaultInputPort<Integer>() {
 	    @Override
 	    public void process(Integer s) {
@@ -54,10 +61,12 @@ public class RedisSumOper extends BaseOperator
 	{
 		collect  = new ArrayList<Integer>();
 	}
-	
-	// out port
+
+	/**
+   * This is the output port which emits the summed tuples.
+   */
 	public final transient DefaultOutputPort<Map<Integer, Integer>> outport = new DefaultOutputPort<Map<Integer, Integer>>();
-	
+
 	@Override
 	public void endWindow()
 	{

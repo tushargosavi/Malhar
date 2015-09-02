@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,12 +23,14 @@ import javax.validation.constraints.NotNull;
 
 
 /**
- * Condition class to filter rows for which given column name value matches given regular expression. <br>
- *
+ * An implementation of condition class to filter rows for which given column name value matches given regular expression. <br>
+ *<p>
  *<b> Properties : </b> <br>
  *<b> column : < /b> Column to be matched with regular expression. <br>
  *<b> pattern : </b> Regular expression pattern.<br>
- *
+ * @displayName Like Condition
+ * @category Stream Manipulators
+ * @tags sql, like condition, regular expression
  * @since 0.3.4
  */
 public class LikeCondition extends Condition
@@ -38,13 +40,13 @@ public class LikeCondition extends Condition
    */
   @NotNull
   private String column;
-  
+
   /**
    * Regular expression pattern.
    */
   @NotNull
   private Pattern pattern;
-  
+
   /**
    * @param column Column to be matched with regular expression, must be non-null.
    * @param pattern Regular expression pattern, must be non-null.
@@ -53,9 +55,9 @@ public class LikeCondition extends Condition
     setColumn(column);
     setPattern(pattern);
   }
-  
+
   /**
-   * For valid row column value string must match regular expression.  
+   * For valid row column value string must match regular expression.
    * @return row valid status.
    */
   @Override
@@ -68,7 +70,7 @@ public class LikeCondition extends Condition
   }
 
   /**
-   * Must not be called. 
+   * Must not be called.
    */
   @Override
   public boolean isValidJoin(Map<String, Object> row1, Map<String, Object> row2)

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,20 +15,23 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.BaseOperator;
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.api.annotation.Stateless;
-
 import java.util.HashMap;
+
 import javax.validation.constraints.NotNull;
 
+import com.datatorrent.common.util.BaseOperator;
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+import com.datatorrent.api.annotation.Stateless;
+
 /**
- *
+ * This operator filters the incoming stream of values by the specified set of filter values.
+ * <p>
  * Filters incoming stream and emits values as specified by the set of values to filter. If
- * property "inverse" is set to "true", then all keys except those specified by "keys" are emitted. The values are expected to be immutable<p>
+ * property "inverse" is set to "true", then all keys except those specified by "keys" are emitted. The values are expected to be immutable.
+ * </p>
+ * <p>
  * This operator should not be used with mutable objects. If this operator has immutable Objects, override "cloneCopy" to ensure a new copy is sent out.
  * This is a pass through node<br>
  * <br>
@@ -42,13 +45,21 @@ import javax.validation.constraints.NotNull;
  * <b>Properties</b>:<br>
  * <b>keys</b>: The keys to pass through. Those not in the list are dropped. A comma separated list of keys<br>
  * <br>
+ * </p>
+ *
+ * @displayName Filter Values
+ * @category Rules and Alerts
+ * @tags filter
  *
  * @since 0.3.2
  */
 @Stateless
+@OperatorAnnotation(partitionable = true)
 public class FilterValues<T> extends BaseOperator
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * The input port on which tuples are received.
+   */
   public final transient DefaultInputPort<T> data = new DefaultInputPort<T>()
   {
     /**
@@ -64,7 +75,10 @@ public class FilterValues<T> extends BaseOperator
       }
     }
   };
-  @OutputPortFieldAnnotation(name = "filter")
+
+  /**
+   * The output port on which tuples satisfying the filter are emitted.
+   */
   public final transient DefaultOutputPort<T> filter = new DefaultOutputPort<T>();
 
   @NotNull()
@@ -72,8 +86,7 @@ public class FilterValues<T> extends BaseOperator
   boolean inverse = false;
 
   /**
-   * getter function for parameter inverse
-   *
+   * Gets the inverse property.
    * @return inverse
    */
   public boolean getInverse()
@@ -82,7 +95,7 @@ public class FilterValues<T> extends BaseOperator
   }
 
   /**
-   * True means match; False means unmatched
+   * If true then only matches are emitted. If false then only non matches are emitted.
    * @param val
    */
   public void setInverse(boolean val)
@@ -114,6 +127,25 @@ public class FilterValues<T> extends BaseOperator
         values.put(e, null);
       }
     }
+  }
+
+  /**
+   * Gets the values to be filtered.
+   * @return The values to be filtered.
+   */
+  public HashMap<T, Object> getValues()
+  {
+    return values;
+  }
+
+  /**
+   * A map containing the values to be filtered. The values are set to be the keys in the map, and the
+   * values are set to be null.
+   * @param values The values to be filtered.
+   */
+  public void setValues(HashMap<T, Object> values)
+  {
+    this.values = values;
   }
 
   /**

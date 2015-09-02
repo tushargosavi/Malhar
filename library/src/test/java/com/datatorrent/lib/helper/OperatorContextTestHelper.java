@@ -1,17 +1,28 @@
-/*
- *  Copyright (c) 2012-2013 DataTorrent, Inc.
- *  All Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.datatorrent.lib.helper;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
-import com.datatorrent.api.AttributeMap;
-import com.datatorrent.api.AttributeMap.Attribute;
+import com.datatorrent.api.Attribute;
 import com.datatorrent.api.Context;
 import com.datatorrent.api.Context.OperatorContext;
 
@@ -33,16 +44,14 @@ public class OperatorContextTestHelper
   public static class TestIdOperatorContext extends TestContext implements OperatorContext
   {
     int id;
-    String applicationPath;
-    String applicationId;
-    AttributeMap attributes;
+    com.datatorrent.api.Attribute.AttributeMap attributes;
 
     public TestIdOperatorContext(int id)
     {
       this.id = id;
     }
 
-    public TestIdOperatorContext(int id, @Nonnull AttributeMap map)
+    public TestIdOperatorContext(int id, @Nonnull com.datatorrent.api.Attribute.AttributeMap map)
     {
       this.id = id;
       this.attributes = map;
@@ -52,6 +61,12 @@ public class OperatorContextTestHelper
     public int getId()
     {
       return id;
+    }
+
+    @Override
+    public void sendMetrics(Collection<String> metricNames)
+    {
+      throw new UnsupportedOperationException("not supported");
     }
 
     @Override
@@ -76,7 +91,7 @@ public class OperatorContextTestHelper
   private static class TestContext implements Context
   {
     @Override
-    public AttributeMap getAttributes()
+    public com.datatorrent.api.Attribute.AttributeMap getAttributes()
     {
       return null;
     }
@@ -91,6 +106,12 @@ public class OperatorContextTestHelper
     public void setCounters(Object counters)
     {
       throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void sendMetrics(Collection<String> metricNames)
+    {
+      throw new UnsupportedOperationException("Not supported yet.");
     }
 
   }

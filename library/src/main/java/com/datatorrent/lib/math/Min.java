@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,13 +18,11 @@ package com.datatorrent.lib.math;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Operator.Unifier;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 
 /**
- * Emits at end of window minimum of all values sub-classed from Number in the incoming stream. <br>
- * <br>
+ * This operator implements Unifier interface and emits at end of window minimum of all values sub-classed from Number in the incoming stream.
+ * <p>
  * <b>StateFull :</b>Yes, min value is computed over application windows. <br>
  * <b>Partitions :</b>Yes, operator is kin unifier operator. <br>
  * <br>
@@ -33,7 +31,9 @@ import com.datatorrent.lib.util.BaseNumberValueOperator;
  * <b>min</b>: emits V extends Number<br>
  * <br>
  * <br>
- *
+ * @displayName Minimum
+ * @category Math
+ * @tags minimum, numeric
  * @since 0.3.2
  */
 public class Min<V extends Number> extends BaseNumberValueOperator<V> implements Unifier<V>
@@ -46,10 +46,9 @@ public class Min<V extends Number> extends BaseNumberValueOperator<V> implements
   // transient field
   protected boolean flag = false;
   
-	/**
-	 * Input port.
-	 */
-  @InputPortFieldAnnotation(name = "data")
+	 /**
+          * Input port that takes a number and compares to min and stores the new min.
+          */
   public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
   {
     /**
@@ -80,7 +79,6 @@ public class Min<V extends Number> extends BaseNumberValueOperator<V> implements
   /**
    * Min output port.
    */
-  @OutputPortFieldAnnotation(name = "min")
   public final transient DefaultOutputPort<V> min = new DefaultOutputPort<V>()
   {
     @Override

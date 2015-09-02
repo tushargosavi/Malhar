@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,11 @@ package com.datatorrent.contrib.couchdb;
 import java.util.Map;
 
 /**
- * Implementation of {@link AbstractCouchDBOutputOperator} that saves a Map in the couch database.<br/>
- *
+ * Implementation of {@link AbstractCouchDBOutputOperator} that saves a Map in the couch database. <br/>
+ * <p>
+ * @displayName Map Based CouchDb Output Operator
+ * @category Output
+ * @tags couchDb, database, nosql
  * @since 0.3.5
  */
 public class MapBasedCouchDbOutputOperator extends AbstractCouchDBOutputOperator<Map<Object, Object>>

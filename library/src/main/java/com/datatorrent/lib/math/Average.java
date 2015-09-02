@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,8 +17,6 @@ package com.datatorrent.lib.math;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 
 /**
@@ -36,15 +34,16 @@ import com.datatorrent.lib.util.BaseNumberValueOperator;
  * <b>Specific compile time checks</b>: None<br>
  * <b>Specific run time checks</b>: None<br>
  * <p>
- *
+ * @displayName Average
+ * @category Math
+ * @tags average, numeric, end window
  * @since 0.3.3
  */
 public class Average<V extends Number> extends BaseNumberValueOperator<V>
 {
 	/**
-	 * Input port
+	 * Input port that takes a number.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -59,9 +58,8 @@ public class Average<V extends Number> extends BaseNumberValueOperator<V>
 	};
 
 	/**
-	 * Output port
+	 * Output port that emits average as a number.
 	 */
-	@OutputPortFieldAnnotation(name = "average")
 	public final transient DefaultOutputPort<V> average = new DefaultOutputPort<V>();
 
 	protected double sums = 0;

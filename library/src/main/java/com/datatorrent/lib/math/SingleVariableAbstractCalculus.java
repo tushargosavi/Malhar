@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,9 +18,10 @@ package com.datatorrent.lib.math;
 import com.datatorrent.api.DefaultInputPort;
 
 /**
+ * Transforms the input into the output after applying appropriate mathematical function to it and emits result on respective ports.
  * <p>
- * Abstract class that output of function(input_tuple). Emits the result as Long on port \"longResult\", as Integer on port \"integerResult\",
- * as Double on port \"doubleResult\", and as Float on port \"floatResult\". This is a pass through operator<br>
+ * Emits the result as Long on port "longResult", as Integer on port "integerResult",as Double on port "doubleResult", and as Float on port "floatResult". 
+ * This is a pass through operator<br>
  * <br>
  * <b>Ports</b>:<br>
  * <b>input</b>: expects Number<br>
@@ -28,11 +29,17 @@ import com.datatorrent.api.DefaultInputPort;
  * <b>integerResult</b>: emits Integer<br>
  * <b>doubleResult</b>: emits Double<br>
  * <b>floatResult</b>: emits Float<br>
- *
+ * @displayName Single Variable Abstract Calculus
+ * @category Math
+ * @tags numeric, single variable
+ * @param <T>
  * @since 0.3.2
  */
 public abstract class SingleVariableAbstractCalculus extends AbstractOutput
 {
+  /**
+   * Input number port.
+   */
   public final transient DefaultInputPort<Number> input = new DefaultInputPort<Number>()
   {
     @Override

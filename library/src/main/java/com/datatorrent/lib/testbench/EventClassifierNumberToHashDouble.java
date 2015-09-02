@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,20 @@
  */
 package com.datatorrent.lib.testbench;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
 
 import java.util.HashMap;
 import javax.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * An implementation of BaseOperator that creates a load with pair of keys by taking in an input stream event and adding to incoming keys
+ * to create a new tuple of Hashmap &lt;String,Double&gt; that is emitted on output port data.
+ * <p>
  * Takes a in stream event and adds to incoming keys to create a new tuple that is emitted on output port data. The aim is to create a load with pair of keys<p>
  * <br>
  * Examples of pairs include<br>
@@ -51,11 +56,14 @@ import javax.validation.constraints.NotNull;
  * <br>
  * <br>
  * <b>Benchmarks</b>: This node has been benchmarked at over 5 million tuples/second in local/inline mode<br>
- *
+ * @displayName Event Classifier Number To HashDouble
+ * @category Test Bench
+ * @tags number, classifier
  * @since 0.3.2
  */
 public class EventClassifierNumberToHashDouble<K extends Number> extends BaseOperator
 {
+  private static final Logger logger = LoggerFactory.getLogger(EventClassifierNumberToHashDouble.class);
   public final transient DefaultInputPort<K> event = new DefaultInputPort<K>()
   {
     @Override
@@ -71,6 +79,10 @@ public class EventClassifierNumberToHashDouble<K extends Number> extends BaseOpe
       }
     }
   };
+
+  /**
+   * Output data port that emits a hashmap of &lt;string,double&gt;.
+   */
   public final transient DefaultOutputPort<HashMap<String, Double>> data = new DefaultOutputPort<HashMap<String, Double>>();
 
   @NotNull
@@ -139,11 +151,12 @@ public class EventClassifierNumberToHashDouble<K extends Number> extends BaseOpe
   }
 
   /**
-   * setter function for key
+   * Use this key to generate new keys.
    * @param i key is set to i
    */
   public void setKey(String i)
   {
+    logger.debug("In setter of key");
     key = i;
   }
 

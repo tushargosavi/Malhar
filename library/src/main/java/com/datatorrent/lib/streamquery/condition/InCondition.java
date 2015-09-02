@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,34 +22,37 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
- * Condition calsss to check a column value is in given set of values.
+ * An implementation of condition class to check if a column value is in a given set of values.
+ * <p>
  * <br>
  * <b>Properties : </b> <br>
  * <b> column : </b> Column name for which value is checked in values set. <br>
  * <b> inValues : </b> Set of values in which column value is checked. <br>
- *
+ * @displayName In Condition
+ * @category Stream Manipulators
+ * @tags sql condition
  * @since 0.3.4
  */
 public class InCondition extends Condition
 {
   /**
-   * Column name for which value is checked in values set. 
+   * Column name for which value is checked in values set.
    */
   @NotNull
   private String column;
-  
+
   /**
    * Set of values in which column value is checked.
    */
   private Set<Object> inValues = new HashSet<Object>();
-  
+
   /**
    * @param  column Column name for which value is checked in values set.
    */
   public InCondition(@NotNull String column) {
     this.column = column;
   }
-  
+
   @Override
   public boolean isValidRow(@NotNull Map<String, Object> row)
   {
@@ -72,9 +75,9 @@ public class InCondition extends Condition
   {
     this.column = column;
   }
-  
+
   public void addInValue(Object value) {
     this.inValues.add(value);
   }
-   
+
 }

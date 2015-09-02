@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,15 +28,15 @@ import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 
 /**
- * <br>A helper class that setups the couch db for testing</br>
+ * <br>A helper class that setups the couch db for testing
  *
  * @since 0.3.5
  */
 public class CouchDBTestHelper
 {
   public static final String TEST_DB = "CouchDbTest";
-  private static final String DESIGN_DOC_ID = "_design/CouchDbTest";
-  private static final String TEST_VIEW = "testView";
+  public static final String DESIGN_DOC_ID = "_design/CouchDbTest";
+  public static final String TEST_VIEW = "testView";
   private static CouchDbConnector connector;
   private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -54,6 +54,11 @@ public class CouchDBTestHelper
   }
 
   public static void insertDocument(Map<String, String> dbTuple)
+  {
+    connector.create(dbTuple);
+  }
+
+   public static void insertDocument(Object dbTuple)
   {
     connector.create(dbTuple);
   }

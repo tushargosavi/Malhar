@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,12 @@
 package com.datatorrent.contrib.mqtt;
 
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import org.fusesource.mqtt.client.Message;
 
 /**
- * MQTT input adapter operator, which receives data from MQTT.<p><br>
- *
- * <br>
+ * This is the base implementation for a single port MQTT input operator.&nbsp;
+ * Subclasses should implement the methods which convert MQTT messages to tuples.
+ * <p>
  * Ports:<br>
  * <b>Input</b>: No input port<br>
  * <b>Output</b>: Can have one output port<br>
@@ -37,16 +36,17 @@ import org.fusesource.mqtt.client.Message;
  * None<br>
  * <br>
  * <b>Benchmarks</b>:TBD
- * <br>
- *
+ * </p>
+ * @displayName Abstract Single Port MQTT Input
+ * @category Messaging
+ * @tags input operator
  * @since 0.9.3
  */
 public abstract class AbstractSinglePortMqttInputOperator<T> extends AbstractMqttInputOperator
 {
   /**
-   * the output port
+   * This output port emits tuples, which were extracted from MQTT messages.
    */
-  @OutputPortFieldAnnotation(name = "out")
   final public transient DefaultOutputPort<T> outputPort = new DefaultOutputPort<T>();
 
   /**

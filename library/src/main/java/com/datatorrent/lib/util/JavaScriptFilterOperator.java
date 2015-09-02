@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,21 @@
  */
 package com.datatorrent.lib.util;
 
-import com.datatorrent.api.Context.OperatorContext;
 import java.util.Map;
+
 import javax.script.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datatorrent.api.Context.OperatorContext;
+
 /**
- * The filter operator that uses JavaScript, intended for use with alerts
- *
+ * This operator consumes tuples.&nbsp;If the tuples satisfy a specified Java Script filtering function, then they are emitted.
+ * <p></p>
+ * @displayName Java Script Filter
+ * @category Rules and Alerts
+ * @tags filter, javascript
  * @since 0.3.4
  */
 public class JavaScriptFilterOperator extends FilterOperator
@@ -41,6 +47,10 @@ public class JavaScriptFilterOperator extends FilterOperator
     return functionName;
   }
 
+  /**
+   * Enter the JavaScript to run against every input.
+   * @param script
+   */
   public void setFunctionName(String script)
   {
     this.functionName = script;
@@ -50,6 +60,11 @@ public class JavaScriptFilterOperator extends FilterOperator
   {
     return setupScript;
   }
+
+  /**
+   * Enter the JavaScript to setup the environment.
+   * @param script
+   */
 
   public void setSetupScript(String script)
   {

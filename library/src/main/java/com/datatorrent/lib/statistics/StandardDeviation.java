@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,16 +17,15 @@ package com.datatorrent.lib.statistics;
 
 import java.util.ArrayList;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OperatorAnnotation;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 
 /**
- * This operator computes variance and standard deviation over incoming data. <br>
- * <br>
+ * An implementation of BaseOperator that computes variance and standard deviation over incoming data. <br>
+ * <p>
  * <b>Input Port(s) : </b><br>
  * <b>data : </b> Data values input port. <br>
  * <br>
@@ -37,18 +36,19 @@ import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
  * <b>StateFull : Yes</b>, value are aggregated over application window. <br>
  * <b>Partitions : No</b>, no will yield wrong results. <br>
  * <br>
- *
+ * @displayName Standard Deviation
+ * @category Stats and Aggregations
+ * @tags numeric, math, calculation, sum, count
  * @since 0.3.4
  */
 @OperatorAnnotation(partitionable = false)
 public class StandardDeviation extends BaseOperator
 {
   private ArrayList<Double> values = new ArrayList<Double>();
-  
+
   /**
-   * Input data port.
+   * Input data port that takes in a number.
    */
-  @InputPortFieldAnnotation(name = "data")
   public final transient DefaultInputPort<Number> data = new DefaultInputPort<Number>()
   {
     /**
@@ -60,19 +60,18 @@ public class StandardDeviation extends BaseOperator
       values.add(tuple.doubleValue());
     }
   };
-  
+
   /**
-   * Variance output port
+   * Variance output port.
    */
-  @OutputPortFieldAnnotation(name = "variance", optional=true)
+  @OutputPortFieldAnnotation(optional=true)
   public final transient DefaultOutputPort<Number> variance = new DefaultOutputPort<Number>();
-  
+
   /**
-   * Standard deviation output port
+   * Standard deviation output port.
    */
-  @OutputPortFieldAnnotation(name = "standardDeviation")
   public final transient DefaultOutputPort<Number> standardDeviation = new DefaultOutputPort<Number>();
-  
+
   /**
    * End window.
    */
@@ -81,15 +80,15 @@ public class StandardDeviation extends BaseOperator
   {
     // no values.
     if (values.size() == 0) return;
-    
+
     // get mean first.
     double mean = 0.0;
     for (Double value : values) {
       mean += value;
     }
     mean = mean/values.size();
-    
-    // get variance  
+
+    // get variance
     double outVal = 0.0;
     for (Double value : values) {
       outVal += (value-mean)*(value-mean);
@@ -98,10 +97,10 @@ public class StandardDeviation extends BaseOperator
     if (variance.isConnected()) {
       variance.emit(outVal);
     }
-    
+
     // get standard deviation
     standardDeviation.emit(Math.sqrt(outVal));
-    
+
     values = new ArrayList<Double>();
   }
 }

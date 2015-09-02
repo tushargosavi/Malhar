@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@ package com.datatorrent.lib.math;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 import com.datatorrent.lib.util.KeyValPair;
@@ -29,10 +28,10 @@ import org.apache.commons.lang.mutable.MutableLong;
 /**
  *
  * Emits the average of values for each key at the end of window.
+ * <p>
  * <br>User can block or only enable certain keys by setting filter-keys/inverse operator properties.
  * <br> Block Key : inverse=true
  * <br> Enable Key : inverse=false
- * <p>
  * This is an end window operator. This can not be partitioned. Partitioning
  * this will yield incorrect result.<br>
  * <br>
@@ -48,7 +47,9 @@ import org.apache.commons.lang.mutable.MutableLong;
  * <b>Specific compile time checks</b>: None<br>
  * <b>Specific run time checks</b>: None<br>
  * <p>
- *
+ * @displayName Average Key Value
+ * @category Math
+ * @tags average, number, end window, key value
  * @since 0.3.3
  */
 public class AverageKeyVal<K> extends BaseNumberKeyValueOperator<K, Number>
@@ -60,9 +61,8 @@ public class AverageKeyVal<K> extends BaseNumberKeyValueOperator<K, Number>
 	protected HashMap<K, MutableLong> counts = new HashMap<K, MutableLong>();
 	
 	/**
-	 * Data input port.
+	 * Input port that takes a key value pair.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<KeyValPair<K, ? extends Number>> data = new DefaultInputPort<KeyValPair<K, ? extends Number>>()
 	{
 		/**
@@ -96,19 +96,19 @@ public class AverageKeyVal<K> extends BaseNumberKeyValueOperator<K, Number>
 	/**
 	 * Double average output port. 
 	 */
-	@OutputPortFieldAnnotation(name = "doubleAverage", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Double>> doubleAverage = new DefaultOutputPort<KeyValPair<K, Double>>();
 	
 	/**
 	 * Integer average output port. 
 	 */
-	@OutputPortFieldAnnotation(name = "intAverage", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Integer>> intAverage = new DefaultOutputPort<KeyValPair<K, Integer>>();
 	
 	/**
 	 * Long average output port. 
 	 */
-	@OutputPortFieldAnnotation(name = "longAverage", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Long>> longAverage = new DefaultOutputPort<KeyValPair<K, Long>>();
 
 	/**

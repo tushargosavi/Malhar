@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,16 @@
  */
 package com.datatorrent.contrib.kafka;
 
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.api.DefaultOutputPort;
 
 import kafka.message.Message;
 
 
 /**
- * Kafka input adapter operator with single output port, which consume data from Kafka message bus.<p><br>
- *
+ * This is the base implementation of the Kafka input operator with a single output port,
+ * which consumes data from the Kafka message bus.&nbsp;
+ * Subclasses should implement the methods which convert Kafka messages to tuples.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: No input port<br>
@@ -41,15 +42,19 @@ import kafka.message.Message;
  * Benchmarks:<br>
  * TBD<br>
  * <br>
+ * </p>
+ *
+ * @displayName Abstract Kafka Single Port Input
+ * @category Messaging
+ * @tags input operator
  *
  * @since 0.3.2
  */
 public abstract class AbstractKafkaSinglePortInputOperator<T> extends AbstractKafkaInputOperator<KafkaConsumer>
 {
   /**
-   * The single output port.
+   * This output port emits tuples extracted from Kafka messages.
    */
-  @OutputPortFieldAnnotation(name = "outputPort")
   public final transient DefaultOutputPort<T> outputPort = new DefaultOutputPort<T>();
 
   /**

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,11 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>RedisNumberSummationKeyValPairOutputOperator class.</p>
+ * This class provides an output adapter that takes a key value pair.&nbsp;
+ * If the values in the key value pairs are maps, the operator will increment the values in the key value pair in redis.&nbsp;
+ * Otherwise, it will increment the value as is.
+ * <p></p>
  *
- * This class provides output adapter that takes a key value pair of key type K and value type V, and if
- * V is a map, it will increment the values in the key value pair in redis as hash, otherwise, it will increment the value
- * as is.
+ * @displayName Redis Number Summation Key Val Pair Output
+ * @category Output
+ * @tags redis, key value
  *
  * @param <K> The key type
  * @param <V> The value type

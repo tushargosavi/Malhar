@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +17,14 @@ package com.datatorrent.lib.stream;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseKeyValueOperator;
 import java.util.HashMap;
 
 /**
  * <p>
- * Creates a HashMap tuple from incoming tuples. If keys[] are set, then each
- * incoming tuple is the value of the key (in-order) till all keys get a value.
+ * An implementation of BaseKeyValueOperator that creates a HashMap tuple from incoming tuples.
+ * <p>
+ * If keys[] are set, then each incoming tuple is the value of the key (in-order) till all keys get a value.
  * Once all keys are assigned values, the tuple (HashMap) is emitted, the
  * process of assigning values starts again<br>
  * This is a stateful operator as it waits across window boundary to complete
@@ -40,7 +39,9 @@ import java.util.HashMap;
  * <br>
  * <b>Properties</b>:<br>
  * <b>keys[]</b>: Set of keys to insert in the output tuple</b>
- *
+ * @displayName Round Robin HashMap
+ * @category Tuple Converters
+ * @tags key value, hashmap
  * @since 0.3.3
  */
 public class RoundRobinHashMap<K, V> extends BaseKeyValueOperator<K, V>
@@ -60,7 +61,6 @@ public class RoundRobinHashMap<K, V> extends BaseKeyValueOperator<K, V>
 	/**
 	 * Value input port.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -87,12 +87,11 @@ public class RoundRobinHashMap<K, V> extends BaseKeyValueOperator<K, V>
 	/**
 	 * key/value map output port.
 	 */
-	@OutputPortFieldAnnotation(name = "map")
 	public final transient DefaultOutputPort<HashMap<K, V>> map = new DefaultOutputPort<HashMap<K, V>>();
 
 	/**
 	 * Keys for round robin asspociation, set by application.
-	 * 
+	 *
 	 * @param keys
 	 */
 	public void setKeys(K[] keys)

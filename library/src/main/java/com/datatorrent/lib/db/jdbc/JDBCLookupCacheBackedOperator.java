@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,20 +15,39 @@
  */
 package com.datatorrent.lib.db.jdbc;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
+
+import com.google.common.collect.Lists;
+
 import com.datatorrent.api.Context;
 
 import com.datatorrent.lib.db.cache.AbstractDBLookupCacheBackedOperator;
 
 /**
- * This is {@link AbstractDBLookupCacheBackedOperator} which uses JDBC to fetch the value of a key from the database
- * when the key is not present in cache. </br>
+ * This is the base implementation of an operator that maintains a loading cache.&nbsp;
+ * The cache is kept in a database which is connected to via JDBC.&nbsp;
+ * Subclasses should implement the methods which are required to insert and retrieve data from the database.
+ * <p></p>
+ * @displayName JDBC Lookup Cache Backed
+ * @category Input
+ * @tags cache, key value
  *
  * @param <T> type of input tuples </T>
  * @since 0.9.1
  */
-public abstract class JDBCLookupCacheBackedOperator<T> extends AbstractDBLookupCacheBackedOperator<T>
+public abstract class JDBCLookupCacheBackedOperator<T> extends AbstractDBLookupCacheBackedOperator<T, JdbcStore>
 {
-  protected final JdbcStore store;
+  @NotNull
+  protected String tableName;
+
+  protected transient PreparedStatement putStatement;
+  protected transient PreparedStatement getStatement;
 
   public JDBCLookupCacheBackedOperator()
   {
@@ -36,22 +55,82 @@ public abstract class JDBCLookupCacheBackedOperator<T> extends AbstractDBLookupC
     store = new JdbcStore();
   }
 
+  public void setTableName(String tableName)
+  {
+    this.tableName = tableName;
+  }
+
+  public String getTableName()
+  {
+    return tableName;
+  }
+
   @Override
   public void setup(Context.OperatorContext context)
   {
-    store.connect();
     super.setup(context);
+
+    String insertQuery = fetchInsertQuery();
+    String getQuery = fetchGetQuery();
+    try {
+      putStatement = store.connection.prepareStatement(insertQuery);
+      getStatement = store.connection.prepareStatement(getQuery);
+    }
+    catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
-  public void teardown()
+  public void put(@Nonnull Object key, @Nonnull Object value)
   {
-    store.disconnect();
-    super.teardown();
+    try {
+      preparePutStatement(putStatement, key, value);
+      putStatement.executeUpdate();
+    }
+    catch (SQLException e) {
+      throw new RuntimeException("while executing insert", e);
+    }
   }
 
-  public JdbcStore getStore()
+  @Override
+  public Object get(Object key)
   {
-    return store;
+    try {
+      prepareGetStatement(getStatement, key);
+      ResultSet resultSet = getStatement.executeQuery();
+      return processResultSet(resultSet);
+    }
+    catch (SQLException e) {
+      throw new RuntimeException("while fetching key", e);
+    }
   }
+
+  @Override
+  public List<Object> getAll(List<Object> keys)
+  {
+    List<Object> values = Lists.newArrayList();
+    for (Object key : keys) {
+      try {
+        prepareGetStatement(getStatement, key);
+        ResultSet resultSet = getStatement.executeQuery();
+        values.add(processResultSet(resultSet));
+      }
+      catch (SQLException e) {
+        throw new RuntimeException("while fetching keys", e);
+      }
+    }
+    return values;
+  }
+
+  protected abstract void prepareGetStatement(PreparedStatement getStatement, Object key) throws SQLException;
+
+  protected abstract void preparePutStatement(PreparedStatement putStatement, Object key, Object value) throws SQLException;
+
+  protected abstract String fetchInsertQuery();
+
+  protected abstract String fetchGetQuery();
+
+  protected abstract Object processResultSet(ResultSet resultSet) throws SQLException;
+
 }

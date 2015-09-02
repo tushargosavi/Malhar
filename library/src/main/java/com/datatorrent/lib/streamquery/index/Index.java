@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,11 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
- * Interface to define sql select statement indexes for column names/aggregate.
- *
+ * Interface to define sql select statement indexes for column names,aggregate.
+ * <p>
+ * @displayName Index
+ * @category Stream Manipulators
+ * @tags index
  * @since 0.3.2
  */
 public interface Index
@@ -29,5 +32,5 @@ public interface Index
   /**
    * Function can key/value hash map, does metric implemented by sub class.
    */
-	public void filter(@NotNull Map<String,Object> row, @NotNull Map<String, Object> collect);  
+	public void filter(@NotNull Map<String,Object> row, @NotNull Map<String, Object> collect);
 }

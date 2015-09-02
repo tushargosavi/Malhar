@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,9 +30,10 @@ public class DimensionObject<T> implements Comparable<DimensionObject<T>>
 
   private MutableDouble count;
   private T val;
-  
+
+  @SuppressWarnings("unused")
   private DimensionObject(){
-    
+
   }
 
   public DimensionObject(MutableDouble count, T s)
@@ -86,10 +87,9 @@ public class DimensionObject<T> implements Comparable<DimensionObject<T>>
       return false;
     if (!this.getClass().equals(obj.getClass()))
       return false;
+    @SuppressWarnings("unchecked")
     DimensionObject<T> obj2 = (DimensionObject<T>) obj;
-    if (this.val.equals(obj2.val))
-      return true;
-    return false;
+    return this.val.equals(obj2.val);
 
   }
 

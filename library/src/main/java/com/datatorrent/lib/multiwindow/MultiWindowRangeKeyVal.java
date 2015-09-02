@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,8 @@ import com.datatorrent.lib.util.HighLow;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
- * A range operator of KeyValPair schema which calculate range across multiple streaming windows. <br>
+ * A range operator of KeyValPair schema which calculates range across multiple streaming windows.
+ * <p>
  * This is an end window operator which emits only at Nth window. <br>
  * <br>
  * <b>StateFull : Yes</b>, computes across multiple windows. <br>
@@ -43,6 +44,9 @@ import com.datatorrent.lib.util.KeyValPair;
  * <b>windowSize i.e. N</b>: Number of streaming windows that define application window.<br>
  * <br>
  *
+ * @displayName Multi Window Range Key Value
+ * @category Stats and Aggregations
+ * @tags key value, range, numeric
  * @since 0.3.2
  */
 public class MultiWindowRangeKeyVal<K, V extends Number> extends RangeKeyVal<K, V>

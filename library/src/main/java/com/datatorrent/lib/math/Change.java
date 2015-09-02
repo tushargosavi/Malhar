@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +17,16 @@ package com.datatorrent.lib.math;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 
 /**
+ * Operator compares data values arriving on input port with base value input operator.
+ * 
  * <p>
+ * Arriving base value is stored in operator for comparison, old base value is overwritten.&nbsp;
+ * This emits &lt;change in value,percentage change&gt;.
  * Operator expects values arriving on data input port and base value input operator.
- * Arriving base value is stored in operator for comparison, old base value is overwritten.
- * Data values arriving input port are compared with base value. <br>
  * Change in value and percentage change in values are emitted on separate ports.<br>
  * This operator can not be partitioned, since copies won't get consecutive operators. <br>
  * This is StateFull operator, tuples that arrive on base port are kept in
@@ -49,12 +50,16 @@ import com.datatorrent.lib.util.BaseNumberValueOperator;
  * <br>
  *
  * <br>
- *
+ * @displayName Change
+ * @category Math
+ * @tags change, key value, numeric, percentage
  * @since 0.3.3
  */
 public class Change<V extends Number> extends BaseNumberValueOperator<V>
 {
-	@InputPortFieldAnnotation(name = "data")
+        /**
+	 * Input data port that takes a number.
+	 */
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -70,7 +75,10 @@ public class Change<V extends Number> extends BaseNumberValueOperator<V>
 			}
 		}
 	};
-	@InputPortFieldAnnotation(name = "base")
+        
+        /**
+	 * Input port that takes a number&nbsp; It stores the value for base comparison. 
+	 */
 	public final transient DefaultInputPort<V> base = new DefaultInputPort<V>()
 	{
 		/**
@@ -88,15 +96,15 @@ public class Change<V extends Number> extends BaseNumberValueOperator<V>
 	};
 	
 	/**
-	 * Change in value compared to base value.
+	 * Output port that emits change in value compared to base value.
 	 */
-	@OutputPortFieldAnnotation(name = "change", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<V> change = new DefaultOutputPort<V>();
 	
 	/**
-	 * Percent change in data value compared to base value.
+	 * Output port that emits percent change in data value compared to base value.
 	 */
-	@OutputPortFieldAnnotation(name = "percent", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Double> percent = new DefaultOutputPort<Double>();
 	
 	/**

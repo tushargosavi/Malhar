@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,9 +18,9 @@ package com.datatorrent.contrib.rabbitmq;
 import com.datatorrent.api.DefaultInputPort;
 
 /**
- * RabbitMQ output adapter operator, which send data to RabbitMQ message bus.<p><br>
- *
- * <br>
+ * This is the base implementation of a single port RabbitMQ output operator.&nbsp;
+ * Subclasses should implement the methods which convert tuples to RabbitMQ messages.
+ * <p>
  * Ports:<br>
  * <b>Input</b>: Can have one input port<br>
  * <b>Output</b>: no output port<br>
@@ -40,7 +40,10 @@ import com.datatorrent.api.DefaultInputPort;
  * <tr><td>One tuple per key per window per port</td><td><b>10 thousand K,V pairs/s</td><td>Out-bound rate is the main determinant of performance. Operator can process about 10 thousand unique (k,v immutable pairs) tuples/sec as RabbitMQ DAG. Tuples are assumed to be
  * immutable. If you use mutable tuples and have lots of keys, the benchmarks may differ</td></tr>
  * </table><br>
- * <br>
+ * </p>
+ * @displayName Abstract Single Port RabbitMQ Output
+ * @category Messaging
+ * @tags output operator
  *
  * @since 0.3.2
  */
@@ -57,7 +60,10 @@ public abstract class AbstractSinglePortRabbitMQOutputOperator<T> extends Abstra
     @Override
     public void process(T tuple)
     {
-      processTuple(tuple); // This is an abstract call
+      if(!skipProcessingTuple)
+      {
+        processTuple(tuple); // This is an abstract call
+      }
     }
   };
 }

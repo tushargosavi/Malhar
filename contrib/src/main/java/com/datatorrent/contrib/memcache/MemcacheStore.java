@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,11 +49,24 @@ public class MemcacheStore implements KeyValueStore
   {
     serverAddresses.add(addr);
   }
+  
+
+  public List<InetSocketAddress> getServerAddresses()
+  {
+    return serverAddresses;
+  }
+
+
+  public void setServerAddresses(List<InetSocketAddress> serverAddresses)
+  {
+    this.serverAddresses = serverAddresses;
+  }
+
 
   /**
    * Gets the key expiry time.
    *
-   * @return
+   * @return The key expiry time.
    */
   public int getKeyExpiryTime()
   {
@@ -88,7 +101,7 @@ public class MemcacheStore implements KeyValueStore
   }
 
   @Override
-  public boolean connected()
+  public boolean isConnected()
   {
     throw new UnsupportedOperationException("Not supported yet.");
   }
@@ -98,7 +111,7 @@ public class MemcacheStore implements KeyValueStore
    * Note that it does NOT work with hash values or list values
    *
    * @param key
-   * @return
+   * @return The value.
    */
   @Override
   public Object get(Object key)
@@ -111,7 +124,7 @@ public class MemcacheStore implements KeyValueStore
    * Note that it does NOT work with hash values or list values
    *
    * @param keys
-   * @return
+   * @return All values for the given keys.
    */
   @SuppressWarnings("unchecked")
   @Override

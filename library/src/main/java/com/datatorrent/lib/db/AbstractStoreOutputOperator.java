@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +17,19 @@ package com.datatorrent.lib.db;
 
 import java.io.IOException;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 
 /**
- * This abstract class is for any implementation of an output adapter of non-transactional store {@link Connectable}
- * without the transactional exactly once feature.
+ * This is the base implementation of an output operator,
+ * which writes to a non-transactional store.&nbsp;
+ * This operator does not provide the exactly once guarantee.&nbsp;
+ * A concrete operator should be created from this skeleton implementation.
+ * <p></p>
+ * @displayName Abstract Store Output
+ * @category Output
  *
  * @param <T> The tuple type
  * @param <S> The store type
@@ -35,9 +40,9 @@ public abstract class AbstractStoreOutputOperator<T, S extends Connectable> exte
   protected S store;
 
   /**
-   * The input port.
+   * The input port on which tuples are received for writing.
    */
-  @InputPortFieldAnnotation(name = "in", optional = true)
+  @InputPortFieldAnnotation(optional = true)
   public final transient DefaultInputPort<T> input = new DefaultInputPort<T>()
   {
     @Override
@@ -50,7 +55,7 @@ public abstract class AbstractStoreOutputOperator<T, S extends Connectable> exte
 
   /**
    * Gets the store.
-   * @return
+   * @return the store.
    */
   public S getStore()
   {
@@ -59,7 +64,7 @@ public abstract class AbstractStoreOutputOperator<T, S extends Connectable> exte
 
   /**
    * Sets the store.
-   * @param store
+   * @param store a {@link Connectable}.
    */
   public void setStore(S store)
   {
@@ -89,13 +94,14 @@ public abstract class AbstractStoreOutputOperator<T, S extends Connectable> exte
       store.disconnect();
     }
     catch (IOException ex) {
+      throw new RuntimeException(ex);
     }
   }
 
   /**
    * Processes the incoming tuple, presumably store the data in the tuple to the store
    *
-   * @param tuple
+   * @param tuple a tuple.
    */
   public abstract void processTuple(T tuple);
 

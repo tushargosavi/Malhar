@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,9 @@ import java.util.Collection;
 
 /**
  *
- * Creates a ArrayList tuple from incoming tuples. The size of the ArrayList before it is emitted is determined by property \"size\". If size == 0
+ * An implementation of AbstractAggregator that creates an ArrayList tuple from incoming tuples.
+ * <p>
+ * The size of the ArrayList before it is emitted is determined by property \"size\". If size == 0
  * then the ArrayList (if not empty) is emitted in the endWindow call. Is size is specified then the ArrayList is emitted as soon as the size is
  * reached as part of process(tuple), and no emit happens in endWindow. For size != 0, the operator is statefull.<p>
  * <br>
@@ -32,7 +34,9 @@ import java.util.Collection;
  * <b>size</b>: The size of ArrayList. If specified the ArrayList is emitted the moment it reaches this size.
  *               If 0, the ArrayList is emitted in endWindow call. Default value is 0, </br>
  * <br>
- *
+ * @displayName Array List Aggregator
+ * @category Stream Manipulators
+ * @tags list, aggregate, collection
  * @param <T> Type of elements in the collection.<br>
  * @since 0.3.3
  */

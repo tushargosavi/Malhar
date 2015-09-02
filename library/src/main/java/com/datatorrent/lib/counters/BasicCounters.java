@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,17 +22,19 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.mutable.Mutable;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import org.apache.commons.lang.mutable.Mutable;
 
 import com.datatorrent.api.Context;
-import com.datatorrent.lib.util.NumberAggregate;
+
+import com.datatorrent.common.util.NumberAggregate;
 
 /**
  * Implementation of basic number counters.
@@ -46,6 +48,7 @@ public class BasicCounters<T extends Number & Mutable> implements Serializable
   private final Map<Enum<?>, T> cache;
   private final Class<T> counterType;
 
+  @SuppressWarnings("unused")
   private BasicCounters()
   {
     //for kryo
@@ -80,7 +83,7 @@ public class BasicCounters<T extends Number & Mutable> implements Serializable
    * Returns the counter if it exists; null otherwise
    *
    * @param counterKey
-   * @return
+   * @return counter corresponding to the counter key.
    */
   public synchronized T getCounter(Enum<?> counterKey)
   {
@@ -101,7 +104,7 @@ public class BasicCounters<T extends Number & Mutable> implements Serializable
   /**
    * Returns an immutable copy of all the counters.
    *
-   * @return
+   * @return an immutable copy of the counters.
    */
   public synchronized ImmutableMap<Enum<?>, T> getCopy()
   {

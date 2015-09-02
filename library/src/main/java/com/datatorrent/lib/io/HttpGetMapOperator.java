@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,8 +24,12 @@ import com.sun.jersey.api.client.WebResource;
 /**
  * Operator to take in map of key value pairs and make a HTTP GET request with the key value pairs from the map
  * as query parameters in the request.
- *
+ * <p>
  * If output port is connected, the response is emitted as {@link String} through the output port.
+ * </p>
+ * @displayName HTTP GET Map
+ * @category Input
+ * @tags http
  *
  * @param <K> Type of key in input map tuple
  * @param <V> Type of value in input map tuple

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,12 @@
  */
 package com.datatorrent.contrib.kafka;
 
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.DefaultInputPort;
 import kafka.producer.KeyedMessage;
 
 /**
- * Kafka output adapter operator with only one input port, which produce data into Kafka message bus.<p><br>
- *
+ * Kafka output adapter operator with a single input port, which writes data to the Kafka message bus.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: Have only one input port<br>
@@ -39,6 +38,11 @@ import kafka.producer.KeyedMessage;
  * Benchmarks:<br>
  * TBD<br>
  * <br>
+ * </p>
+ *
+ * @displayName Kafka Single Port Output
+ * @category Messaging
+ * @tags output operator
  *
  * @since 0.3.2
  */
@@ -46,9 +50,8 @@ public class KafkaSinglePortOutputOperator<K, V> extends AbstractKafkaOutputOper
 {
 
   /**
-   * The single input port.
+   * This input port receives tuples that will be written out to Kafka.
    */
-  @InputPortFieldAnnotation(name = "KafkaInputPort")
   public final transient DefaultInputPort<V> inputPort = new DefaultInputPort<V>()
   {
     @Override

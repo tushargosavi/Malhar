@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,15 +24,13 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.common.util.DTThrowable;
+import com.datatorrent.netlet.util.DTThrowable;
 
 /**
- * Takes a json byte stream and emits a HashMap of key values
+ * An implementation of BaseOperator that takes a json byte stream and emits a HashMap of key values.
  * <p>
  * This is a pass through operator<br>
  * <br>
@@ -44,7 +42,9 @@ import com.datatorrent.common.util.DTThrowable;
  * &nbsp&nbsp The key will be dot concatenated nested key names <br>
  * &nbsp&nbsp eg: key: "agentinfo.os.name", value: "Ubuntu" <br>
  * <br>
- *
+ * @displayName JSON Byte Array
+ * @category Tuple Converters
+ * @tags json, byte array
  * @since 0.9.4
  */
 @Stateless
@@ -55,7 +55,6 @@ public class JsonByteArrayOperator extends BaseOperator
   /**
    * Input byte array port.
    */
-  @InputPortFieldAnnotation(name = "input")
   public final transient DefaultInputPort<byte[]> input = new DefaultInputPort<byte[]>()
   {
     private void getFlatMap(JSONObject jSONObject, Map<String, Object> map, String keyPrefix) throws Exception
@@ -119,16 +118,13 @@ public class JsonByteArrayOperator extends BaseOperator
   /**
    * Output hash map port.
    */
-  @OutputPortFieldAnnotation(name = "map")
   public final transient DefaultOutputPort<HashMap<String, Object>> outputMap = new DefaultOutputPort<HashMap<String, Object>>();
   /**
    * Output JSONObject port.
    */
-  @OutputPortFieldAnnotation(name = "jsonobject")
   public final transient DefaultOutputPort<JSONObject> outputJsonObject = new DefaultOutputPort<JSONObject>();
   /**
    * Output hash map port.
    */
-  @OutputPortFieldAnnotation(name = "flatmap")
   public final transient DefaultOutputPort<HashMap<String, Object>> outputFlatMap = new DefaultOutputPort<HashMap<String, Object>>();
 }

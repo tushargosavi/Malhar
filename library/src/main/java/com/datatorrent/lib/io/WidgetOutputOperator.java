@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.datatorrent.lib.io;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,20 +28,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.datatorrent.lib.util.PubSubMessageCodec;
-import com.datatorrent.lib.util.PubSubWebSocketClient;
-
-import com.datatorrent.api.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.ShipContainingJars;
-import java.lang.reflect.Array;
+
+import com.datatorrent.common.util.BaseOperator;
+import com.datatorrent.common.util.PubSubMessageCodec;
+import com.datatorrent.common.util.PubSubWebSocketClient;
 
 /**
- * This is an Output operator output the data in a format that can be displayed in DT UI widgets<br><br>
- *
+ * This operator outputs data in a format that can be displayed in DT UI widgets.
+ * <p>
  * There are 4 input ports each of which is compatible to one widget
  *  <li>simpleInput is used for simple input widget. It takes any object and push the toString() value to the UI</li>
  *  <li>timeSeriesInput is used for a widget of bar chart of series number values at certain times. It takes a Long for time and a Number for value </li>
@@ -50,10 +48,13 @@ import java.lang.reflect.Array;
  *
  *  By default it outputs data to WebSocket channel specified by DT gateway.<br>
  *  If DT gateway is not specified, it will use output data to console.
+ * </p>
+ * @displayName DT Widget Output
+ * @category Output
+ * @tags dt, output operator
  *
  * @since 0.9.3
  */
-@ShipContainingJars(classes = {com.ning.http.client.websocket.WebSocket.class})
 public class WidgetOutputOperator extends BaseOperator
 {
   protected transient WebSocketOutputOperator<Pair<String, Object>> wsoo = new WebSocketOutputOperator<Pair<String,Object>>(){
@@ -91,19 +92,34 @@ public class WidgetOutputOperator extends BaseOperator
 
   private transient int operId = 0;
 
-  @InputPortFieldAnnotation(name="simple input", optional=true)
+  /**
+   * Tuples received on this input port will be sent to a Simple Widget for display.
+   */
+  @InputPortFieldAnnotation(optional=true)
   public final transient SimpleInputPort simpleInput = new SimpleInputPort(this);
 
-  @InputPortFieldAnnotation(name="time series input", optional=true)
+  /**
+   * Tuples received on this input port will be sent to a Time Series Widget for display.
+   */
+  @InputPortFieldAnnotation(optional=true)
   public final transient TimeseriesInputPort timeSeriesInput = new TimeseriesInputPort(this);
 
-  @InputPortFieldAnnotation(name="percentage input", optional=true)
+  /**
+   * Tuples received on this input port will be sent to a Percentage Widget.
+   */
+  @InputPortFieldAnnotation(optional=true)
   public final transient PercentageInputPort percentageInput = new PercentageInputPort(this);
 
-  @InputPortFieldAnnotation(name="topN input", optional=true)
+  /**
+   * Tuples received on this input port will be sent to a Top N Widget for display.
+   */
+  @InputPortFieldAnnotation(optional=true)
   public final transient TopNInputPort topNInput = new TopNInputPort(this);
 
-  @InputPortFieldAnnotation(name="pieChart input", optional=true)
+  /**
+   * Tuples received on this input port will be sent to a Pie Chart Widget for display.
+   */
+  @InputPortFieldAnnotation(optional=true)
   public final transient PiechartInputPort pieChartInput = new PiechartInputPort(this);
 
   protected transient boolean isWebSocketConnected = true;

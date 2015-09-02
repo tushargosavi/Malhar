@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +15,18 @@
  */
 package com.datatorrent.lib.stream;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 
 import javax.validation.constraints.Min;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * An implementation of BaseOperator that is used for logging by counting the tuple and then drops it.
  * <p>
- * Counts and then drops the tuple; mainly used for logging. Increments a count
- * and writes the net number (rate) to console. Useful to benchmark other
+ * Increments a count and writes the net number (rate) to console. Useful to benchmark other
  * modules.<br>
  * This operator is neither pass through nor windowed as far as data tuples are
  * concerned. The logging is done during end of window call.<br>
@@ -38,18 +37,22 @@ import org.slf4j.LoggerFactory;
  * <b>Properties</b>: rollingwindowcount: Number of windows to average over.
  * Results are written to the log<br>
  * <br>
- *
+ * @displayName Dev Null Counter
+ * @category Stream Manipulators
+ * @tags count
  * @since 0.3.3
  */
 public class DevNullCounter<K> extends BaseOperator
 {
-	@InputPortFieldAnnotation(name = "data")
+        /**
+	 * Input port that takes objects to be counted in each window.
+	 */
 	public final transient DefaultInputPort<K> data = new DefaultInputPort<K>()
 	{
 		/**
 		 * Process each tuple. Expects upstream node to compute number of tuples in
 		 * that window and send it as an int<br>
-		 * 
+		 *
 		 * @param tuple
 		 */
 		@Override
@@ -71,7 +74,7 @@ public class DevNullCounter<K> extends BaseOperator
 
 	/**
 	 * getter function for debug state
-	 * 
+	 *
 	 * @return debug state
 	 */
 	public boolean getDebug()
@@ -81,7 +84,7 @@ public class DevNullCounter<K> extends BaseOperator
 
 	/**
 	 * setter function for debug state
-	 * 
+	 *
 	 * @param i
 	 *          sets debug to i
 	 */
@@ -100,7 +103,7 @@ public class DevNullCounter<K> extends BaseOperator
 
 	/**
 	 * Sets up all the config parameters. Assumes checking is done and has passed
-	 * 
+	 *
 	 * @param context
 	 */
 	@Override

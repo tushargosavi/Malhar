@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 import org.ektorp.CouchDbConnector;
 import org.ektorp.ViewQuery;
@@ -28,17 +29,17 @@ import org.ektorp.http.HttpClient;
 import org.ektorp.http.StdHttpClient;
 import org.ektorp.impl.StdCouchDbInstance;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
-
 import com.datatorrent.lib.db.Connectable;
 
 /**
- * A Couch-db store implementation.<br/>
+ * Implements a CouchDb store. <br/>
+ * <p>
  * Operates in At-most once recovery mode.
- *
+ * @displayName CouchDb Store
+ * @category Output
+ * @tags couchdb
  * @since 0.3.5
  */
-@ShipContainingJars(classes = {CouchDbConnector.class})
 public class CouchDbStore implements Connectable
 {
   /**
@@ -47,7 +48,7 @@ public class CouchDbStore implements Connectable
   private String dbUrl;
   private String userName;
   private String password;
-  @Nonnull
+  @NotNull
   private String dbName;
 
   private transient CouchDbConnector dbConnector;
@@ -187,7 +188,7 @@ public class CouchDbStore implements Connectable
   }
 
   @Override
-  public boolean connected()
+  public boolean isConnected()
   {
     return dbConnector == null;
   }

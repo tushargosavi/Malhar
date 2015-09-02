@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@ package com.datatorrent.lib.stream;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.api.annotation.Stateless;
 import com.datatorrent.lib.util.BaseKeyValueOperator;
@@ -26,9 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * An implementation of BaseKeyValueOperator that breaks a HashMap tuple into objects.
+ * <p>
  * Takes a HashMap and emits its keys, keyvals, vals; used for breaking up a
- * HashMap tuple into objects (keys, vals, or key/val pairs)
+ * HashMap tuple into objects (keys, vals, or &lt;key,val&gt; pairs)
  * <p>
  * This is a pass through operator<br>
  * <br>
@@ -41,16 +41,17 @@ import java.util.Map;
  * <b>keyval</b>: emits Entry&lt;K,V&gt;<br>
  * <b>val</b>: emits V<br>
  * <br>
- *
+ * @displayName Hash Map To Key Value Pair
+ * @category Tuple Converters
+ * @tags hashmap, key value
  * @since 0.3.3
  */
 @Stateless
 public class HashMapToKeyValPair<K, V> extends BaseKeyValueOperator<K, V>
 {
 	/**
-	 * Input key/vale map port.
+	 * Input port that takes a hashmap of &lt;key,value&rt;.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<HashMap<K, V>> data = new DefaultInputPort<HashMap<K, V>>()
 	{
 		/**
@@ -77,18 +78,18 @@ public class HashMapToKeyValPair<K, V> extends BaseKeyValueOperator<K, V>
 	/**
 	 * Key output port.
 	 */
-	@OutputPortFieldAnnotation(name = "key", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<K> key = new DefaultOutputPort<K>();
 
 	/**
 	 * key/value pair output port.
 	 */
-	@OutputPortFieldAnnotation(name = "keyval", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, V>> keyval = new DefaultOutputPort<KeyValPair<K, V>>();
 
 	/**
 	 * Value output port.
 	 */
-	@OutputPortFieldAnnotation(name = "val", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<V> val = new DefaultOutputPort<V>();
 }

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,10 @@ package com.datatorrent.contrib.zmq;
 import com.datatorrent.api.DefaultInputPort;
 
 /**
- * ZeroMQ output adapter operator, which send data to ZeroMQ message bus.<p><br>
- *
+ * This is the base implementation of a single port ZeroMQ output adapter.&nbsp;
+ * This operator will behave like a publisher that replies to requests.&nbsp;
+ * Subclasses should implement the methods which create ZeroMQ messages from tuples.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: Can have one input port<br>
@@ -41,7 +43,10 @@ import com.datatorrent.api.DefaultInputPort;
  * immutable. If you use mutable tuples and have lots of keys, the benchmarks may differ</td></tr>
  * </table><br>
  * <br>
- *
+ * </p>
+ * @displayName Abstract Single Port ZeroMQ Output
+ * @category Messaging
+ * @tags output operator
  * @since 0.3.2
  */
 public abstract class AbstractSinglePortZeroMQOutputOperator<T> extends AbstractBaseZeroMQOutputOperator
@@ -53,6 +58,9 @@ public abstract class AbstractSinglePortZeroMQOutputOperator<T> extends Abstract
    */
   public abstract void processTuple(T tuple);
 
+  /**
+   * This is the input port which provides the tuples that are written out to ZeroMQ.
+   */
   public final transient DefaultInputPort<T> inputPort = new DefaultInputPort<T>()
   {
     @Override

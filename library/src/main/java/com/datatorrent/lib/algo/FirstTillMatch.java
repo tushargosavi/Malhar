@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,22 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OperatorAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.BaseMatchOperator;
 import java.util.HashMap;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+
+import com.datatorrent.lib.util.BaseMatchOperator;
+
 /**
- *
+ * This operator filters the incoming stream of key value pairs by obtaining the values corresponding to a specified key,
+ * and comparing those values to a specified number.&nbsp;For each window, all key value pairs are emitted by the operator until a value satisfying the comparison is encountered.
+ * <p>
  * All key.val pairs with val sub-classed from Number are emitted till the first match;  A compare metric is done based on the property "key",
- * "value", and "cmp". Then on no tuple is emitted in that window. The comparison is done by getting double value of the Number.<p>
+ * "value", and "cmp". Then on no tuple is emitted in that window. The comparison is done by getting double value of the Number.
+ * </p>
+ * <p>
  * This module is a pass through<br>
  * <br>
  * <b>StateFull : Yes, </b> tuple are processed in current window. <br>
@@ -47,6 +51,11 @@ import java.util.HashMap;
  * Value must be able to convert to a "double"<br>
  * Compare string, if specified, must be one of "lte", "lt", "eq", "neq", "gt", "gte"<br>
  * <br>
+ * </p>
+ *
+ * @displayName Emit Keyval Pairs Until Match (Number)
+ * @category Rules and Alerts
+ * @tags filter, key value, numeric
  *
  * @since 0.3.2
  */
@@ -57,11 +66,10 @@ public class FirstTillMatch<K, V extends Number> extends BaseMatchOperator<K, V>
    * Tuple emitted flag.
    */
   boolean emitted = false;
-  
+
   /**
-   * Input port.
+   * The input port on which incoming key value pairs are received.
    */
-  @InputPortFieldAnnotation(name="data")
   public final transient DefaultInputPort<HashMap<K, V>> data = new DefaultInputPort<HashMap<K, V>>()
   {
     /**
@@ -88,9 +96,8 @@ public class FirstTillMatch<K, V extends Number> extends BaseMatchOperator<K, V>
   };
 
   /**
-   * Output port.
+   * The output port on which key value pairs are emitted until the first match.
    */
-  @OutputPortFieldAnnotation(name="first")
   public final transient DefaultOutputPort<HashMap<K, V>> first = new DefaultOutputPort<HashMap<K, V>>();
 
   /**

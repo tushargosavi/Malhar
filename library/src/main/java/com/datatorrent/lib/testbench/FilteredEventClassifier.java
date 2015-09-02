@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.testbench;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
@@ -26,9 +26,11 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- *
- * Takes in a stream data and filters the tuples, and only emits tuples as per pass filter numbers provided
- * on output port filter. The aim is to create another stream representing a subsection of incoming load<p>
+ * This operator takes in a stream of tuples
+ * and randomly emits them based on the specified total_filter and pass_filter values.&nbsp;
+ * Emitted tuples are modified based on the specified key map and key weights.
+ * <p>
+ * The aim is to create another stream representing a subsection of incoming load<p>
  * <br>
  * Examples of pairs include<br>
  * publisher,advertizer<br>
@@ -59,12 +61,17 @@ import java.util.Random;
  * <br>
  * <b>Benchmarks</b>: Blast as many tuples as possible in inline mode<br>
  * This node has been benchmarked at over 20 million tuples/second in local/inline mode<br>
- * <br>
- *
+ * </p>
+ * @displayName Filtered Event Classifier
+ * @category Test Bench
+ * @tags filter
  * @since 0.3.2
  */
 public class FilteredEventClassifier<T> extends BaseOperator
 {
+  /**
+   * The input port on which tuples are received.
+   */
   public final transient DefaultInputPort<HashMap<String, T>> data = new DefaultInputPort<HashMap<String, T>>()
   {
     @Override
@@ -110,6 +117,10 @@ public class FilteredEventClassifier<T> extends BaseOperator
       }
     }
   };
+
+  /**
+   * The output port which emits filtered and modified tuples.
+   */
   public final transient DefaultOutputPort<HashMap<String, T>> filter = new DefaultOutputPort<HashMap<String, T>>();
   HashMap<String, T> keys = new HashMap<String, T>();
   HashMap<Integer, String> wtostr_index = new HashMap<Integer, String>();

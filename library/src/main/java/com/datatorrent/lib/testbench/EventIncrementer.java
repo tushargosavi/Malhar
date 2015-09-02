@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.testbench;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.lib.util.KeyValPair;
@@ -24,19 +24,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Takes in a seed stream on port seed and then on increments this data based on increments on port increment. Data is immediately emitted on output port data.
+ * Creates a random movement by taking in a seed stream and incrementing this data.
+ * <p>
+ * Takes in a seed stream on port seed and then increments this data on port increment. Data is immediately emitted on output port data.
  * Emits number of tuples on port count<p>
- * The aim is to create a random movement
+ * The aim is to create a random movement.
  * <br>
  * Examples of application includes<br>
  * random motion<br>
  * <br>
  * <br>
- * Description: tbd
  * <br>
  * <b>Tuple Schema</b>: Each tuple is HashMap<String, ArrayList> on both the ports. Currently other schemas are not supported<br>
  * <b>Port Interface</b><br>
- * <b>seed</b>: The seed data for setting up the incrementor data to work on<br>
+ * <b>seed</b>: The seed data for setting up the incrementer data to work on<br>
  * <b>increment</b>: Small random increments to the seed data. This now creates a randomized change in the seed<br>
  * <b>data</b>: Output of seed + increment<br>
  * <b>count</b>: Emits number of processed tuples per window<br>
@@ -50,11 +51,16 @@ import java.util.Map;
  * Processing tuples on seed port are at 3.5 Million tuples/sec<br>
  * Processing tuples on increment port are at 10 Million tuples/sec<br>
  * <br>
- *
+ * @displayName Event Incrementer
+ * @category Test Bench
+ * @tags increment, hashmap
  * @since 0.3.2
  */
 public class EventIncrementer extends BaseOperator
 {
+   /**
+   * Input seed port that takes a hashmap of &lt;string,arraylist of integers&gt; which provides seed data for setting up the incrementer data to work on.
+   */
   public final transient DefaultInputPort<HashMap<String, ArrayList<Integer>>> seed = new DefaultInputPort<HashMap<String, ArrayList<Integer>>>()
   {
     @Override
@@ -80,6 +86,10 @@ public class EventIncrementer extends BaseOperator
       }
     }
   };
+
+  /**
+   * Input increment port that takes a hashmap of &lt;string,hashmap of &lt;string,number&gt;&gt; which provides small random increments to the seed data.
+   */
   public final transient DefaultInputPort<HashMap<String, HashMap<String, Integer>>> increment = new DefaultInputPort<HashMap<String, HashMap<String, Integer>>>()
   {
     @Override
@@ -114,7 +124,15 @@ public class EventIncrementer extends BaseOperator
       }
     }
   };
+
+  /**
+   * Output data port that emits a hashmap of &lt;string,string&gt; which is the addition of seed and increment.
+   */
   public final transient DefaultOutputPort<HashMap<String, String>> data = new DefaultOutputPort<HashMap<String, String>>();
+
+  /**
+   * Output count port that emits a hashmap of &lt;string,integer&gt; which contains number of processed tuples per window.
+   */
   public final transient DefaultOutputPort<HashMap<String, Integer>> count = new DefaultOutputPort<HashMap<String, Integer>>();
   public static final String OPORT_COUNT_TUPLE_COUNT = "count";
   HashMap<String, ArrayList<KeyValPair<String, Double>>> vmap = new HashMap<String, ArrayList<KeyValPair<String, Double>>>();
@@ -127,6 +145,10 @@ public class EventIncrementer extends BaseOperator
   double delta = 1;
   int tuple_count = 0;
 
+  /**
+   * The max increment value.
+   * @param i
+   */
   public void setDelta(double i)
   {
     delta = i;

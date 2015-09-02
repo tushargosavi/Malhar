@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,16 +35,18 @@ import com.datatorrent.api.Operator;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
- * <p>
- * MultiWindowDimensionAggregation class.
- * </p>
- * This class aggregates the value of given dimension across windows
+ * This class aggregates the value of given dimension across windows.
+ * <p></p>
+ * @displayName Multi Window Dimension Aggregation
+ * @category Stats and Aggregations
+ * @tags aggregation
  *
  * @since 0.3.4
  */
 public class MultiWindowDimensionAggregation implements Operator
 {
 
+  @SuppressWarnings("unused")
   private static final Logger logger = LoggerFactory.getLogger(MultiWindowDimensionAggregation.class);
 
   public enum AggregateOperation {
@@ -64,7 +66,13 @@ public class MultiWindowDimensionAggregation implements Operator
 
   private transient List<Pattern> patternList;
   private transient int applicationWindowSize = 500;
+  /**
+   * This is the output port which emits aggregated dimensions.
+   */
   public final transient DefaultOutputPort<Map<String, DimensionObject<String>>> output = new DefaultOutputPort<Map<String, DimensionObject<String>>>();
+  /**
+   * This is the input port which receives multi dimensional data.
+   */
   public final transient DefaultInputPort<Map<String, Map<String, Number>>> data = new DefaultInputPort<Map<String, Map<String, Number>>>() {
     @Override
     public void process(Map<String, Map<String, Number>> tuple)

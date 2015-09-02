@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.datatorrent.lib.streamquery;
 
 import java.util.ArrayList;
@@ -9,7 +24,8 @@ import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Operator;
 
 /**
- * This operator provides sql top select query semantic on live data stream. <br>
+ * An implementation of Operator that provides sql top select query semantic on live data stream. <br>
+ * <p>
  * Stream rows passing condition are emitted on output port stream. <br>
  * <br>
  * <b>StateFull : NO,</b> all row data is processed in current time window. <br>
@@ -25,17 +41,19 @@ import com.datatorrent.api.Operator;
  * <b> topValue : </b> top values count. <br>
  * <b> isPercentage : </b> top values count is percentage flag.
  * <br>
- *
- * @since 0.3.4
+ * @displayName Select Top
+ * @category Stream Manipulators
+ * @tags sql select, sql top operator
+ *  @since 0.3.4
  */
 public class SelectTopOperator implements Operator
 {
   private ArrayList<Map<String, Object>> list;
   private int topValue = 1;
   private boolean isPercentage = false;
-  
+
   /**
-   * Input port.
+   * Input port that takes a map of &lt;string,object&gt;.
    */
   public final transient DefaultInputPort<Map<String, Object>> inport = new DefaultInputPort<Map<String, Object>>() {
     @Override
@@ -44,19 +62,19 @@ public class SelectTopOperator implements Operator
       list.add(tuple);
     }
   };
-  
+
   @Override
   public void setup(OperatorContext context)
   {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void teardown()
   {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -101,7 +119,7 @@ public class SelectTopOperator implements Operator
   }
 
   /**
-   * Output port.
+   * Output port that emits a map of &lt;string,object&gt;.
    */
   public final transient DefaultOutputPort<Map<String, Object>> outport =  new DefaultOutputPort<Map<String, Object>>();
 }

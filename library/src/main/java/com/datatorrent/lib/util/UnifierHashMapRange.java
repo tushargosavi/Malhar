@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,15 +23,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- * Combiner for an output port that emits object with Map<K,ArrayList<V>(2)> interface and has the processing done
- * with round robin partition. The first element in the ArrayList is high, the next is low
- *
+ * This unifier consumes hash maps, where the key is an object and the value is a number.&nbsp;
+ * The unifier emits the minimum and maximum value for each key in a map at the end of each application window.
+ * <p>
+ * This unifier uses round robin partitioning.
+ * </p>
+ * @displayName Unifier Hash Map Range
+ * @category Algorithmic
+ * @tags numeric
  * @since 0.3.2
  */
 public class UnifierHashMapRange<K, V extends Number> implements Unifier<HashMap<K, HighLow<V>>>
 {
   public HashMap<K, HighLow<V>> mergedTuple = new HashMap<K, HighLow<V>>();
+  /**
+   * This is the output port that emits key value pairs which map keys to a minimum and maximum.
+   */
   public final transient DefaultOutputPort<HashMap<K, HighLow<V>>> mergedport = new DefaultOutputPort<HashMap<K, HighLow<V>>>();
 
   /**

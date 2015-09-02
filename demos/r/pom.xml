@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.datatorrent</groupId>
+  <version>3.2.0-SNAPSHOT</version>
+  <artifactId>r-demo</artifactId>
+  <packaging>jar</packaging>
+
+ <name>DataTorrent R Demo</name>
+  <description>DataTorrent demo applications for using R.</description>
+
+  <parent>
+    <groupId>com.datatorrent</groupId>
+    <artifactId>malhar-demos</artifactId>
+    <version>3.2.0-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <skipTests>true</skipTests>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>datatorrent-3rd-party</id>
+      <name>Embedded repository for dependencies not available online</name>
+      <url>https://www.datatorrent.com/maven/content/repositories/thirdparty</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+      <releases>
+        <updatePolicy>daily</updatePolicy>
+      </releases>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.rosuda</groupId>
+      <artifactId>jri</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.rosuda</groupId>
+      <artifactId>rengine</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.rosuda</groupId>
+      <artifactId>jriengine</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.datatorrent</groupId>
+      <artifactId>malhar-contrib</artifactId>
+      <version>${datatorrent.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+</project>

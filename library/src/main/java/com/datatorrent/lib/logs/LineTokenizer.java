@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,12 @@
 package com.datatorrent.lib.logs;
 
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
+import com.datatorrent.api.annotation.*;
 import com.datatorrent.lib.util.BaseLineTokenizer;
 
 /**
- *
+ * This operator splits lines into tokens and emits token strings on the output port.
  * <p>
- * Splits lines into tokens and emits token Strings on outpu port.
  * This module is a pass through. Ideal for applications like word count, or log
  * processing<br>
  * <br>
@@ -37,17 +36,25 @@ import com.datatorrent.lib.util.BaseLineTokenizer;
  * <b>splitby</b>: The characters used to split the line. Default is ";\t "<br>
  * <br>
  * <br>
+ * </p>
+ * @displayName Line Tokenizer
+ * @category Tuple Converters
+ * @tags string
  *
  * @since 0.3.3
  */
+@Stateless
+@OperatorAnnotation(partitionable=true)
 public class LineTokenizer extends BaseLineTokenizer
 {
-	@OutputPortFieldAnnotation(name = "tokens")
+  /**
+   * The is the output port that emits string tokens.
+   */
 	public final transient DefaultOutputPort<String> tokens = new DefaultOutputPort<String>();
 
 	/**
 	 * emits tokens on port "tokens" if tok is not empty
-	 * 
+	 *
 	 * @param tok
 	 */
 	@Override

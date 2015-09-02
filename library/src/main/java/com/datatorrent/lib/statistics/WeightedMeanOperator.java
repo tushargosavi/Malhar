@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,16 +16,15 @@
 package com.datatorrent.lib.statistics;
 
 import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OperatorAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 
 /**
- * This operator computes weighted mean of incoming data. <br>
- * <br>
+ * An implementation of BaseOperator that computes weighted mean of incoming data. <br>
+ * <p>
  * <b>Input Port(s) : </b><br>
  * <b>data : </b> Data values input port. <br>
  * <b>weight : </b> Current input data weight. <br>
@@ -36,7 +35,9 @@ import com.datatorrent.lib.util.BaseNumberValueOperator;
  * <b>StateFull : Yes</b>, value are aggregated over application window. <br>
  * <b>Partitions : No</b>, no will yeild wrong results. <br>
  * <br>
- *
+ * @displayName Weighted Mean
+ * @category Stats and Aggregations
+ * @tags numeric, math, calculation, sum, count, mean operator, average
  * @since 0.3.4
  */
 @OperatorAnnotation(partitionable = false)
@@ -44,17 +45,16 @@ public class WeightedMeanOperator<V extends Number>  extends BaseNumberValueOper
 {
   // aggregate weighted sum
   private double weightedSum;
-  
+
   // aggregate weighted count
   private double weightedCount;
-  
+
   // current input weight
   private double currentWeight;
-  
+
   /**
-   * Input data port.
+   * Input data port that takes a number.
    */
-  @InputPortFieldAnnotation(name = "data")
   public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
   {
     /**
@@ -67,11 +67,10 @@ public class WeightedMeanOperator<V extends Number>  extends BaseNumberValueOper
       weightedCount += currentWeight;
     }
   };
-    
+
   /**
-   * Input weight port.
+   * Input weight port that takes a number.
    */
-  @InputPortFieldAnnotation(name = "weight")
   public final transient DefaultInputPort<V> weight = new DefaultInputPort<V>()
   {
     /**
@@ -83,15 +82,14 @@ public class WeightedMeanOperator<V extends Number>  extends BaseNumberValueOper
       if (tuple.doubleValue() != 0.0) currentWeight = tuple.doubleValue();
     }
   };
-  
+
   /**
-   * Output port
+   * Output port that emits weighted mean.
    */
-  @OutputPortFieldAnnotation(name = "mean")
   public final transient DefaultOutputPort<V> mean = new DefaultOutputPort<V>();
-  
+
   @Override
-  public void setup(OperatorContext arg0) 
+  public void setup(OperatorContext arg0)
   {
     currentWeight = 1.0;
   }
@@ -119,24 +117,22 @@ public class WeightedMeanOperator<V extends Number>  extends BaseNumberValueOper
     Number val;
     switch (getType()) {
       case DOUBLE:
-        val = new Double(num.doubleValue() / weightedCount);
+        val = num.doubleValue() / weightedCount;
         break;
       case INTEGER:
-        int icount = (int) (num.intValue() / weightedCount);
-        val = new Integer(icount);
+        val = (int) (num.intValue() / weightedCount);
         break;
       case FLOAT:
         val = new Float(num.floatValue() / weightedCount);
         break;
       case LONG:
-        val = new Long((long) (num.longValue() / weightedCount));
+        val = (long) (num.longValue() / weightedCount);
         break;
       case SHORT:
-        short scount = (short) (num.shortValue() / weightedCount);
-        val = new Short(scount);
+        val = (short) (num.shortValue() / weightedCount);
         break;
       default:
-        val = new Double(num.doubleValue() / weightedCount);
+        val = num.doubleValue() / weightedCount;
         break;
     }
     return (V) val;

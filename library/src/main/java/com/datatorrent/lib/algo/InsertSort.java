@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,15 +22,17 @@ import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Operator.Unifier;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 
 import com.datatorrent.lib.util.AbstractBaseSortOperator;
 
 /**
+ * This operator takes the values it receives each window and outputs them in ascending order at the end of each window.
+ * <p>
  * Takes a stream of key value pairs via input port "data". The incoming tuple
  * is merged into already existing sorted list. At the end of the window the
  * entire sorted list is emitted on output port "sort"
- * <p/>
+ * </p>
+ * <p>
  * <br>
  * <b>StateFull : Yes, </b> tuple are compare across application window(s). <br>
  * <b>Partitions : Yes, </b> the operator itself serves as the unifier.
@@ -40,6 +42,11 @@ import com.datatorrent.lib.util.AbstractBaseSortOperator;
  * <b>datalist</b>: expects ArrayList&lt;K&gt;<br>
  * <b>sortlist</b>: emits ArrayList&lt;K&gt;, must be connected<br>
  * <br>
+ * </p>
+ *
+ * @displayName Sort Ascending
+ * @category Stream Manipulators
+ * @tags rank, sort
  *
  * @since 0.3.3
  */
@@ -50,9 +57,9 @@ public class InsertSort<K> extends AbstractBaseSortOperator<K> implements
   Unifier<ArrayList<K>>
 {
   /**
-   * Input port that takes in one tuple at a time
+   * The input port on which individual tuples are received for sorting.
    */
-  @InputPortFieldAnnotation(name = "data", optional = true)
+  @InputPortFieldAnnotation(optional = true)
   public final transient DefaultInputPort<K> data = new DefaultInputPort<K>()
   {
     /**
@@ -65,9 +72,9 @@ public class InsertSort<K> extends AbstractBaseSortOperator<K> implements
     }
   };
   /**
-   * Input port that takes in an array of Objects to insert
+   * The input port on which lists of tuples are received for sorting.
    */
-  @InputPortFieldAnnotation(name = "datalist", optional = true)
+  @InputPortFieldAnnotation(optional = true)
   public final transient DefaultInputPort<ArrayList<K>> datalist = new DefaultInputPort<ArrayList<K>>()
   {
     /**
@@ -81,9 +88,8 @@ public class InsertSort<K> extends AbstractBaseSortOperator<K> implements
   };
 
   /**
-   * Output port.
+   * The output port on which a sorted ascending list of tuples is emitted.
    */
-  @OutputPortFieldAnnotation(name = "sort")
   public final transient DefaultOutputPort<ArrayList<K>> sort = new DefaultOutputPort<ArrayList<K>>()
   {
     @Override

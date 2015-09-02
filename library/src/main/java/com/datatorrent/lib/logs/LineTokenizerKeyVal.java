@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,15 +16,18 @@
 package com.datatorrent.lib.logs;
 
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
+import com.datatorrent.api.annotation.*;
 import com.datatorrent.lib.util.BaseLineTokenizer;
 import com.datatorrent.lib.util.UnifierHashMap;
-
 import java.util.HashMap;
 
 /**
- *
- * Splits lines into tokens, and tokens into sub-tokens and emits key,val pairs in a HashMap. Useful to convert String (log lines) into a POJO (HashMap)<p>
+ * This operator splits lines into tokens, and tokens into sub-tokens.&nbsp;
+ * Emitted tuples are key value pairs where tokens are the keys and sub tokens are the values.
+ * <p>
+ * Useful to convert String (log lines) into a POJO (HashMap)
+ * </p>
+ * <p>
  * This module is a pass through<br>
  * <br>
  * <b>StateFull : No, </b> tokens are processed in current window. <br>
@@ -40,18 +43,27 @@ import java.util.HashMap;
  * <b>splitby</b>: The characters used to split the line. Default is ";\t "<br>
  * <b>splittokenby</b>: The characters used to split a token into key,val pair. Default is "", i.e. tokens are not split, and key is set to token, and val is null<br>
  * <br>
+ * </p>
+ * @displayName Line Tokenizer Key Value
+ * @category Tuple Converters
+ * @tags string, key value
  *
  * @since 0.3.2
  */
+@Stateless
+@OperatorAnnotation(partitionable=true)
 public class LineTokenizerKeyVal extends BaseLineTokenizer
 {
-  @OutputPortFieldAnnotation(name = "tokens")
+  /**
+   * This output port emits key value pairs where the key is a token in an input string,
+   * and the value is a sub token of the key token.
+   */
   public final transient DefaultOutputPort<HashMap<String, String>> tokens = new DefaultOutputPort<HashMap<String, String>>()
   {
     @Override
     public Unifier<HashMap<String, String>> getUnifier()
     {
-      return new UnifierHashMap<String, String>();  
+      return new UnifierHashMap<String, String>();
     }
   };
 
@@ -117,9 +129,6 @@ public class LineTokenizerKeyVal extends BaseLineTokenizer
     }
     else if (sval.isEmpty()) {
       sval = subtok;
-    }
-    else {
-      // emit error(?)
     }
   }
 }

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,16 +15,18 @@
  */
 package com.datatorrent.contrib.zmq;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
-import com.datatorrent.api.BaseOperator;
-import com.datatorrent.api.Context.OperatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 
+import com.datatorrent.common.util.BaseOperator;
+import com.datatorrent.api.Context.OperatorContext;
+
 /**
- * ZeroMQ output adapter operator, which send data to ZeroMQ message bus.<p><br>
- *
+ * This is the base implementation of a ZeroMQ output adapter.&nbsp;
+ * This operator will behave like a publisher that replies to requests.&nbsp;
+ * A concrete operator should be created from this skeleton implementation.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: Can have any number of input ports<br>
@@ -47,11 +49,12 @@ import org.zeromq.ZMQ;
  * <tr><td>One tuple per key per window per port</td><td><b>400 thousand K,V pairs/s</td><td>Out-bound rate is the main determinant of performance. Operator can process about 400 thousand unique (k,v immutable pairs) tuples/sec as ZeroMQ DAG. Tuples are assumed to be
  * immutable. If you use mutable tuples and have lots of keys, the benchmarks may differ</td></tr>
  * </table><br>
- * <br>
- *
+ * </p>
+ * @displayName Abstract Base ZeroMQ Input
+ * @category Messaging
+ * @tags output operator
  * @since 0.3.2
  */
-@ShipContainingJars(classes={org.zeromq.ZMQ.Socket.class})
 public abstract class AbstractBaseZeroMQOutputOperator extends BaseOperator
 {
   private static final Logger logger = LoggerFactory.getLogger(AbstractBaseZeroMQInputOperator.class);

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,50 +21,54 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
- * Abstract class for select aggregate function implementation.
+ * A base class for select aggregate function implementation.&nbsp; Subclasses should provide the
+   implementation for aggregate compute functions.
+ * <p>
  * <br>
  * <b>Properties : </b> <br>
  * <b>column : </b> Column name for aggregation.
  * <b>alias : </b> Output value alias name.
- *
+ * @displayName Function Index
+ * @category Stream Manipulators
+ * @tags sql aggregate
  * @since 0.3.4
  */
-abstract public class FunctionIndex 
+abstract public class FunctionIndex
 {
   /**
    * Column name.
    */
   @NotNull
   protected String column;
-  
+
   /**
    * Alias name.
    */
   protected String alias;
-  
+
   /**
    * @param column Column name for aggregation.
    * @param alias Output value alias name.
    */
-  public FunctionIndex(@NotNull String column, String alias) 
+  public FunctionIndex(@NotNull String column, String alias)
   {
     this.column = column;
     this.alias = alias;
   }
-  
+
   /**
    * Aggregate compute function, implementation in sub class.
    * @param rows Tuple list over application window.
    * @return aggregate result object.
    */
   abstract public Object compute(@NotNull ArrayList<Map<String, Object>> rows) throws Exception;
-  
+
   /**
    * Get aggregate output value name.
    * @return name string.
    */
   abstract protected String aggregateName();
-  
+
   /**
    * Apply compute function to given rows and store result in collect by output value name.
    * @param  rows Tuple list over application window.

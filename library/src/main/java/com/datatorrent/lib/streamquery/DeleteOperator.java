@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +17,14 @@ package com.datatorrent.lib.streamquery;
 
 import java.util.Map;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.lib.streamquery.condition.Condition;
 
 /**
- * This operator provides sql select query semantic on live data stream. <br>
+ * An implementation of BaseOperator that provides sql delete query semantic on live data stream. <br>
+ * <p>
  * Stream rows passing condition are emitted on output port stream. <br>
  * <br>
  * <b>StateFull : NO,</b> all row data is processed in current time window. <br>
@@ -39,7 +40,9 @@ import com.datatorrent.lib.streamquery.condition.Condition;
  * <b> condition : </b> Select condition for selecting rows. <br>
  * <b> columns : </b> Column names/aggregate functions for select. <br>
  * <br>
- *
+ * @displayName Delete
+ * @category Stream Manipulators
+ * @tags sql delete operator
  * @since 0.3.3
  */
 public class DeleteOperator extends BaseOperator
@@ -59,7 +62,7 @@ public class DeleteOperator extends BaseOperator
   }
 
   /**
-   * Input port.
+   * Input port that takes a map of &lt;string,object&gt;.
    */
   public final transient DefaultInputPort<Map<String, Object>> inport = new DefaultInputPort<Map<String, Object>>()
   {
@@ -74,7 +77,7 @@ public class DeleteOperator extends BaseOperator
   };
 
   /**
-   * Output port.
+   * Output port emits a map of &lt;string,object&gt;.
    */
   public final transient DefaultOutputPort<Map<String, Object>> outport = new DefaultOutputPort<Map<String, Object>>();
 }

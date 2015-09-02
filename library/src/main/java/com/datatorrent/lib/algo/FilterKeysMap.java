@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,21 +15,26 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.api.annotation.Stateless;
-import com.datatorrent.lib.util.BaseKeyOperator;
-import com.datatorrent.lib.util.UnifierHashMap;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.validation.constraints.NotNull;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+import com.datatorrent.api.annotation.Stateless;
+
+import com.datatorrent.lib.util.BaseKeyOperator;
+import com.datatorrent.lib.util.UnifierHashMap;
+
 /**
- *
+ * This operator filters the incoming stream of key value pairs based on the keys specified by property "keys"..
+ * <p>
  * Filters the incoming stream based of keys specified by property "keys". If
- * property "inverse" is set to "true", then all keys except those specified by "keys" are emitted<p>
+ * property "inverse" is set to "true", then all keys except those specified by "keys" are emitted
+ * </p>
+ * <p>
  * Operator assumes that the key, val pairs are immutable objects. If this operator has to be used for mutable objects,
  * override "cloneKey()" to make copy of K, and "cloneValue()" to make copy of V.<br>
  * This is a pass through node<br>
@@ -44,10 +49,16 @@ import javax.validation.constraints.NotNull;
  * <b>Properties</b>:<br>
  * <b>keys</b>: The keys to pass through, rest are filtered/dropped. A comma separated list of keys<br>
  * <br>
+ * </p>
+ *
+ * @displayName Filter Keyval Pairs By Key Generic
+ * @category Rules and Alerts
+ * @tags filter, key value
  *
  * @since 0.3.2
  */
 @Stateless
+@OperatorAnnotation(partitionable = true)
 public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
 {
   /**
@@ -55,16 +66,15 @@ public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
    */
   @NotNull()
   HashMap<K, V> keys = new HashMap<K, V>();
-  
+
   /**
    * Emits key not in filter map.
    */
   boolean inverse = false;
-  
+
   /**
-   * Input port.
+   * The input port on which key value pairs are received.
    */
-  @InputPortFieldAnnotation(name="data")
   public final transient DefaultInputPort<Map<K, V>> data = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -91,9 +101,8 @@ public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
   };
 
   /**
-   * Output port.
+   * The output port on which filtered key value pairs are emitted.
    */
-  @OutputPortFieldAnnotation(name="filter")
   public final transient DefaultOutputPort<HashMap<K, V>> filter = new DefaultOutputPort<HashMap<K, V>>()
   {
     @Override
@@ -104,7 +113,7 @@ public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
   };
 
   /**
-   * getter function for parameter inverse
+   * If true then only matches are emitted. If false then only non matches are emitted.
    * @return inverse
    */
   public boolean getInverse() {
@@ -113,7 +122,7 @@ public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
 
 
   /**
-   * True means match; False means unmatched
+   * Sets the inverse property. If true then only matches are emitted. If false then only non matches are emitted.
    * @param val
    */
   public void setInverse(boolean val) {
@@ -139,6 +148,24 @@ public class FilterKeysMap<K,V> extends BaseKeyOperator<K>
         keys.put(e, null);
       }
     }
+  }
+
+  /**
+   * The keys to filter. The values in the map should be null.
+   * @param keys
+   */
+  public void setKeys(HashMap<K, V> keys)
+  {
+    this.keys = keys;
+  }
+
+  /**
+   * Gets the keys to filter.
+   * @return Returns a map containing the keys.
+   */
+  public HashMap<K, V> getKeys()
+  {
+    return keys;
   }
 
   /*

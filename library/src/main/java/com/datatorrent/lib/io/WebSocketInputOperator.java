@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
 package com.datatorrent.lib.io;
 
 import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfigBean;
 import com.ning.http.client.websocket.WebSocket;
@@ -25,35 +24,35 @@ import com.ning.http.client.websocket.WebSocketUpgradeHandler;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
+import org.apache.commons.lang3.ClassUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * Reads via WebSocket from given URL as input stream<p>
- * <br>
- * Incoming data is interpreted as JSONObject and converted to {@link java.util.Map}.<br>
- * <br>
+ * Reads via WebSocket from given URL as input stream.&nbsp;
+ * Incoming data is interpreted as JSONObject and converted to {@link java.util.Map}.
+ * <p></p>
+ * @displayName JSON Map Input
+ * @category Input
+ * @tags http, websocket
  *
  * @since 0.3.2
  */
-@ShipContainingJars(classes = {com.ning.http.client.websocket.WebSocket.class})
-public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<String, String>> implements Runnable
+public class WebSocketInputOperator<T> extends SimpleSinglePortInputOperator<T> implements Runnable
 {
+  private static final long serialVersionUID = 201506160829L;
   private static final Logger LOG = LoggerFactory.getLogger(WebSocketInputOperator.class);
   /**
    * Timeout interval for reading from server. 0 or negative indicates no timeout.
    */
   public int readTimeoutMillis = 0;
-  @NotNull
+  //Do not make this @NotNull since null is a valid value for some child classes
   private URI uri;
   private transient AsyncHttpClient client;
   private transient final JsonFactory jsonFactory = new JsonFactory();
@@ -62,6 +61,7 @@ public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<St
   private transient boolean connectionClosed = false;
   private transient boolean shutdown = false;
   private int ioThreadMultiplier = 1;
+  protected boolean skipNull = false;
 
   /**
    * Gets the URI for WebSocket connection
@@ -94,7 +94,7 @@ public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<St
   }
 
   /**
-   * Sets the IO Thread multiplier for AsyncWebSocket connection
+   * The number of threads to use for the websocket connection.
    *
    * @param ioThreadMultiplier
    */
@@ -138,9 +138,9 @@ public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<St
   }
 
   @SuppressWarnings("unchecked")
-  protected Map<String, String> convertMessageToMap(String message) throws IOException
+  protected T convertMessage(String message) throws IOException
   {
-    return mapper.readValue(message, HashMap.class);
+    return (T)mapper.readValue(message, Object.class);
   }
 
   private transient MonitorThread monThread;
@@ -179,7 +179,7 @@ public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<St
         public Thread newThread(Runnable r)
         {
           Thread t = new Thread(r);
-          t.setName(WebSocketInputOperator.this.getName() + "-AsyncHttpClient-" + count++);
+          t.setName(ClassUtils.getShortClassName(this.getClass()) + "-AsyncHttpClient-" + count++);
           return t;
         }
 
@@ -192,8 +192,10 @@ public class WebSocketInputOperator extends SimpleSinglePortInputOperator<Map<St
         {
           LOG.debug("Got: " + string);
           try {
-            Map<String, String> o = convertMessageToMap(string);
-            outputPort.emit(o);
+            T o = convertMessage(string);
+            if(!(skipNull && o == null)) {
+              outputPort.emit(o);
+            }
           }
           catch (IOException ex) {
             LOG.error("Got exception: ", ex);

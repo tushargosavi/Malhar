@@ -1,12 +1,28 @@
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.datatorrent.lib.codec;
 
-import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
-import com.datatorrent.common.util.Slice;
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
+import com.google.common.base.Preconditions;
+
+import com.datatorrent.netlet.util.Slice;
 
 /**
  * Tests for {@link KryoSerializableStreamCodec}
@@ -17,8 +33,9 @@ public class KryoStreamCodecTest {
     public static class TestTuple {
         final Integer field;
 
-        public TestTuple(){
-            this.field= new Integer(0);
+        @SuppressWarnings("unused")
+        private TestTuple(){
+            this.field= 0;
         }
 
         public TestTuple(Integer x){
@@ -55,12 +72,12 @@ public class KryoStreamCodecTest {
         TestKryoStreamCodec decoder = new TestKryoStreamCodec();
 
         KryoSerializableStreamCodec<Object> objCoder = new KryoSerializableStreamCodec<Object>();
-        Slice sliceOfObj = objCoder.toByteArray(new Integer(10));
-        Object decodedObj = objCoder.fromByteArray(sliceOfObj);
+        Slice sliceOfObj = objCoder.toByteArray(10);
+        Integer decodedObj = (Integer) objCoder.fromByteArray(sliceOfObj);
 
-        Assert.assertEquals("codec", decodedObj, new Integer(10));
+        Assert.assertEquals("codec", decodedObj.intValue(), 10);
 
-        TestTuple tp= new TestTuple(new Integer(5));
+        TestTuple tp= new TestTuple(5);
 
         Slice dsp1 = coder.toByteArray(tp);
         Slice dsp2 = coder.toByteArray(tp);

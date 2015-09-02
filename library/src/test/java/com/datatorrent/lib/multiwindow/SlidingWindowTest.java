@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,17 @@
  */
 package com.datatorrent.lib.multiwindow;
 
-import static junit.framework.Assert.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.testbench.CollectorTestSink;
 import com.google.common.collect.Lists;
+
+import com.datatorrent.api.DefaultOutputPort;
+
+import com.datatorrent.lib.testbench.CollectorTestSink;
 
 /**
  * Unit tests for
@@ -36,13 +36,11 @@ public class SlidingWindowTest
 
 	public class TestSlidingWindow extends AbstractSlidingWindow<String, List<String>>
 	{
-		@OutputPortFieldAnnotation(name = "out")
 		public final transient DefaultOutputPort<ArrayList<String>> out = new DefaultOutputPort<ArrayList<String>>();
 
 		ArrayList<String> tuples = new ArrayList<String>();
 
-		@Override
-		void processDataTuple(String tuple)
+		@Override protected void processDataTuple(String tuple)
 		{
 			tuples.add(tuple);
 		}
@@ -96,11 +94,11 @@ public class SlidingWindowTest
 		oper.data.process("b3");
 		oper.endWindow();
 
-		assertEquals("number emitted tuples", 4,
-				swinSink.collectedTuples.size());
+		Assert.assertEquals("number emitted tuples", 4,
+      swinSink.collectedTuples.size());
 		
-		assertEquals("Invalid second stream window state.", oper.getStreamingWindowState(1), Lists.newArrayList("a2", "b2"));
-		assertEquals("Invalid expired stream window state.", oper.lastExpiredWindowState, Lists.newArrayList("a0", "b0"));
+		Assert.assertEquals("Invalid second stream window state.", oper.getStreamingWindowState(1), Lists.newArrayList("a2", "b2"));
+		Assert.assertEquals("Invalid expired stream window state.", oper.lastExpiredWindowState, Lists.newArrayList("a0", "b0"));
 
 	}
 }

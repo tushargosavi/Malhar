@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,24 +15,24 @@
  */
 package com.datatorrent.contrib.hbase;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 
 /**
- * The base class for the HBase operators.<br>
- *
+ * Implements the base class for the HBase operators. <br>
+ * <p>
  * <br>
  * The HBase operators extend this class. The base class contains the HBase properties and also sets up
  * the configuration to be used by the HBase operators.<br>
  *
  * <br>
- *
+ * @displayName HBase Operator Base
+ * @category Output
+ * @tags hbase, base, properties
  * @since 0.3.2
  */
-@ShipContainingJars(classes = {org.apache.hadoop.hbase.client.HTable.class})
 public class HBaseOperatorBase
 {
   private String zookeeperQuorum;

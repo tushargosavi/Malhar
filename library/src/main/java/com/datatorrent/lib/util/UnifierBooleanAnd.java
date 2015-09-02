@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,17 +20,24 @@ import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.Operator.Unifier;
 
 /**
- *
- * Combiner for an output port that emits object with Map<K,V> interface and has the processing done
- * with sticky key partition, i.e. each one key belongs only to one partition. The final output of the
- * combiner is a simple merge into a single object that implements Map
- *
+ * This unifier consumes boolean tuples.&nbsp;
+ * All the tuples received within an application window are ANDED together and the result is emitted at the end of the window.
+ * <p>
+ * The processing is done with sticky key partitioning, i.e. each one key belongs only to one partition.
+ * </p>
+ * @displayName Unifier Boolean And
+ * @category Algorithmic
+ * @tags unifier, and
  * @since 0.3.2
  */
 public class UnifierBooleanAnd implements Unifier<Boolean>
 {
   boolean result = true;
   boolean doemit = false;
+
+  /**
+   * This is the output port which emits the ANDED input tuples result.
+   */
   public final transient DefaultOutputPort<Boolean> mergedport = new DefaultOutputPort<Boolean>();
 
   /**

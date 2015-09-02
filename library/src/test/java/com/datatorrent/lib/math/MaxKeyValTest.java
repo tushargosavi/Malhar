@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,18 @@
  */
 package com.datatorrent.lib.math;
 
-import com.datatorrent.api.*;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.math.MaxKeyVal;
+import java.util.ArrayList;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.datatorrent.common.util.BaseOperator;
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.InputOperator;
+
 import com.datatorrent.lib.testbench.CountAndLastTupleTestSink;
 import com.datatorrent.lib.util.KeyValPair;
-
-import java.util.ArrayList;
-import junit.framework.Assert;
-import org.junit.Test;
 
 /**
  *
@@ -102,7 +105,6 @@ public class MaxKeyValTest
    */
   public static class TestInputOperator extends BaseOperator implements InputOperator
   {
-    @OutputPortFieldAnnotation(name = "output")
     public final transient DefaultOutputPort<KeyValPair<String, Integer>> output = new DefaultOutputPort<KeyValPair<String, Integer>>();
     private transient boolean first = true;
 

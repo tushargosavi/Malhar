@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,20 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.AbstractBaseFrequentKeyValueMap;
 import java.util.HashMap;
 
+import com.datatorrent.api.DefaultOutputPort;
+
+import com.datatorrent.lib.util.AbstractBaseFrequentKeyValueMap;
+
 /**
- *
- * Occurrences of all values for each key is counted and at the end of window the least frequent values are emitted on output port least per key<p>
+ * This operator filters the incoming stream of key value pairs by finding the value or values (if there is a tie),
+ * for each key, that occur the fewest number of times within each window.&nbsp;
+ * Each key and its corresponding least values are emitted at the end of each window.
+ * <p>
+ * Occurrences of all values for each key is counted and at the end of window the least frequent values are emitted on output port least per key.
+ * </p>
+ * <p>
  * This module is an end of window module<br>
  * <br>
  * <b>Ports</b>:<br>
@@ -40,6 +46,7 @@ import java.util.HashMap;
  * <tr><td><b>&gt; 30 Million K,V pairs/s</b></td><td>Emits only 1 tuple per window per key</td><td>In-bound throughput is the main determinant of performance.
  * The benchmark was done with immutable objects. If K or V are mutable the benchmark may be lower</td></tr>
  * </table><br>
+ * </p>
  * <p>
  * <b>Function Table (K=String,V=Integer);</b>:
  * <table border="1" cellspacing=1 cellpadding=1 summary="Function table for LeastFrequentKeyValueMap&lt;K,V&gt; operator template">
@@ -57,12 +64,19 @@ import java.util.HashMap;
  * </table>
  * <br>
  * <br>
+ * </p>
+ *
+ * @displayName Emit Least Frequent Keyval Pair
+ * @category Rules and Alerts
+ * @tags filter, key value, count
  *
  * @since 0.3.2
  */
 public class LeastFrequentKeyValueMap<K, V> extends AbstractBaseFrequentKeyValueMap<K, V>
 {
-  @OutputPortFieldAnnotation(name = "least")
+  /**
+   * The output port on which the least frequent key value pairs are emitted.
+   */
   public final transient DefaultOutputPort<HashMap<K, HashMap<V, Integer>>> least = new DefaultOutputPort<HashMap<K, HashMap<V, Integer>>>();
 
   /**

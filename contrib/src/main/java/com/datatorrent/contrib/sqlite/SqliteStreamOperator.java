@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@ import com.almworks.sqlite4java.SQLiteException;
 import com.almworks.sqlite4java.SQLiteStatement;
 import com.datatorrent.lib.streamquery.AbstractSqlStreamOperator;
 import com.datatorrent.lib.streamquery.AbstractSqlStreamOperator.InputSchema.ColumnInfo;
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.datatorrent.api.Context.OperatorContext;
 import java.io.File;
 import java.util.ArrayList;
@@ -30,11 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>SqliteStreamOperator class.</p>
- *
+ * This is an SQLite input operator.
+ * <p></p>
+ * @displayName Sqlite Stream
+ * @category Input
+ * @tags sqlite
  * @since 0.3.2
  */
-@ShipContainingJars(classes = {com.almworks.sqlite4java.SQLiteConnection.class})
 public class SqliteStreamOperator extends AbstractSqlStreamOperator
 {
   private static final Logger logger = LoggerFactory.getLogger(SqliteStreamOperator.class);

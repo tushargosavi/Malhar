@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,10 @@
  */
 package com.datatorrent.contrib.kafka;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.datatorrent.api.Context.OperatorContext;
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.common.util.Pair;
+import com.google.common.collect.Sets;
 import kafka.api.FetchRequest;
 import kafka.api.FetchRequestBuilder;
 import kafka.javaapi.FetchResponse;
@@ -32,16 +29,19 @@ import kafka.message.Message;
 import kafka.message.MessageAndOffset;
 import kafka.producer.KeyedMessage;
 import kafka.producer.Partitioner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.common.util.Pair;
-import com.datatorrent.contrib.kafka.AbstractKafkaOutputOperator;
-import com.google.common.collect.Sets;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * Kafka output operator, which, in most cases, guarantees to send tuples to kafka MQ only once.<br>
+ * This is a base implementation of a Kafka output operator,
+ * which, in most cases, guarantees to send tuples to Kafka MQ only once.&nbsp;
+ * Subclasses should implement the methods for converting tuples into a format appropriate for Kafka.
+ * <p>
  * Assuming messages kept in kafka are ordered by either key or value or keyvalue pair
  * (For example, use timestamps as key), this Kafka OutputOperator always retrieve the last message from MQ as initial offset.
  *  So that replayed message wouldn't be sent to kafka again.
@@ -69,11 +69,14 @@ import com.google.common.collect.Sets;
  * <br>
  * Benchmarks:<br>
  * TBD<br>
- * <br>
+ * </p>
+ *
+ * @displayName Abstract Exactly Once Kafka Output
+ * @category Messaging
+ * @tags output operator
  *
  * @since 1.0.2
  */
-
 public abstract class AbstractExactlyOnceKafkaOutputOperator<T, K, V> extends AbstractKafkaOutputOperator<K, V>
 {
 
@@ -99,6 +102,9 @@ public abstract class AbstractExactlyOnceKafkaOutputOperator<T, K, V> extends Ab
     initializeLastProcessingOffset();
   }
 
+  /**
+   * This input port receives tuples that will be written out to Kafka.
+   */
   public final transient DefaultInputPort<T> inputPort = new DefaultInputPort<T>() {
     @Override
     public void process(T tuple)
@@ -179,7 +185,7 @@ public abstract class AbstractExactlyOnceKafkaOutputOperator<T, K, V> extends Ab
   /**
    * Tell the operator how to convert a input tuple to a kafka key value pair
    * @param tuple
-   * @return
+   * @return A kafka key value pair.
    */
   protected abstract Pair<K, V> tupleToKeyValue(T tuple);
 

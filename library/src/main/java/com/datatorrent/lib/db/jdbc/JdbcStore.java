@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,11 @@ import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datatorrent.common.util.DTThrowable;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+
+import com.datatorrent.netlet.util.DTThrowable;
 import com.datatorrent.lib.db.Connectable;
 
 /**
@@ -36,36 +40,51 @@ import com.datatorrent.lib.db.Connectable;
 public class JdbcStore implements Connectable
 {
   protected static final Logger logger = LoggerFactory.getLogger(JdbcStore.class);
-
   @NotNull
-  private String dbUrl;
+  private String databaseUrl;
   @NotNull
-  private String dbDriver;
-  private String userName;
-  private String password;
-
+  private String databaseDriver;
+  private final Properties connectionProperties;
   protected transient Connection connection = null;
 
+  /*
+   * Connection URL used to connect to the specific database.
+   */
   @NotNull
-  public String getDbUrl()
+  public String getDatabaseUrl()
   {
-    return dbUrl;
+    return databaseUrl;
   }
 
-  public void setDbUrl(@NotNull String dbUrl)
+  /*
+   * Connection URL used to connect to the specific database.
+   */
+  public void setDatabaseUrl(@NotNull String databaseUrl)
   {
-    this.dbUrl = dbUrl;
+    this.databaseUrl = databaseUrl;
   }
 
+  /*
+   * Driver used to connect to the specific database.
+   */
   @NotNull
-  public String getDbDriver()
+  public String getDatabaseDriver()
   {
-    return dbDriver;
+    return databaseDriver;
   }
 
-  public void setDbDriver(@NotNull String dbDriver)
+  /*
+   * Driver used to connect to the specific database.
+   */
+  public void setDatabaseDriver(@NotNull String databaseDriver)
   {
-    this.dbDriver = dbDriver;
+    this.databaseDriver = databaseDriver;
+  }
+
+
+  public JdbcStore()
+  {
+    connectionProperties = new Properties();
   }
 
   public Connection getConnection()
@@ -76,21 +95,48 @@ public class JdbcStore implements Connectable
   /**
    * Sets the user name.
    *
-   * @param userName user name.
+   * @param userName user name
+   * @deprecated use {@link #setConnectionProperties(String)} instead.
    */
   public void setUserName(String userName)
   {
-    this.userName = userName;
+    connectionProperties.put("user", userName);
   }
 
   /**
    * Sets the password.
    *
    * @param password password
+   * @deprecated use {@link #setConnectionProperties(String)} instead.
    */
   public void setPassword(String password)
   {
-    this.password = password;
+    connectionProperties.put("password", password);
+  }
+
+  /**
+   * Connection Properties for JDBC Connection.
+   * Sets the properties on the jdbc connection.
+   * @param connectionProps Comma separated list of properties. Property key and value are separated by colon.
+   *                             eg. user:xyz,password:ijk
+   */
+  public void setConnectionProperties(String connectionProps)
+  {
+    String[] properties = Iterables.toArray(Splitter.on(CharMatcher.anyOf(":,")).omitEmptyStrings().trimResults().split(connectionProps), String.class);
+    for (int i = 0; i < properties.length; i += 2) {
+      if (i + 1 < properties.length) {
+        connectionProperties.put(properties[i], properties[i + 1]);
+      }
+    }
+  }
+
+  /**
+   * Connection Properties for JDBC Connection.
+   * Gets the properties on the jdbc connection.
+   */
+  public Properties getConnectionProperties()
+  {
+    return connectionProperties;
   }
 
   /**
@@ -101,15 +147,8 @@ public class JdbcStore implements Connectable
   {
     try {
       // This will load the JDBC driver, each DB has its own driver
-      Class.forName(dbDriver).newInstance();
-      Properties connectionProps = new Properties();
-      if (userName != null) {
-        connectionProps.put("user", this.userName);
-      }
-      if (password != null) {
-        connectionProps.put("password", this.password);
-      }
-      connection = DriverManager.getConnection(dbUrl, connectionProps);
+      Class.forName(databaseDriver).newInstance();
+      connection = DriverManager.getConnection(databaseUrl, connectionProperties);
 
       logger.debug("JDBC connection Success");
     }
@@ -133,13 +172,15 @@ public class JdbcStore implements Connectable
   }
 
   @Override
-  public boolean connected()
+  public boolean isConnected()
   {
     try {
       return !connection.isClosed();
     }
     catch (SQLException e) {
-      throw new RuntimeException("is connected", e);
+      throw new RuntimeException("is isConnected", e);
     }
   }
+
+
 }

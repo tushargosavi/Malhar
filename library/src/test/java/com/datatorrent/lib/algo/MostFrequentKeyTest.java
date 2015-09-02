@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@ package com.datatorrent.lib.algo;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ import com.datatorrent.lib.testbench.CountAndLastTupleTestSink;
 
 /**
  *
- * Functional tests for {@link com.datatorrent.lib.algo.MostFrequentKey}<p>
+ * Functional tests for {@link com.datatorrent.lib.algo.MostFrequentValue}<p>
  *
  */
 public class MostFrequentKeyTest
@@ -38,7 +38,7 @@ public class MostFrequentKeyTest
   @Test
   public void testNodeProcessing() throws Exception
   {
-    MostFrequentKey<String> oper = new MostFrequentKey<String>();
+    MostFrequentValue<String> oper = new MostFrequentValue<String>();
     CountAndLastTupleTestSink matchSink = new CountAndLastTupleTestSink();
     CountAndLastTupleTestSink listSink = new CountAndLastTupleTestSink();
     oper.most.setSink(matchSink);
@@ -91,10 +91,10 @@ public class MostFrequentKeyTest
     for (HashMap<String,Integer> h : list) {
       val = h.get("a");
       if (val == null) {
-        ccount = h.get("c").intValue();
+        ccount = h.get("c");
       }
       else {
-        acount = val.intValue();
+        acount = val;
       }
     }
     Assert.assertEquals("Count of a was ", atot, acount);

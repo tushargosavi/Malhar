@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,52 +15,50 @@
  */
 package com.datatorrent.lib.db;
 
-import java.util.List;
-
-import com.datatorrent.api.Context.OperatorContext;
+import java.util.Collection;
 import com.google.common.collect.Lists;
 
 /**
- * This abstract class is for aggregate output (over one application window, all in one single batch) to a transactionable store with the transactional exactly-once feature.
+ * This is the base implementation for an aggregate output operator,
+ * which writes to a transactionable store.&nbsp;
+ * All the writes to the store over an application window are sent in one batch.
+ * <p></p>
+ * @displayName Abstract Batch Transactionable Store Output
+ * @category Output
+ * @tags transactional, output operator
  *
  * @param <T> The tuple type.
  * @param <S> The store type.
  * @since 1.0.2
  */
-public abstract class AbstractBatchTransactionableStoreOutputOperator<T, S extends TransactionableStore> extends AbstractTransactionableStoreOutputOperator<T, S>{
-	protected final List<T> tuples;
+public abstract class AbstractBatchTransactionableStoreOutputOperator<T, S extends TransactionableStore> extends AbstractAggregateTransactionableStoreOutputOperator<T, S> {
 
-	public AbstractBatchTransactionableStoreOutputOperator(){
-		tuples = Lists.newArrayList();
-	}
+  private Collection<T> tuples;
+  public AbstractBatchTransactionableStoreOutputOperator(){
+    tuples = Lists.newArrayList();
+  }
 
-	@Override
-	public void setup(OperatorContext context)
-	{
-		super.setup(context);
-	}
+  @Override
+  public void processTuple(T tuple)
+  {
+    tuples.add(tuple);
+  }
 
-	@Override
-	public void processTuple(T tuple)
-	{
-		tuples.add(tuple);
-	}
+  @Override
+  public void endWindow()
+  {
+    super.endWindow();
+    tuples.clear();
+  }
 
-	@Override
-	public void endWindow()
-	{
-		store.beginTransaction();
-		processBatch();
-		store.storeCommittedWindowId(appId, operatorId, currentWindowId);
-		store.commitTransaction();
-		committedWindowId = currentWindowId;
-		super.endWindow();
-		tuples.clear();
-	}
+  /**
+   * Processes the whole batch at the end window and writes to the store.
+   *
+   */
+  public abstract void processBatch(Collection<T> tuples);
 
-	/**
-	 * Processes the whole batch at the end window and writes to the store.
-	 *
-	 */
-	public abstract void processBatch();
+  @Override
+  public void storeAggregate() {
+    processBatch(tuples);
+  }
 }

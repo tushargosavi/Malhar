@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,14 @@ package com.datatorrent.lib.db;
 import java.util.*;
 
 /**
- * This abstract class is for any implementation of an input adapter of key value store.
+ * This is the base implementation of an input operator which consumes data from a key value store.&nbsp;
+ * Subclasses should implement the method which converts key value pairs into tuples.
+ * <p>
  * The default behavior is to get all the values using the keys from the store for each window. Subclasses are free to override this behavior.
+ * </p>
+ * @displayName Abstract Key Value Store Input
+ * @category Input
+ * @tags key value
  *
  * @param <T> The tuple type.
  * @param <S> The store type.
@@ -32,7 +38,7 @@ public abstract class AbstractKeyValueStoreInputOperator<T, S extends KeyValueSt
   /**
    * Adds the key to the list of keys to be fetched for each window
    *
-   * @param key
+   * @param key a key.
    */
   public void addKey(Object key)
   {
@@ -55,8 +61,8 @@ public abstract class AbstractKeyValueStoreInputOperator<T, S extends KeyValueSt
   /**
    * Implementations should provide the way of converting from a map of key value pairs from the store to a tuple.
    *
-   * @param o
-   * @return
+   * @param o map of keys and values.
+   * @return tuple.
    */
   public abstract T convertToTuple(Map<Object, Object> o);
 

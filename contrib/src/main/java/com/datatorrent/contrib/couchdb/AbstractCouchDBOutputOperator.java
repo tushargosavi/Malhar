@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,11 +16,16 @@
 package com.datatorrent.contrib.couchdb;
 
 import com.datatorrent.lib.db.AbstractStoreOutputOperator;
+import java.util.Map;
 
 /**
- * An {@link AbstractStoreOutputOperator} output operator that saves tuples in the CouchDb. <br/>
- * Sub-classes provide the implementation of parsing document id from the tuple.
- *
+ * Generic base output adaptor which saves tuples in the CouchDb.&nbsp; Subclasses should provide implementation for getting Document Id. <br/>
+ * <p>
+ * An {@link AbstractStoreOutputOperator} saving tuples in the CouchDb.
+ * Sub-classes provide the implementation of parsing document id from the tuple and converting tuple to a map.
+ * @displayName Abstract CouchDB Output
+ * @category Output
+ * @tags output operator
  * @param <T> type of tuple </T>
  * @since 0.3.5
  */
@@ -45,4 +50,5 @@ public abstract class AbstractCouchDBOutputOperator<T> extends AbstractStoreOutp
    * @return document id.
    */
   public abstract String getDocumentId(T tuple);
+
 }

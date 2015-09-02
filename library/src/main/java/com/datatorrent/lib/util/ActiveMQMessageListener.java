@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,8 +33,8 @@ public class ActiveMQMessageListener implements MessageListener, Runnable
   private Session session;
   private MessageConsumer consumer;
   private Destination destination;
-  private int countMessages = 0;
-  public HashMap<Integer, String> receivedData = new HashMap<Integer, String>();
+  protected int countMessages = 0;
+  public HashMap<Integer, Object> receivedData = new HashMap<Integer, Object>();
   private String user = "";
   private String password = "";
   private String url = "tcp://localhost:61617";
@@ -157,25 +157,6 @@ public class ActiveMQMessageListener implements MessageListener, Runnable
       }
       return;
     }
-
-    //System.out.println("we are in onMessage");
-    if (message instanceof TextMessage) {
-      TextMessage txtMsg = (TextMessage)message;
-      String msg = null;
-      try {
-        msg = txtMsg.getText();
-        receivedData.put(new Integer(countMessages), msg);
-      }
-      catch (JMSException ex) {
-        logger.debug(ex.getLocalizedMessage());
-      }
-
-      logger.debug("Received a TextMessage: {}", msg);
-    }
-    else {
-      throw new IllegalArgumentException("Unhandled message type " + message.getClass().getName());
-    }
-
   }
 
   @Override

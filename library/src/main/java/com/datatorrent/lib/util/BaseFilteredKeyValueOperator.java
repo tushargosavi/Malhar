@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,8 @@ package com.datatorrent.lib.util;
 import java.util.HashMap;
 
 /**
- * Base class for operators that enables filtering of of keys to be processed<p>
+ * This operator filters incoming tuples based on whether or not the tuple is contained in its filter set.
+ * <p>
  * By default no filtering would be done as inverse is set to true and filterBy would be empty unless set<br>
  * <br>
  * <b>Ports</b>: None<br>
@@ -31,9 +32,10 @@ import java.util.HashMap;
  * <b>Specific run time checks</b>: None<br>
  * <br>
  * <b>Benchmarks</b>: Not done as there are no ports on this operator<br>
- * <br>
- * <br>
- *
+ * </p>
+ * @displayName Base Filtered Key Value
+ * @category Algorithmic
+ * @tags filter, key value
  * @since 0.3.2
  */
 public class BaseFilteredKeyValueOperator<K, V> extends BaseKeyValueOperator<K, V>

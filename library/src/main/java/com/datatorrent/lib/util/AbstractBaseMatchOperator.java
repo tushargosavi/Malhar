@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,9 +21,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 /**
- *
- * An abstract class that sets up the basic operator functionality needed for match based operators<p>
- * <br>
+ * This is the base implementation of operators which perform comparisons.&nbsp;
+ * A concrete operator should be created from this skeleton implementation.
+ * <p>
  * Ports:<br>
  * none
  * <br>
@@ -39,7 +39,10 @@ import javax.validation.constraints.Pattern;
  * <br>
  * Run time checks<br>
  * none<br>
- *
+ * </p>
+ * @displayName Abstract Base Match
+ * @category Algorithmic
+ * @tags compare
  * @since 0.3.2
  */
 @SuppressWarnings("rawtypes")

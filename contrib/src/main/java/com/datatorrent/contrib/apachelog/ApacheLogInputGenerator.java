@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,16 +22,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import javax.validation.constraints.NotNull;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This operator simulates the apache logs
- *
+ * An implementation of input operator and activation listener that simulates the apache logs.
+ * <p>
+ * @displayName Apache Log Input Generator
+ * @category Test Bench
+ * @tags apache log, generator
  * @since 0.9.4
  */
-public class ApacheLogInputGenerator implements InputOperator, ActivationListener<OperatorContext>
+public class ApacheLogInputGenerator implements InputOperator, Operator.ActivationListener<OperatorContext>
 {
   private final static String delimiter = ";";
 
@@ -340,6 +342,9 @@ public class ApacheLogInputGenerator implements InputOperator, ActivationListene
     this.refererFile = refererFile;
   }
 
+  /**
+   * Output port that emits a string into DAG.
+   */
   public final transient DefaultOutputPort<String> output = new DefaultOutputPort<String>();
   private static final Logger LOG = LoggerFactory.getLogger(ApacheLogInputGenerator.class);
 }

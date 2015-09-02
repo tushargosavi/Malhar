@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,15 @@
  */
 package com.datatorrent.lib.math;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.annotation.OperatorAnnotation;
 
 /**
- * Calculate the running average of the input numbers and emit it at the end of
- * the window. This is an end of window operator<br>
+ * Calculate the running average of the input numbers and emit it at the end of the window. 
+ * <p>
+ * This is an end of window operator.<br>
  * <br>
  * <b>StateFull : Yes</b>, average is computed over application window. <br>
  * <b>Partitions : No</b>, will yield wrong results. <br>
@@ -34,7 +35,9 @@ import com.datatorrent.api.annotation.OperatorAnnotation;
  * <b>doubleAverage</b>: emits Double<br>
  * <b>floatAverage</b>: emits Float<br>
  * <br>
- *
+ * @displayName Running Average
+ * @category Math
+ * @tags average, numeric
  * @since 0.3.3
  */
 @OperatorAnnotation(partitionable = false)

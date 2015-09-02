@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,20 +27,25 @@ import org.slf4j.LoggerFactory;
 
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
 /**
- * Reads via GET from given URL as input stream<p>
- * <br>
+ * This is a base implementation for an HTTP input operator that reads from a given url using the HTTP GET command like an input stream.&nbsp;
+ * Subclasses must implement the method which handles the response to the HTTP GET request.
+ * <p></p>
+ * @displayName Abstract HTTP Input
+ * @category Input
+ * @tags http, input operator
  *
  * @since 0.3.2
  */
-@ShipContainingJars(classes = {com.sun.jersey.api.client.ClientHandler.class})
 public abstract class AbstractHttpInputOperator<T> extends SimpleSinglePortInputOperator<T> implements Runnable
 {
+  /**
+   * The output port which emits retrieved tuples.
+   */
   public final transient DefaultOutputPort<String> rawOutput = new DefaultOutputPort<String>();
   private static final Logger LOG = LoggerFactory.getLogger(AbstractHttpInputOperator.class);
   /**
@@ -51,14 +56,27 @@ public abstract class AbstractHttpInputOperator<T> extends SimpleSinglePortInput
    * The URL of the web service resource for the POST request.
    */
   @NotNull
-  private URI resourceUrl;
+  private URI url;
   private Map<String, String> headers = new HashMap<String, String>();
   private transient Client wsClient;
   private transient WebResource resource;
 
+  /**
+   * The url to read from.
+   * @param u The url to read from.
+   */
   public void setUrl(URI u)
   {
-    resourceUrl = u;
+    url = u;
+  }
+
+  /**
+   * Sets the url to read from.
+   * @return The url to read from.
+   */
+  public URI getUrl()
+  {
+    return url;
   }
 
   public void setHeader(String key, String value)
@@ -72,8 +90,8 @@ public abstract class AbstractHttpInputOperator<T> extends SimpleSinglePortInput
     wsClient = Client.create();
     wsClient.setFollowRedirects(true);
     wsClient.setReadTimeout(readTimeoutMillis);
-    resource = wsClient.resource(resourceUrl.toString()); // side step "not absolute URL" after serialization
-    LOG.info("URL: {}", resourceUrl);
+    resource = wsClient.resource(url.toString()); // side step "not absolute URL" after serialization
+    LOG.info("URL: {}", url);
   }
 
   @Override

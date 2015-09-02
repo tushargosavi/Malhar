@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,8 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
- * Class for logical AND/OR select expression. <br>
+ * A derivation of Condition index that implements logical AND/OR select expression. <br>
+ * <p>
  * Class provides logical OR or AND function specified in parameters. User can implement
  * complex and/or expression by chaining operator itself.
  * <br>
@@ -29,7 +30,9 @@ import javax.validation.constraints.NotNull;
  * <b> rightCondition : </b> Right validate row condition. <br>
  * <b> logicalOr : </b> OR/AND logical metric flag. <br>
  * <br>
- *
+ * @displayName Compound Condition
+ * @category Stream Manipulators
+ * @tags sql condition, logical
  * @since 0.3.4
  */
 public class CompoundCondition extends Condition
@@ -39,18 +42,18 @@ public class CompoundCondition extends Condition
    */
   @NotNull
   private Condition leftCondition;
-  
+
   /**
    * Right validate row condition .
    */
   @NotNull
   private Condition rightCondition;
-  
+
   /**
    * AND/OR metric flag.
    */
   private boolean logicalOr = true;
-  
+
   /**
    * Constructor for logical or metric.
    * @param leftCondition  Left validate row condition, must be non null. <br>
@@ -60,7 +63,7 @@ public class CompoundCondition extends Condition
     this.leftCondition = leftCondition;
     this.rightCondition = rightCondition;
   }
-  
+
   /**
    * Constructor for logical and metric if logical and parameter is true.
    * <br>
@@ -73,7 +76,7 @@ public class CompoundCondition extends Condition
     this.rightCondition = rightCondition;
     logicalOr = !isLogicalAnd;
   }
-  
+
   @Override
   public boolean isValidRow(Map<String, Object> row)
   {

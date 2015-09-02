@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,9 +21,11 @@ import java.util.Map;
 
 import org.junit.Assert;
 
+import com.datatorrent.lib.helper.OperatorContextTestHelper;
+
 import com.datatorrent.api.*;
 
-import com.datatorrent.lib.helper.OperatorContextTestHelper;
+import com.datatorrent.common.util.BaseOperator;
 
 /**
  * @param <S>
@@ -117,7 +119,7 @@ public class KeyValueStoreOperatorTest<S extends KeyValueStore>
   {
     OutputOperator<S> outputOperator = new OutputOperator<S>();
     try {
-      AttributeMap.DefaultAttributeMap attributes = new AttributeMap.DefaultAttributeMap();
+      com.datatorrent.api.Attribute.AttributeMap.DefaultAttributeMap attributes = new com.datatorrent.api.Attribute.AttributeMap.DefaultAttributeMap();
       attributes.put(DAG.APPLICATION_ID, "test_appid");
       outputOperator.setStore(operatorStore);
       outputOperator.setup(new OperatorContextTestHelper.TestIdOperatorContext(0, attributes));

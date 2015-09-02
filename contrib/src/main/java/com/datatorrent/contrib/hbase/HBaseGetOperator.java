@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,11 @@ package com.datatorrent.contrib.hbase;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 
 /**
- * Operator for retrieving tuples from HBase columns.<br>
- *
+ * A base implementation of hbase input operator that retrieves tuples from HBase columns and provides get operation.&nbsp; Subclasses should provide implementation for get operation. <br>
+ * <p>
  * <br>
  * This class provides a HBase input operator that can be used to retrieve tuples from columns in a
  * HBase table. The class should be extended by the end-operator developer. The extending class should
@@ -31,7 +30,9 @@ import org.apache.hadoop.hbase.client.Result;
  * of a KeyValue from the Get result to a tuple.<br>
  *
  * <br>
- *
+ * @displayName HBase Get
+ * @category Input
+ * @tags hbase, get
  * @param <T> The tuple type
  * @since 0.3.2
  */

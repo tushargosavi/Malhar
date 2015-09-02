@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,20 +16,14 @@
 package com.datatorrent.contrib.mongodb;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * MongoDB ArrayList output adapter operator, which send insertion data to database.<p><br>
- *
+ * This is a MongoDB Output Operator, which uses HashMaps to map tuples to appropriate tables and columns in MongoDB,
+ * when doing writes.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: Can have one input port, derived from base class <br>
@@ -47,6 +41,10 @@ import org.slf4j.LoggerFactory;
  * <br>
  * <b>Benchmarks</b>:
  * <br>
+ * </p>
+ * @displayName MongoDB Array List Output
+ * @category Output
+ * @tags mongodb
  *
  * @since 0.3.2
  */

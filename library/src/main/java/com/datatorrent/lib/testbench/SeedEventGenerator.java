@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.testbench;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
 import com.datatorrent.lib.util.KeyValPair;
@@ -26,9 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Generates one time seed load based on range provided for the keys, and adds new classification to incoming keys. The new tuple is emitted
- * on the output port keyvalpair_list, val_list, string_data, val_data<p>
- * <br>
+ * Generates a one time seed load based on the range provided by the keys,
+ * and adds new classification to incoming keys.&nbsp;
+ * Generated tuples are emitted on the keyvalpair_list, val_list, string_data, and val_data output ports.
+ * <p>
  * Examples of getting seed distributions include<br>
  * Clients data of a company for every clientId (key is clienId)<br>
  * Persons age, gender, for every phone number (key is phone number)<br>
@@ -64,15 +65,41 @@ import org.slf4j.LoggerFactory;
  * <b>Benchmarks</b>: Blast as many tuples as possible in inline mode<br>
  * With key: Benchmarked at over 1 million tuples/second in local/in-line mode<br>
  * Without key: Benchmarked at over 4 million tuples/second in local/in-line mode<br>
- *
+ * </p>
+ * @displayName Seed Event Generator
+ * @category Test Bench
+ * @tags generate
  * @since 0.3.2
  */
 public class SeedEventGenerator extends BaseOperator implements InputOperator
 {
   @SuppressWarnings("rawtypes")
+  /**
+   * This output port emits generated tuples as a HashMap&lt;String, ArrayList&lt;KeyValPair&gt;&gt;.
+   * The key in the map is a seed integer in the form of a string.
+   * The value in the map is a list of key value pairs.
+   * Each of these key value pairs is comprised of a specified string key,
+   * and a randomly generated integer which lies within a specified range.
+   */
   public final transient DefaultOutputPort<HashMap<String, ArrayList<KeyValPair>>> keyvalpair_list = new DefaultOutputPort<HashMap<String, ArrayList<KeyValPair>>>();
+  /**
+   * This output port emits generator tuples as a HashMap&lt;String, ArrayList&lt;Integer&gt;&gt;&gt;.
+   * The key in the map is a seed integer in the form of a string.
+   * The value in the map is a list of integers.
+   * Each integer is randomly generated and lies within a specified range.
+   */
   public final transient DefaultOutputPort<HashMap<String, ArrayList<Integer>>> val_list = new DefaultOutputPort<HashMap<String, ArrayList<Integer>>>();
+  /**
+   * This output port emits generator tuples as a HashMap&lt;String, String&gt;&gt;.
+   * The key in the map is a seed integer in the form of a string.
+   * The value in the map is a list of integers and their corresponding keys (in string form) that are randomly generated and lies within a specified range.
+   */
   public final transient DefaultOutputPort<HashMap<String, String>> string_data = new DefaultOutputPort<HashMap<String, String>>();
+  /**
+   * This output port emits generator tuples as a HashMap&lt;String, String&gt;&gt;.
+   * The key in the map is a seed integer in the form of a string.
+   * The value in the map is a list of integers (in string form) that are randomly generated and lies within a specified range.
+   */
   public final transient DefaultOutputPort<HashMap<String, String>> val_data = new DefaultOutputPort<HashMap<String, String>>();
   private static Logger LOG = LoggerFactory.getLogger(SeedEventGenerator.class);
   /**
@@ -85,12 +112,12 @@ public class SeedEventGenerator extends BaseOperator implements InputOperator
   int s_end = 99;
   private final Random random = new Random();
 
-  public void setSeedstart(int i)
+  public void setSeedStart(int i)
   {
     s_start = i;
   }
 
-  public void setSeedend(int i)
+  public void setSeedEnd(int i)
   {
     s_end = i;
   }
@@ -113,7 +140,7 @@ public class SeedEventGenerator extends BaseOperator implements InputOperator
     }
     // done generating data
     LOG.info("Finished generating data.");
-    throw new RuntimeException(new InterruptedException("Finished generating data."));
+    BaseOperator.shutdown();
   }
 
   /**

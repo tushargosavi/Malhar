@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,21 +15,27 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.AbstractBaseFrequentKey;
-import com.datatorrent.lib.util.UnifierArrayHashMapFrequent;
-import com.datatorrent.lib.util.UnifierHashMapFrequent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
+
+import com.datatorrent.lib.util.AbstractBaseFrequentKey;
+import com.datatorrent.lib.util.UnifierArrayHashMapFrequent;
+import com.datatorrent.lib.util.UnifierHashMapFrequent;
+
 /**
- *
+ * This operator filters the incoming stream of key value pairs by finding the key or keys (if there is a tie) that occur the fewest number of times within each window.&nbsp;
+ * A list of the corresponding key value pairs are then output to the port named "list" and one of the corresponding key value pairs is output to the port "least", at the end of each window.
+ * <p>
  * Occurrences of each key is counted and at the end of window any of the least frequent key is emitted on output port least and all least frequent
- * keys on output port list<p>
+ * keys on output port list.
+ * </p>
+ * <p>
  * This module is an end of window module. In case of a tie any of the least key would be emitted. The list port would however have all the tied keys<br>
  * <br>
  * <b>StateFull : Yes, </b> tuple are compared across application window(s). <br>
@@ -40,15 +46,21 @@ import java.util.Map;
  * <b>least</b>: emits HashMap&lt;K,Integer&gt;(1); where String is the least frequent key, and Integer is the number of its occurrences in the window<br>
  * <b>list</b>: emits ArrayList&lt;HashMap&lt;K,Integer&gt;(1)&gt;; Where the list includes all the keys are least frequent<br>
  * <br>
+ * </p>
+ *
+ * @displayName Emit Least Frequent Tuple Key
+ * @category Rules and Alerts
+ * @tags filter, key value, count
  *
  * @since 0.3.2
  */
+
+@OperatorAnnotation(partitionable = true)
 public class LeastFrequentKeyMap<K, V> extends AbstractBaseFrequentKey<K>
 {
   /**
-   * Input port.
+   * The input port on which key value pairs are received.
    */
-  @InputPortFieldAnnotation(name = "data")
   public final transient DefaultInputPort<Map<K, V>> data = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -62,11 +74,13 @@ public class LeastFrequentKeyMap<K, V> extends AbstractBaseFrequentKey<K>
       }
     }
   };
-  
+
   /**
-   * Output port.
+   * The output port on which one of the tuples,
+   * which occurred the least number of times,
+   * is emitted.
    */
-  @OutputPortFieldAnnotation(name = "least", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<HashMap<K, Integer>> least = new DefaultOutputPort<HashMap<K, Integer>>()
   {
     @Override
@@ -77,11 +91,13 @@ public class LeastFrequentKeyMap<K, V> extends AbstractBaseFrequentKey<K>
       return ret;
     }
   };
-  
+
   /**
-   * Output port.
+   * The output port on which all the tuples,
+   * which occurred the least number of times,
+   * is emitted.
    */
-  @OutputPortFieldAnnotation(name = "list", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<ArrayList<HashMap<K, Integer>>> list = new DefaultOutputPort<ArrayList<HashMap<K, Integer>>>()
       {
     @Override

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,14 +26,18 @@ import com.datatorrent.api.Operator;
 import com.datatorrent.api.annotation.OperatorAnnotation;
 
 /**
+ *
+ * A base implementation of an operator that aggregates tuples.&nbsp; Subclasses should provide the
+   implementation to get a new collection of a given size.
  * <p>
- * Abstract operator to aggregate tuples, if size of collection is 0 then all
- * tuples till end window are aggregated, otherwise collection is emitted as
+ * If size of collection is 0 then all tuples till end window are aggregated, otherwise collection is emitted as
  * soon as collection size reaches to given size. <br>
  * <br>
  * <b>StateFull : Yes </b>, values are collected over application window. <br>
  * <b>Partitions : No</b>, will yield wrong results.
- *
+ * @displayName Abstract Aggregator
+ * @category Stream Manipulators
+ * @tags aggregate
  * @param <T>
  *          Aggregate tuple type.
  * @since 0.3.3
@@ -52,7 +56,7 @@ public abstract class AbstractAggregator<T> implements Operator
 	private int size = 0;
 
 	/**
-	 * Input port.
+	 * Input port that takes data to be added to a collection.
 	 */
 	public final transient DefaultInputPort<T> input = new DefaultInputPort<T>()
 	{
@@ -72,18 +76,18 @@ public abstract class AbstractAggregator<T> implements Operator
 	};
 
 	/**
-	 * Collection output port.
+	 * Output port that emits a collection.
 	 */
 	public final transient DefaultOutputPort<Collection<T>> output = new DefaultOutputPort<Collection<T>>();
 
 	/**
 	 * Set the size of the collection.
-	 * 
+	 *
 	 * If set to zero, the collection collects all the tuples within a window and
 	 * emits the collection as 1 output tuple at the end of the window. If set to
 	 * positive value, it collects the collection as soon as the size of the
 	 * collection reaches the size.
-	 * 
+	 *
 	 * @param size
 	 *          the size to set
 	 */
@@ -94,7 +98,7 @@ public abstract class AbstractAggregator<T> implements Operator
 
 	/**
 	 * Size of collection.
-	 * 
+	 *
 	 * @return size of collection
 	 */
 	@Min(0)
@@ -105,7 +109,7 @@ public abstract class AbstractAggregator<T> implements Operator
 
 	/**
 	 * Abstract method to get collection of given size.
-	 * 
+	 *
 	 * @param size
 	 * @return collection
 	 */

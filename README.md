@@ -2,7 +2,6 @@ Malhar
 ======
 Malhar repository contains open source operator and codec library that can be used with the DataTorrent platform to build Realtime streaming applications. In addition to the library there are benchmark, contrib, demos, webdemos and samples folders available. Demos contain demo applications built using the library operators. Webdemos contain webpages for the demos. Benchmark contains performance testing applications. Contrib contains additional operators that interface with third party softwares. Samples contain some sample code that shows how to use the library operators.
 
-[![Build Status](https://travis-ci.org/DataTorrent/Malhar.png?branch=master)](https://travis-ci.org/DataTorrent/Malhar)
 
 Contributing
 ------------
@@ -68,7 +67,7 @@ Running the code
 
 To run the code DataTorrent platform is needed. The developer version or an evaluation version, both of which are free, can be downloaded from 
 
-https://www.datatorrent.com/download.php
+https://www.datatorrent.com/download/
 
 Please follow the instructions in the software README on how to run the application.  
 
@@ -95,12 +94,13 @@ Web apps run on Node.js. Please see [webapps](https://github.com/DataTorrent/Mal
 Issue tracking
 --------------------
 
-[Malhar JIRA](https://malhar.atlassian.net) issue tracking system is used for this project. You can monitor the state of existing issues and their track their progress at https://malhar.atlassian.net
+[Malhar JIRA](https://malhar.atlassian.net/projects/MLHR) issue tracking system is used for this project.
+You can submit new issues and track the progress of existing issues at https://malhar.atlassian.net/projects/MLHR.
 
-When working with JIRA to submit pull requests, please use [smart commits](https://confluence.atlassian.com/display/AOD/Processing+JIRA+issues+with+commit+messages) feature by specifying MLHR-XXXX in the commit messages.  It helps us link commits with issues being tracked for easy reference.  And example commit might look like this:
+When working with JIRA to submit pull requests, please use [smart commits](https://confluence.atlassian.com/display/AOD/Processing+JIRA+issues+with+commit+messages) feature by specifying MLHR-XXXX in the commit messages.
+It helps us link commits with issues being tracked for easy reference.  And example commit might look like this:
 
-    git commit -am "MLHR-12345 #comment Task completed ahead of schedule #resolve"
-
+    git commit -am "MLHR-1234 #comment Task completed ahead of schedule #resolve"
 
 
 License

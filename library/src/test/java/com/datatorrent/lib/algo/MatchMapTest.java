@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,13 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.lib.algo.MatchMap;
-import com.datatorrent.lib.testbench.CountAndLastTupleTestSink;
-
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.Assert;
+
+import org.junit.Assert;
 import org.junit.Test;
+
+import com.datatorrent.lib.testbench.CountAndLastTupleTestSink;
 
 /**
  *
@@ -67,13 +67,13 @@ public class MatchMapTest
     Assert.assertEquals("number emitted tuples", 1, matchSink.count);
     for (Map.Entry<String, Number> e: ((HashMap<String, Number>) matchSink.tuple).entrySet()) {
       if (e.getKey().equals("a")) {
-        Assert.assertEquals("emitted value for 'a' was ", new Double(2), e.getValue().doubleValue());
+        Assert.assertEquals("emitted value for 'a' was ", new Double(2), new Double(e.getValue().doubleValue()));
       }
       else if (e.getKey().equals("b")) {
-        Assert.assertEquals("emitted tuple for 'b' was ", new Double(20), e.getValue().doubleValue());
+        Assert.assertEquals("emitted tuple for 'b' was ", new Double(20), new Double(e.getValue().doubleValue()));
       }
       else if (e.getKey().equals("c")) {
-        Assert.assertEquals("emitted tuple for 'c' was ", new Double(1000), e.getValue().doubleValue());
+        Assert.assertEquals("emitted tuple for 'c' was ", new Double(1000), new Double(e.getValue().doubleValue()));
       }
     }
   }

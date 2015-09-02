@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,18 @@
  */
 package com.datatorrent.contrib.redis;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.datatorrent.lib.db.AbstractAggregateTransactionableKeyValueStoreOutputOperator;
-import redis.clients.jedis.Jedis;
 
 /**
- * This abstract class provides the base class for any redis aggregate output adapter.
+ * This is the base implementation of a Redis aggregate output operator.
+ * <p></p>
+ * @displayName Abstract Redis Aggregate Output
+ * @category Output
+ * @tags redis, key value, aggregate
  *
  * @param <T> The tuple type.
  * @since 0.9.3
  */
-@ShipContainingJars(classes = {Jedis.class})
 public abstract class AbstractRedisAggregateOutputOperator<T>
         extends AbstractAggregateTransactionableKeyValueStoreOutputOperator<T, RedisStore>
 {

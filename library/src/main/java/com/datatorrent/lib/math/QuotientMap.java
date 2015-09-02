@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,14 +25,12 @@ import org.apache.commons.lang.mutable.MutableDouble;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 
 /**
+ * Add all the values for each key on "numerator" and "denominator" and emits quotient at end of window for all keys in the denominator. 
  * <p>
- * Add all the values for each key on "numerator" and "denominator" and emits
- * quotient at end of window for all keys in the denominator. <br>
+ * <br>
  * Application can set multiplication value for quotient(default = 1). <br>
  * Operator will calculate quotient of occurrence of key in numerator divided by
  * occurrence of key in denominator if countKey flag is true. <br>
@@ -55,7 +53,9 @@ import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
  * denominator. <br>
  * <b>mult_by :</b> Set multiply by constant value. <br>
  * <br>
- *
+ * @displayName Quotient Map
+ * @category Math
+ * @tags division, sum, map
  * @since 0.3.3
  */
 @OperatorAnnotation(partitionable = false)
@@ -85,7 +85,6 @@ public class QuotientMap<K, V extends Number> extends
 	/**
 	 * Numerator input port.
 	 */
-	@InputPortFieldAnnotation(name = "numerator")
 	public final transient DefaultInputPort<Map<K, V>> numerator = new DefaultInputPort<Map<K, V>>()
 	{
 		/**
@@ -101,7 +100,6 @@ public class QuotientMap<K, V extends Number> extends
 	/**
 	 * Denominator input port.
 	 */
-	@InputPortFieldAnnotation(name = "denominator")
 	public final transient DefaultInputPort<Map<K, V>> denominator = new DefaultInputPort<Map<K, V>>()
 	{
 		/**
@@ -115,9 +113,8 @@ public class QuotientMap<K, V extends Number> extends
 	};
 
 	/**
-	 * Quotient input port.
+	 * Quotient output port.
 	 */
-	@OutputPortFieldAnnotation(name = "quotient")
 	public final transient DefaultOutputPort<HashMap<K, Double>> quotient = new DefaultOutputPort<HashMap<K, Double>>();
 
 	/**

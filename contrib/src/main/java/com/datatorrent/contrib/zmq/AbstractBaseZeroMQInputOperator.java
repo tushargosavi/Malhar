@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,20 +16,22 @@
 package com.datatorrent.contrib.zmq;
 
 
+import java.util.concurrent.ArrayBlockingQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 
-import com.datatorrent.api.annotation.ShipContainingJars;
-import com.datatorrent.api.ActivationListener;
-import com.datatorrent.api.InputOperator;
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
-import java.util.concurrent.ArrayBlockingQueue;
+import com.datatorrent.api.InputOperator;
+import com.datatorrent.api.Operator.ActivationListener;
 
 /**
- * ZeroMQ input adapter operator, which consume data from ZeroMQ message bus.<p><br>
- *
+ * This is the base implementation of a ZeroMQ input operator.&nbsp;
+ * This operator will behave like a subscriber that issues requests.&nbsp;
+ * Subclasses should implement the methods which convert ZeroMQ messages into tuples.
+ * <p>
  * <br>
  * Ports:<br>
  * <b>Input</b>: No input port<br>
@@ -55,10 +57,12 @@ import java.util.concurrent.ArrayBlockingQueue;
  * immutable. If you use mutable tuples and have lots of keys, the benchmarks may differ</td></tr>
  * </table><br>
  * <br>
- *
+ * </p>
+ * @displayName Abstract Base ZeroMQ Input
+ * @category Messaging
+ * @tags input operator
  * @since 0.3.2
  */
-@ShipContainingJars(classes={org.zeromq.ZMQ.Socket.class})
 public abstract class AbstractBaseZeroMQInputOperator extends BaseOperator implements InputOperator, ActivationListener<OperatorContext>
 {
   @SuppressWarnings("unused")

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.testbench;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
 import com.datatorrent.api.Context.OperatorContext;
@@ -24,8 +24,8 @@ import java.util.Random;
 import javax.validation.constraints.Min;
 
 /**
- *
- * Generates synthetic load. Creates tuples using random numbers and keeps emitting them on the output port string_data and integer_data<p>
+ * Generates synthetic load.&nbsp;Creates tuples using random numbers and keeps emitting them on the output port string_data and integer_data.
+ * <p>
  * <br>
  * The load is generated as per config parameters. This class is mainly meant for testing nodes by creating a random number within
  * a range at a very high throughput. This node does not need to be windowed. It would just create tuple stream upto the limit set
@@ -50,15 +50,23 @@ import javax.validation.constraints.Min;
  * <br>
  * <b>Benchmarks</b>: Blast as many tuples as possible in inline mode<br>
  * This node has been benchmarked at over 10 million tuples/second in local/inline mode<br>
- *<br>
- * Compile time error checking includes<br>
  * <br>
- *
+ * Compile time error checking includes<br>
+ * </p>
+ * @displayName Random Event Generator
+ * @category Test Bench
+ * @tags generate
  * @since 0.3.2
  */
 public class RandomEventGenerator extends BaseOperator implements InputOperator
 {
+  /**
+   * The output port on which randomly generated integers are emitted as strings.
+   */
   public final transient DefaultOutputPort<String> string_data = new DefaultOutputPort<String>();
+  /**
+   * The output port on which randomly generated integers are emitted.
+   */
   public final transient DefaultOutputPort<Integer> integer_data = new DefaultOutputPort<Integer>();
   private int maxCountOfWindows = Integer.MAX_VALUE;
   @Min(1)
@@ -118,7 +126,11 @@ public class RandomEventGenerator extends BaseOperator implements InputOperator
     }
   }
 
-  public void setMaxcountofwindows(int i)
+  /**
+   * Maximum number of Windows across which this operator will work.
+   * @param i
+  */
+  public void setMaxCountOfWindows(int i)
   {
     maxCountOfWindows = i;
   }

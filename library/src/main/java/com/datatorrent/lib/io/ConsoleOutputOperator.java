@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package com.datatorrent.lib.io;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.annotation.Stateless;
 
@@ -23,11 +23,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * Writes tuples to stdout of the container<p>
- * <br>
+ * Writes tuples to stdout of the container.
+ * <p>
  * Mainly to be used for debugging. Users should be careful to not have this node listen to a high throughput stream<br>
  * <br>
+ * </p>
+ * @displayName Console Output
+ * @category Output
+ * @tags output operator
  *
  * @since 0.3.2
  */
@@ -35,6 +38,10 @@ import org.slf4j.LoggerFactory;
 public class ConsoleOutputOperator extends BaseOperator
 {
   private static final Logger logger = LoggerFactory.getLogger(ConsoleOutputOperator.class);
+
+  /**
+   * This is the input port which receives the tuples that will be written to stdout.
+   */
   public final transient DefaultInputPort<Object> input = new DefaultInputPort<Object>()
   {
     @Override
@@ -57,7 +64,7 @@ public class ConsoleOutputOperator extends BaseOperator
     }
   };
   public boolean silent = false;
-  
+
   /**
    * @return the silent
    */

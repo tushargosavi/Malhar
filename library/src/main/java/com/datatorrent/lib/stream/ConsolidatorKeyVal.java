@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,13 +24,13 @@ import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Operator;
 import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OperatorAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
  * <p>
- * Operator aggregates key/value input from 5 ports of different types into
- * key/array list map, for each key. <br>
+ * An implementation of operator that Aggregates &lt;key,value&gt; input from five ports of different types into
+ * &lt;key,array list map&gt; for each key. <br>
+ * <p>
  * Operator emits key/array list map at end window, this end window operator. <br>
  * <br>
  * <b>StateFull : Yes</b>, values are collected over application window. <br>
@@ -39,7 +39,9 @@ import com.datatorrent.lib.util.KeyValPair;
  * <b>Ports : </b><br>
  * <b>Input(s) : </b> 5 max input ports, 3 are optional. <br>
  * <br>
- *
+ * @displayName Consolidator Key Value
+ * @category Stream Manipulators
+ * @tags arraylist, key value
  * @since 0.3.3
  */
 @OperatorAnnotation(partitionable = false)
@@ -64,7 +66,7 @@ public class ConsolidatorKeyVal<K, V1, V2, V3, V4, V5> implements Operator
 	 * <p>
 	 * Class operates on <K,V> pair, stores value in given number position in
 	 * list. <br>
-	 * 
+	 *
 	 * @param <V>
 	 *          value type.
 	 */
@@ -78,7 +80,7 @@ public class ConsolidatorKeyVal<K, V1, V2, V3, V4, V5> implements Operator
 
 		/**
 		 * Constructor
-		 * 
+		 *
 		 * @param oper
 		 *          Connected operator.
 		 * @param num
@@ -106,47 +108,44 @@ public class ConsolidatorKeyVal<K, V1, V2, V3, V4, V5> implements Operator
 	/**
 	 * V1 type value input port.
 	 */
-	@InputPortFieldAnnotation(name = "in1")
 	public final transient ConsolidatorInputPort<V1> in1 = new ConsolidatorInputPort<V1>(
 			this, 0);
 
 	/**
 	 * V2 type value input port.
 	 */
-	@InputPortFieldAnnotation(name = "in2")
 	public final transient ConsolidatorInputPort<V2> in2 = new ConsolidatorInputPort<V2>(
 			this, 1);
 
 	/**
 	 * V3 type value input port.
 	 */
-	@InputPortFieldAnnotation(name = "in3", optional = true)
+	@InputPortFieldAnnotation(optional = true)
 	public final transient ConsolidatorInputPort<V3> in3 = new ConsolidatorInputPort<V3>(
 			this, 2);
 
 	/**
 	 * V4 type value input port.
 	 */
-	@InputPortFieldAnnotation(name = "in4", optional = true)
+	@InputPortFieldAnnotation(optional = true)
 	public final transient ConsolidatorInputPort<V4> in4 = new ConsolidatorInputPort<V4>(
 			this, 3);
 
 	/**
 	 * V5 type value input port.
 	 */
-	@InputPortFieldAnnotation(name = "in5", optional = true)
+	@InputPortFieldAnnotation(optional = true)
 	public final transient ConsolidatorInputPort<V5> in5 = new ConsolidatorInputPort<V5>(
 			this, 4);
 
 	/**
-	 * Key/array values map output port.
+	 * Output port that emits a hashmap of &lt;key,arraylist&gt;.
 	 */
-	@OutputPortFieldAnnotation(name = "out")
 	public final transient DefaultOutputPort<HashMap<K, ArrayList<Object>>> out = new DefaultOutputPort<HashMap<K, ArrayList<Object>>>();
 
 	/**
 	 * Get array list object for given key
-	 * 
+	 *
 	 * @param k  key
 	 * @return array list for key.
 	 */

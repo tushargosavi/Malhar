@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,7 +70,7 @@ public abstract class Benchmark
 
     public abstract Locality getLocality();
   }
-  
+
   /**
    * Let the engine decide how to best place the 2 operators.
    */
@@ -103,7 +103,7 @@ public abstract class Benchmark
   /**
    * Place the 2 operators so that they are in the same node.
    * The operators are requested to be deployed as different processes within the same machine.
-   */  
+   */
   @ApplicationAnnotation(name="PerformanceBenchmarkNodeLocal")
   public static class NodeLocal extends AbstractApplication
   {

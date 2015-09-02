@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,17 +19,14 @@ import javax.validation.constraints.Min;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
+ * Compares consecutive input data values, emits &lt;value,percent change value&gt; pair on alert output port, if percent change exceeds certain thresh hold value.
  * <p>
- * Operator compare consecutive input data values and exits value and percent change value
- * pair on alert output port, if percent change exceeds certain thresh hold value. <br>
  * Operator is StateFull since current value is stored for comparison in next window. <br>
- * This operator can not be partitioned, partitioning will result in inconsitent base value
+ * This operator can not be partitioned, partitioning will result in inconsistent base value
  * across replicated copies.
  * <br>
  *
@@ -46,15 +43,16 @@ import com.datatorrent.lib.util.KeyValPair;
  * <b>Specific compile time checks</b>: None<br>
  * <b>Specific run time checks</b>: None<br>
  * <br>
- *
+ * @displayName Change Alert
+ * @category Rules and Alerts
+ * @tags change, key value, numeric, percentage
  * @since 0.3.3
  */
 public class ChangeAlert<V extends Number> extends BaseNumberValueOperator<V>
 {
 	/**
-	 * Input port.
+	 * Input port that takes in a number.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -82,14 +80,13 @@ public class ChangeAlert<V extends Number> extends BaseNumberValueOperator<V>
 			baseValue = tval;
 		}
 	};
-	
-	
+
+
 	/**
-	 * Output port.
+	 * Output port which emits a key value pair.
 	 */
-	@OutputPortFieldAnnotation(name = "alert")
 	public final transient DefaultOutputPort<KeyValPair<V, Double>> alert = new DefaultOutputPort<KeyValPair<V, Double>>();
-	
+
 	/**
 	 * baseValue is a state full field. It is retained across windows
 	 */
@@ -99,7 +96,7 @@ public class ChangeAlert<V extends Number> extends BaseNumberValueOperator<V>
 
 	/**
 	 * getter function for threshold value
-	 * 
+	 *
 	 * @return threshold value
 	 */
 	@Min(1)

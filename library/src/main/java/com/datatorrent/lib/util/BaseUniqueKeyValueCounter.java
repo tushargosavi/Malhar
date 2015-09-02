@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,14 @@ import java.util.HashMap;
 import org.apache.commons.lang.mutable.MutableInt;
 
 /**
- * Count unique occurances of keys within a window<p>
- * <br>
+ * This operator counts the number of unique occurrences of key value pairs within each application window.
+ * <p>
  * <b>Benchmarks</b>: Blast as many tuples as possible in inline mode<br>
  * Operator processes > 110 million tuples/sec. Only one tuple per unique key is emitted on end of window, so this operator is not bound by outbound throughput<br>
- *
+ * </p>
+ * @displayName Base Unique Key Value Counter
+ * @category Algorithmic
+ * @tags count, key value
  * @since 0.3.2
  */
 public class BaseUniqueKeyValueCounter<K,V> extends BaseKeyValueOperator<K,V>

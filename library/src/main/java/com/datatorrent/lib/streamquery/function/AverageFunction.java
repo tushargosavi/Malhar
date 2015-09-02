@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,22 +23,25 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Class implements aggregate function semantic for select function  statement. <br>
+ * An implementation of function index that implements average function semantics. <br>
+ * <p>
  *   e.g : sql => SELECT AVG(column_name) FROM table_name. <br>
  *   <br>
  *   <b> Properties : </b> <br>
  *   <b> column : </b> Aggregate over given column values.   <br>
  *   <b> alias  : </b> Alias name for aggregate output. <br>
- *
+ * @displayName Average Function
+ * @category Stream Manipulators
+ * @tags sql average
  * @since 0.3.4
  */
 public class AverageFunction  extends FunctionIndex
 {
   /**
-   * @param column Aggregate over given column values, must be non null. 
+   * @param column Aggregate over given column values, must be non null.
    * @param alias  Alias name for aggregate output.
    */
-  public AverageFunction(@NotNull String column, String alias) 
+  public AverageFunction(@NotNull String column, String alias)
   {
     super(column, alias);
   }

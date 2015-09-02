@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,8 @@ import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
- * Calculate simple moving average (SMA) of last N window. <br>
- * <br>
+ * Calculates simple moving average (SMA) of last N window. <br>
+ * <p>
  * <b>StateFull : Yes</b>, operator store values  for n-1 th windows. <br>
  * <b>Partitions : No</b>, sum is not unified on output ports. <br>
  * <br>
@@ -38,7 +38,9 @@ import com.datatorrent.lib.util.KeyValPair;
  * <b>Properties</b>:<br>
  * <b>windowSize</b>: Number of windows to keep state on<br>
  * <br>
- *
+ * @displayName Simple Moving Average
+ * @category Stats and Aggregations
+ * @tags key value, numeric, average
  * @since 0.3.3
  */
 @OperatorAnnotation(partitionable = false)
@@ -48,29 +50,29 @@ public class SimpleMovingAverage<K, V extends Number> extends
 	/**
 	 * Output port to emit simple moving average (SMA) of last N window as Double.
 	 */
-	@OutputPortFieldAnnotation(name = "doubleSMA", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Double>> doubleSMA = new DefaultOutputPort<KeyValPair<K, Double>>();
 	/**
 	 * Output port to emit simple moving average (SMA) of last N window as Float.
 	 */
-	@OutputPortFieldAnnotation(name = "floatSMA", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Float>> floatSMA = new DefaultOutputPort<KeyValPair<K, Float>>();
 	/**
 	 * Output port to emit simple moving average (SMA) of last N window as Long.
 	 */
-	@OutputPortFieldAnnotation(name = "longSMA", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Long>> longSMA = new DefaultOutputPort<KeyValPair<K, Long>>();
 	/**
 	 * Output port to emit simple moving average (SMA) of last N window as
 	 * Integer.
 	 */
-	@OutputPortFieldAnnotation(name = "integerSMA", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<KeyValPair<K, Integer>> integerSMA = new DefaultOutputPort<KeyValPair<K, Integer>>();
 
 	/**
 	 * Create the list if key doesn't exist. Add value to buffer and increment
 	 * counter.
-	 * 
+	 *
 	 * @param tuple
 	 */
 	@Override
@@ -93,7 +95,7 @@ public class SimpleMovingAverage<K, V extends Number> extends
 
 	/**
 	 * Calculate average and emit in appropriate port.
-	 * 
+	 *
 	 * @param key
 	 * @param obj
 	 */

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,10 +22,16 @@ import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 
 /**
- * Http get operator to extract query parameters from incoming tuple and make GET calls to
- * the set url.
- *
+ * This is the base implementation of an HTTP get operator,
+ * which extracts query parameters from incoming tuples.&nbsp;
+ * The operator then makes GET calls using the extracted parameters and given url.&nbsp;
+ * Subclasses should implement the methods required to extract query parameters and process responses.
+ * <p>
  * If the output port is connected, the response is processed
+ * </p>
+ * @displayName Abstract HTTP Query Input
+ * @category Input
+ * @tags http, input operator
  *
  * @param <INPUT> tuple type of input port
  * @param <OUTPUT> tuple type of output port
@@ -33,7 +39,10 @@ import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
  */
 public abstract class AbstractHttpGetOperator<INPUT, OUTPUT> extends AbstractHttpOperator<INPUT>
 {
-  @OutputPortFieldAnnotation(name = "output", optional = true)
+  /**
+   * The output port which emits retrieved tuples.
+   */
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<OUTPUT> output = new DefaultOutputPort<OUTPUT>();
 
   @Override

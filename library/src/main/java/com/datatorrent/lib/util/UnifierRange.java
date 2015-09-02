@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,15 +21,22 @@ import com.datatorrent.api.Operator.Unifier;
 
 
 /**
- *cd
- * Combiner for an output port that emits object with ArrayList<V>(2) interface and has the processing done
- * with round robin partition. The first element in the ArrayList is high, the next is low
- *
+ * This unifier consumes numbers, and emits the maximum and minimum tuples at the end of each window.
+ * <p>
+ * This unifier uses round robin partitioning.
+ * </p>
+ * @displayName Unifier Range
+ * @category Algorithmic
+ * @tags numeric
  * @since 0.3.2
  */
 public class UnifierRange<V extends Number> implements Unifier<HighLow<V>>
 {
   public HighLow<V> mergedTuple = null;
+
+  /**
+   * This is the output port which emits the minimum and maximum.
+   */
   public final transient DefaultOutputPort<HighLow<V>> mergedport = new DefaultOutputPort<HighLow<V>>();
 
   /**

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +15,24 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.Operator.Unifier;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.lib.util.BaseKeyValueOperator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.Operator.Unifier;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+
+import com.datatorrent.lib.util.BaseKeyValueOperator;
+
 /**
- *
- * Inverts the index and sends out the tuple on output port "index" at the end of the window<p>
+ * This operator takes a stream of key value pairs each window,
+ * and outputs a set of inverted key value pairs at the end of each window.
+ * <p>
+ * Inverts the index and sends out the tuple on output port "index" at the end of the window.
+ * </p>
+ * <p>
  * This is an end of window operator<br>
  * <br>
  * <b>StateFull : Yes, </b> tuple are compare across application window(s). <br>
@@ -38,20 +43,26 @@ import java.util.Map;
  * <b>data</b>: expects &lt;K,V&gt;<br>
  * <b>index</b>: emits &lt;V,ArrayList&lt;K&gt;&gt;(1); one HashMap per V<br>
  * <br>
+ * </p>
+ *
+ * @displayName Invert Key Value Pairs
+ * @category Stream Manipulators
+ * @tags key value
  *
  * @since 0.3.2
  */
+
+@OperatorAnnotation(partitionable = true)
 public class InvertIndex<K, V> extends BaseKeyValueOperator<K, V> implements Unifier<HashMap<V, ArrayList<K>>>
 {
   /**
    * Inverted key/value map.
    */
   protected HashMap<V, ArrayList<K>> map = new HashMap<V, ArrayList<K>>();
-  
+
   /**
-   * Input port.
+   * The input port on which key value pairs are received.
    */
-  @InputPortFieldAnnotation(name = "data")
   public final transient DefaultInputPort<HashMap<K, V>> data = new DefaultInputPort<HashMap<K, V>>()
   {
     /**
@@ -68,11 +79,10 @@ public class InvertIndex<K, V> extends BaseKeyValueOperator<K, V> implements Uni
       }
     }
   };
-  
+
   /**
-   * Output port.
+   * The output port on which inverted key value pairs are emitted.
    */
-  @OutputPortFieldAnnotation(name = "index")
   public final transient DefaultOutputPort<HashMap<V, ArrayList<K>>> index = new DefaultOutputPort<HashMap<V, ArrayList<K>>>()
   {
     @Override
@@ -87,7 +97,6 @@ public class InvertIndex<K, V> extends BaseKeyValueOperator<K, V> implements Uni
    * Returns the ArrayList stored for a key
    *
    * @param key
-   * @return ArrayList
    */
   void insert(V val, K key)
   {
@@ -113,7 +122,7 @@ public class InvertIndex<K, V> extends BaseKeyValueOperator<K, V> implements Uni
     }
     map.clear();
   }
-  
+
   /**
    * Unifier override.
    */
@@ -125,7 +134,7 @@ public class InvertIndex<K, V> extends BaseKeyValueOperator<K, V> implements Uni
       if (map.containsKey(e.getKey())) {
         keys = map.remove(e.getKey());
       } else {
-        keys = new ArrayList<K>();;
+        keys = new ArrayList<K>();
       }
       keys.addAll(e.getValue());
     }

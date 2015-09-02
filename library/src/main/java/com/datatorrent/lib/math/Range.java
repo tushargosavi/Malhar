@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +17,13 @@ package com.datatorrent.lib.math;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 import com.datatorrent.lib.util.HighLow;
 import com.datatorrent.lib.util.UnifierRange;
 
 /**
+ * This operator emits the range of values at the end of window.
  * <p>
- * Emits the range of values at the end of window<br>
  * <br>
  * <b>StateFull : Yes</b>, values are computed over application time window. <br>
  * <b>Partitions : Yes </b>, High/Low values are unified on output port. <br>
@@ -35,7 +33,9 @@ import com.datatorrent.lib.util.UnifierRange;
  * <b>range</b>: emits HighLow&lt;V&gt;<br>
  * <br>
  * <br>
- *
+ * @displayName Range
+ * @category Math
+ * @tags range, numeric , comparison
  * @since 0.3.3
  */
 public class Range<V extends Number> extends BaseNumberValueOperator<V>
@@ -53,7 +53,6 @@ public class Range<V extends Number> extends BaseNumberValueOperator<V>
 	/**
 	 * Input data port.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -73,9 +72,8 @@ public class Range<V extends Number> extends BaseNumberValueOperator<V>
 	};
 
 	/**
-	 * Output range port, with high low unifier operator.
+	 * Output range port, which emits high low unifier operator.
 	 */
-	@OutputPortFieldAnnotation(name = "range")
 	public final transient DefaultOutputPort<HighLow<V>> range = new DefaultOutputPort<HighLow<V>>()
 	{
 		@Override

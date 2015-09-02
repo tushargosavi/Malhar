@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,14 @@
  */
 package com.datatorrent.lib.util;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 
 /**
- * Base class for operators that allows cloneKey for enabling users to use mutable objects<p>
- *
+ * This is an abstract operator that allows cloneKey to allow users to use mutable objects.
+ * <p></p>
+ * @displayName Base Key
+ * @category Algorithmic
+ * @tags abstract, cloneKey
  * @since 0.3.2
  */
 public class BaseKeyOperator<K> extends BaseOperator

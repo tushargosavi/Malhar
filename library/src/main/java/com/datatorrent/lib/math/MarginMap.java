@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,8 +17,6 @@ package com.datatorrent.lib.math;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 import com.datatorrent.lib.util.UnifierHashMap;
 import java.util.HashMap;
@@ -28,8 +26,9 @@ import org.apache.commons.lang.mutable.MutableDouble;
 
 /**
  *
- * Adds all values for each key in "numerator" and "denominator", and at the end of window emits the margin for each key
- * (1 - numerator/denominator). <p>
+ * This operator adds all values for each key in "numerator" and "denominator", and emits the margin for each key at the end of window.
+ * <p>
+ * Margin is calculated as  1 - SUM(numerator)/SUM(denominator).
  * <br>The values are added for each key within the window and for each stream.<br>
  * <br>
  * <b>Ports</b>:<br>
@@ -41,12 +40,16 @@ import org.apache.commons.lang.mutable.MutableDouble;
  * <b>inverse</b>: if set to true the key in the filter will block tuple<br>
  * <b>filterBy</b>: List of keys to filter on<br>
  * <br>
- *
+ * @displayName Margin Map
+ * @category Math
+ * @tags sum, division, numeric, map
  * @since 0.3.2
  */
 public class MarginMap<K, V extends Number> extends BaseNumberKeyValueOperator<K,V>
 {
-  @InputPortFieldAnnotation(name = "numerator")
+  /**
+   * Numerator input port that takes a map.
+   */  
   public final transient DefaultInputPort<Map<K, V>> numerator = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -58,7 +61,10 @@ public class MarginMap<K, V extends Number> extends BaseNumberKeyValueOperator<K
       addTuple(tuple, numerators);
     }
   };
-  @InputPortFieldAnnotation(name = "denominator")
+  
+  /**
+   * Denominator input port that takes a map.
+   */
   public final transient DefaultInputPort<Map<K, V>> denominator = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -90,7 +96,10 @@ public class MarginMap<K, V extends Number> extends BaseNumberKeyValueOperator<K
       val.add(e.getValue().doubleValue());
     }
   }
-  @OutputPortFieldAnnotation(name = "margin")
+  
+  /*
+   * Output margin port that emits hashmap.
+   */
   public final transient DefaultOutputPort<HashMap<K, V>> margin = new DefaultOutputPort<HashMap<K, V>>()
   {
     @Override

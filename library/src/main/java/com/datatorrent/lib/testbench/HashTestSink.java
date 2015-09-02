@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,11 @@ import java.util.HashMap;
 import org.apache.commons.lang.mutable.MutableInt;
 
 /**
- * A sink implementation to collect expected test results in a HashMap
- *
+ * A sink implementation, which counts the number of times each tuples is collected and stores the results in a hash map.
+ * <p></p>
+ * @displayName Hash Count Test Sink
+ * @category Test Bench
+ * @tags sink, count
  * @since 0.3.2
  */
 public class HashTestSink<T> implements Sink<T>

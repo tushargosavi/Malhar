@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,14 +21,13 @@ import java.util.Map;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Operator.Unifier;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberValueOperator;
 import com.datatorrent.lib.util.UnifierSumNumber;
 
 /**
+ * This operator implements Unifier interface and emits the sum of values at the end of window. 
  * <p>
- * Emits the sum of values at the end of window. <br>
  * This is an end of window operator. Application can turn this into accumulated
  * sum operator by setting cumulative flag to true. <br>
  * <b>StateFull : Yes</b>, sum is computed over application window >= 1. <br>
@@ -46,7 +45,9 @@ import com.datatorrent.lib.util.UnifierSumNumber;
  * <b>Properties: </b> <br>
  * <b>cumulative </b> Sum has to be cumulative. <br>
  * <br>
- *
+ * @displayName Sum
+ * @category Math
+ * @tags numeric, sum
  * @param <V>
  *          Generic number type parameter. <br>
  * @since 0.3.3
@@ -70,9 +71,8 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	protected boolean cumulative = false;
 
 	/**
-	 * Input port to receive data.
+	 * Input port to receive data.&nbsp; It computes sum and count for each tuple.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<V> data = new DefaultInputPort<V>()
 	{
 		/**
@@ -99,7 +99,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sum", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<V> sum = new DefaultOutputPort<V>()
 	{
 		@Override
@@ -114,7 +114,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output double sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sumDouble", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Double> sumDouble = new DefaultOutputPort<Double>()
 	{
 		@Override
@@ -129,7 +129,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output integer sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sumInteger", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Integer> sumInteger = new DefaultOutputPort<Integer>()
 	{
 		@Override
@@ -144,7 +144,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output Long sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sumLong", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Long> sumLong = new DefaultOutputPort<Long>()
 	{
 		@Override
@@ -159,7 +159,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output short sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sumShort", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Short> sumShort = new DefaultOutputPort<Short>()
 	{
 		@Override
@@ -174,7 +174,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Output float sum port.
 	 */
-	@OutputPortFieldAnnotation(name = "sumFloat", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Float> sumFloat = new DefaultOutputPort<Float>()
 	{
 		@Override
@@ -189,7 +189,7 @@ public class Sum<V extends Number> extends BaseNumberValueOperator<V> implements
 	/**
 	 * Redis server output port.
 	 */
-	@OutputPortFieldAnnotation(name = "redisport", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Map<Integer, Integer>> redisport = new DefaultOutputPort<Map<Integer, Integer>>();
 
 	/**

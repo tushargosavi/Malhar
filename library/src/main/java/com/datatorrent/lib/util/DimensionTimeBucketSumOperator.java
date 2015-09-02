@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>DimensionTimeBucketSumOperator class.</p>
- *
+ * This operator accumulates the values of "value" fields for different time and dimensions and emits the accumulated values as a map.&nbsp;
+ * The emitted map's keys are a combination of the time and dimension fields,
+ * and the emitted map's values are another map from value fields to and accumulated value.
+ * <p></p>
+ * @displayName Dimension Time Bucket Sum
+ * @category Stats and Aggregations
+ * @tags count, key value, numeric
  * @since 0.3.2
  */
 public class DimensionTimeBucketSumOperator extends AbstractDimensionTimeBucketOperator

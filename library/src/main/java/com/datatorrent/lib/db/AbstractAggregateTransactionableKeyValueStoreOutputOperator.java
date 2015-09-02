@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,14 @@
 package com.datatorrent.lib.db;
 
 /**
- * This abstract class is for aggregate output (over one application window) to a transactionable key value store with the transactional exactly-once feature.
+ * This is the base implementation for an aggregate output operator,
+ * which writes to a transactionable key value store (over one application window).&nbsp;
+ * This operator provides the exactly-once gaurantee.&nbsp;
+ * A concrete operator should be created from this skeleton implementation.
+ * <p></p>
+ * @displayName Abstract Aggregate Transactionable Store Output
+ * @category Output
+ * @tags transactional, output operator, key value
  *
  * @param <T> The tuple type.
  * @param <S> The store type.

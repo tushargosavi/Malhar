@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,24 +32,24 @@ import com.datatorrent.api.Context;
 import com.datatorrent.lib.db.AbstractPassThruTransactionableStoreOutputOperator;
 
 /**
+ * This is the base class implementation of a transactionable JDBC output operator.&nbsp;
+ * Subclasses should implement the method which provides the insertion command.
  * <p>
- * Generic JDBC Output Adaptor which creates a transaction at the start of window.<br/>
- * Executes batches of sql updates and closes the transaction at the end of the window.
- * </p>
- *
- * <p>
- * Each tuple corresponds to an SQL update statement. The operator groups the updates in a batch
- * and submits them with one call to the database. Batch processing improves performance considerably.<br/>
+ * This operator creates a transaction at the start of window, executes batches of sql updates,
+ * and closes the transaction at the end of the window. Each tuple corresponds to an SQL update statement.
+ * The operator groups the updates in a batch and submits them with one call to the database. Batch processing improves performance considerably.<br/>
  * The size of a batch is configured by batchSize property.
  * </p>
- *
  * <p>
  * The tuples in a window are stored in check-pointed collection which is cleared in the endWindow().
  * This is needed for the recovery. The operator writes a tuple exactly once in the database, which is why
  * only when all the updates are executed, the transaction is committed in the end window call.
  * </p>
+ * @displayName Abstract JDBC Transactionable Output
+ * @category Output
+ * @tags transactional
  *
- * @param <T>type of tuple</T>
+ * @param <T> type of tuple
  * @since 0.9.4
  */
 public abstract class AbstractJdbcTransactionableOutputOperator<T> extends AbstractPassThruTransactionableStoreOutputOperator<T, JdbcTransactionalStore>
@@ -75,7 +75,12 @@ public abstract class AbstractJdbcTransactionableOutputOperator<T> extends Abstr
   public void setup(Context.OperatorContext context)
   {
     super.setup(context);
-    updateCommand = getUpdateCommand();
+    try {
+      updateCommand = store.connection.prepareStatement(getUpdateCommand());
+    }
+    catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
 
   }
 
@@ -114,7 +119,7 @@ public abstract class AbstractJdbcTransactionableOutputOperator<T> extends Abstr
       throw new RuntimeException("processing batch", e);
     }
     finally {
-      batchStartIdx += batchSize;
+      batchStartIdx += tuples.size() - batchStartIdx;
     }
   }
 
@@ -135,7 +140,7 @@ public abstract class AbstractJdbcTransactionableOutputOperator<T> extends Abstr
    * @return the sql statement to update a tuple in the database.
    */
   @Nonnull
-  protected abstract PreparedStatement getUpdateCommand();
+  protected abstract String getUpdateCommand();
 
   /**
    * Sets the parameter of the insert/update statement with values from the tuple.

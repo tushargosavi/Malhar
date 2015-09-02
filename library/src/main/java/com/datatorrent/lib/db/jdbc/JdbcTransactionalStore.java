@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
 import com.datatorrent.lib.db.TransactionableStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>JdbcTransactionalStore class.</p>
@@ -30,25 +32,27 @@ import com.datatorrent.lib.db.TransactionableStore;
  */
 public class JdbcTransactionalStore extends JdbcStore implements TransactionableStore
 {
+  private static transient final Logger LOG = LoggerFactory.getLogger(JdbcTransactionalStore.class);
+
   public static String DEFAULT_APP_ID_COL = "dt_app_id";
   public static String DEFAULT_OPERATOR_ID_COL = "dt_operator_id";
   public static String DEFAULT_WINDOW_COL = "dt_window";
   public static String DEFAULT_META_TABLE = "dt_meta";
 
-  @Nonnull
+  @NotNull
   protected String metaTableAppIdColumn;
-  @Nonnull
+  @NotNull
   protected String metaTableOperatorIdColumn;
-  @Nonnull
+  @NotNull
   protected String metaTableWindowColumn;
-  @Nonnull
+  @NotNull
   private String metaTable;
 
-  private transient boolean inTransaction;
-  private transient PreparedStatement lastWindowFetchCommand;
-  private transient PreparedStatement lastWindowInsertCommand;
-  private transient PreparedStatement lastWindowUpdateCommand;
-  private transient PreparedStatement lastWindowDeleteCommand;
+  private boolean inTransaction;
+  protected transient PreparedStatement lastWindowFetchCommand;
+  protected transient PreparedStatement lastWindowInsertCommand;
+  protected transient PreparedStatement lastWindowUpdateCommand;
+  protected transient PreparedStatement lastWindowDeleteCommand;
 
   public JdbcTransactionalStore()
   {
@@ -66,7 +70,7 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
    *
    * @param metaTable meta table name.
    */
-  public void setMetaTable(@Nonnull String metaTable)
+  public void setMetaTable(@NotNull String metaTable)
   {
     this.metaTable = metaTable;
   }
@@ -77,7 +81,7 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
    *
    * @param appIdColumn application id column name.
    */
-  public void setMetaTableAppIdColumn(@Nonnull String appIdColumn)
+  public void setMetaTableAppIdColumn(@NotNull String appIdColumn)
   {
     this.metaTableAppIdColumn = appIdColumn;
   }
@@ -88,7 +92,7 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
    *
    * @param operatorIdColumn operator id column name.
    */
-  public void setMetaTableOperatorIdColumn(@Nonnull String operatorIdColumn)
+  public void setMetaTableOperatorIdColumn(@NotNull String operatorIdColumn)
   {
     this.metaTableOperatorIdColumn = operatorIdColumn;
   }
@@ -99,7 +103,7 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
    *
    * @param windowColumn window column name.
    */
-  public void setMetaTableWindowColumn(@Nonnull String windowColumn)
+  public void setMetaTableWindowColumn(@NotNull String windowColumn)
   {
     this.metaTableWindowColumn = windowColumn;
   }
@@ -188,10 +192,41 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
   @Override
   public long getCommittedWindowId(String appId, int operatorId)
   {
+    Long lastWindow = getCommittedWindowIdHelper(appId, operatorId);
+
+    try {
+      if(lastWindow == null) {
+        lastWindowInsertCommand.close();
+        connection.commit();
+      }
+
+      lastWindowFetchCommand.close();
+      LOG.debug("Last window id: {}", lastWindow);
+
+      if(lastWindow == null) {
+        return -1L;
+      }
+      else {
+        return lastWindow;
+      }
+    }
+    catch (SQLException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  /**
+   * This is a helper method for loading the committed window Id.
+   * @param appId The application ID.
+   * @param operatorId The operator ID.
+   * @return The last committed window. If there is no previously committed window this will return null.
+   */
+  protected Long getCommittedWindowIdHelper(String appId, int operatorId)
+  {
     try {
       lastWindowFetchCommand.setString(1, appId);
       lastWindowFetchCommand.setInt(2, operatorId);
-      long lastWindow = -1;
+      Long lastWindow = null;
       ResultSet resultSet = lastWindowFetchCommand.executeQuery();
       if (resultSet.next()) {
         lastWindow = resultSet.getLong(1);
@@ -201,10 +236,7 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
         lastWindowInsertCommand.setInt(2, operatorId);
         lastWindowInsertCommand.setLong(3, -1);
         lastWindowInsertCommand.executeUpdate();
-        lastWindowInsertCommand.close();
-        connection.commit();
       }
-      lastWindowFetchCommand.close();
       return lastWindow;
     }
     catch (SQLException ex) {
@@ -224,7 +256,6 @@ public class JdbcTransactionalStore extends JdbcStore implements Transactionable
     catch (SQLException e) {
       throw new RuntimeException(e);
     }
-
   }
 
   @Override

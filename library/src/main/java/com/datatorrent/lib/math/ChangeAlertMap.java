@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,15 +24,12 @@ import org.apache.commons.lang.mutable.MutableDouble;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 
 /**
+ * Operator stores  &lt;key,value&gt; pair in hash map across the windows for comparison and emits hash map of &lt;key,percent change in value for each key&gt; if percent change
+ * exceeds preset threshold.
  * <p>
- * Operator stores key/value pair in hash map across the windows for comparison.<br>
- * Operator emits hashmap of key/percent change in value for each key, if percent change
- * exceeds preset thresh hold. <br> <br>
  *
  * StateFull : Yes, key/value pair in current window are stored for comparison in next window. <br>
  * Partition : No, will yield wrong result, base value won't be consistent across instances. <br>
@@ -45,16 +42,20 @@ import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
  * <b>threshold</b>: The threshold of change between consecutive tuples of the same key that triggers an alert tuple<br>
  * <b>inverse</b>: if set to true the key in the filter will block tuple<br>
  * <b>filterBy</b>: List of keys to filter on<br>
- *
+ * @displayName Change Alert Map
+ * @category Rules and Alerts
+ * @tags change, key value, numeric, percentage, map
  * @since 0.3.2
  */
 public class ChangeAlertMap<K, V extends Number> extends BaseNumberKeyValueOperator<K, V>
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * Input data port that takes a map of &lt;key,value&gt;.
+   */
   public final transient DefaultInputPort<Map<K, V>> data = new DefaultInputPort<Map<K, V>>()
   {
     /**
-     * Process each key, compute change or percent, and emit it
+     * Process each key, compute change or percent, and emits it.
      */
     @Override
     public void process(Map<K, V> tuple)
@@ -87,7 +88,9 @@ public class ChangeAlertMap<K, V extends Number> extends BaseNumberKeyValueOpera
   };
 
   // Default "pass through" unifier works as tuple is emitted as pass through
-  @OutputPortFieldAnnotation(name = "alert")
+  /**
+   * Output port which emits a hashmap of key, percentage change.
+   */
   public final transient DefaultOutputPort<HashMap<K, HashMap<V,Double>>> alert = new DefaultOutputPort<HashMap<K, HashMap<V,Double>>>();
 
   /**

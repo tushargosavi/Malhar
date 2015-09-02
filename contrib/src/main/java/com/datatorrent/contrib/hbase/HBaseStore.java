@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,142 +15,267 @@
  */
 package com.datatorrent.contrib.hbase;
 
-import com.datatorrent.lib.db.Connectable;
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.security.UserGroupInformation;
 
-import java.io.IOException;
+import com.datatorrent.lib.db.Connectable;
 /**
- * A {@link Connectable} that uses hbase to connect to stores.
- *
+ * A {@link Connectable} that uses HBase to connect to stores and implements Connectable interface.
+ * <p>
+ * @displayName HBase Store
+ * @category Output
+ * @tags store, hbase
  * @since 1.0.2
  */
 public class HBaseStore implements Connectable {
 
-	private String zookeeperQuorum;
-	private int zookeeperClientPort;
-	protected String tableName;
+  public static final String USER_NAME_SPECIFIER = "%USER_NAME%";
 
-	protected transient HTable table;
+  private static final Logger logger = LoggerFactory.getLogger(HBaseStore.class);
 
-	/**
-	 * Get the zookeeper quorum location.
-	 * 
-	 * @return The zookeeper quorum location
-	 */
-	public String getZookeeperQuorum() {
-		return zookeeperQuorum;
-	}
+  private String zookeeperQuorum;
+  private int zookeeperClientPort;
+  protected String tableName;
 
-	/**
-	 * Set the zookeeper quorum location.
-	 * 
-	 * @param zookeeperQuorum
-	 *            The zookeeper quorum location
-	 */
-	public void setZookeeperQuorum(String zookeeperQuorum) {
-		this.zookeeperQuorum = zookeeperQuorum;
-	}
+  protected String principal;
+  protected String keytabPath;
+  // Default interval 30 min
+  protected long reloginCheckInterval = 30 * 60 * 1000;
+  protected transient Thread loginRenewer;
+  private volatile transient boolean doRelogin;
 
-	/**
-	 * Get the zookeeper client port.
-	 * 
-	 * @return The zookeeper client port
-	 */
-	public int getZookeeperClientPort() {
-		return zookeeperClientPort;
-	}
+  protected transient HTable table;
 
-	/**
-	 * Set the zookeeper client port.
-	 * 
-	 * @param zookeeperClientPort
-	 *            The zookeeper client port
-	 */
-	public void setZookeeperClientPort(int zookeeperClientPort) {
-		this.zookeeperClientPort = zookeeperClientPort;
-	}
+  /**
+   * Get the zookeeper quorum location.
+   *
+   * @return The zookeeper quorum location
+   */
+  public String getZookeeperQuorum() {
+    return zookeeperQuorum;
+  }
 
-	/**
-	 * Get the HBase table name.
-	 * 
-	 * @return The HBase table name
-	 */
-	public String getTableName() {
-		return tableName;
-	}
+  /**
+   * Set the zookeeper quorum location.
+   *
+   * @param zookeeperQuorum
+   *            The zookeeper quorum location
+   */
+  public void setZookeeperQuorum(String zookeeperQuorum) {
+    this.zookeeperQuorum = zookeeperQuorum;
+  }
 
-	/**
-	 * Set the HBase table name.
-	 * 
-	 * @param tableName
-	 *            The HBase table name
-	 */
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
+  /**
+   * Get the zookeeper client port.
+   *
+   * @return The zookeeper client port
+   */
+  public int getZookeeperClientPort() {
+    return zookeeperClientPort;
+  }
 
-	/**
-	 * Get the HBase table .
-	 * 
-	 * @return The HBase table
-	 */
-	public HTable getTable() {
-		return table;
-	}
+  /**
+   * Set the zookeeper client port.
+   *
+   * @param zookeeperClientPort
+   *            The zookeeper client port
+   */
+  public void setZookeeperClientPort(int zookeeperClientPort) {
+    this.zookeeperClientPort = zookeeperClientPort;
+  }
 
-	/**
-	 * Set the HBase table.
-	 * 
-	 * @param table
-	 *            The HBase table
-	 */
-	public void setTable(HTable table) {
-		this.table = table;
-	}
+  /**
+   * Get the HBase table name.
+   *
+   * @return The HBase table name
+   */
+  public String getTableName() {
+    return tableName;
+  }
 
-	/**
-	 * Get the configuration.
-	 * 
-	 * @return The configuration
-	 */
-	public Configuration getConfiguration() {
-		return configuration;
-	}
+  /**
+   * Set the HBase table name.
+   *
+   * @param tableName
+   *            The HBase table name
+   */
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
 
-	/**
-	 * Set the configuration.
-	 * 
-	 * @param configuration
-	 *            The configuration
-	 */
-	public void setConfiguration(Configuration configuration) {
-		this.configuration = configuration;
-	}
+  /**
+   * Get the Kerberos principal.
+   *
+   * @return The Kerberos principal
+   */
+  public String getPrincipal()
+  {
+    return principal;
+  }
 
-	protected transient Configuration configuration;
+  /**
+   * Set the Kerberos principal.
+   *
+   * @param principal
+   *            The Kerberos principal
+   */
+  public void setPrincipal(String principal)
+  {
+    this.principal = principal;
+  }
 
-	@Override
-	public void connect() throws IOException {
-		configuration = HBaseConfiguration.create();
-		configuration.set("hbase.zookeeper.quorum", zookeeperQuorum);
-		configuration.set("hbase.zookeeper.property.clientPort", ""
-				+ zookeeperClientPort);
-		table = new HTable(configuration, tableName);
+  /**
+   * Get the Kerberos keytab path
+   *
+   * @return The Kerberos keytab path
+   */
+  public String getKeytabPath()
+  {
+    return keytabPath;
+  }
 
-	}
+  /**
+   * Set the Kerberos keytab path.
+   *
+   * @param keytabPath
+   *            The Kerberos keytab path
+   */
+  public void setKeytabPath(String keytabPath)
+  {
+    this.keytabPath = keytabPath;
+  }
 
-	@Override
-	public void disconnect() throws IOException {
-		// not applicable for hbase
+  /**
+   * Get the interval to check for relogin.
+   *
+   * @return The interval to check for relogin
+   */
+  public long getReloginCheckInterval()
+  {
+    return reloginCheckInterval;
+  }
 
-	}
+  /**
+   * Set the interval to check for relogin.
+   *
+   * @param reloginCheckInterval
+   *            The interval to check for relogin
+   */
+  public void setReloginCheckInterval(long reloginCheckInterval)
+  {
+    this.reloginCheckInterval = reloginCheckInterval;
+  }
 
-	@Override
-	public boolean connected() {
-		// not applicable to hbase
-		return false;
-	}
+  /**
+   * Get the HBase table .
+   *
+   * @return The HBase table
+   * @omitFromUI
+   */
+  public HTable getTable() {
+    return table;
+  }
+
+
+  /**
+   * Get the configuration.
+   *
+   * @return The configuration
+   */
+  public Configuration getConfiguration() {
+    return configuration;
+  }
+
+  /**
+   * Set the configuration.
+   *
+   * @param configuration
+   *            The configuration
+   */
+  public void setConfiguration(Configuration configuration) {
+    this.configuration = configuration;
+  }
+
+  protected transient Configuration configuration;
+
+  @Override
+  public void connect() throws IOException {
+    if ((principal != null) && (keytabPath != null)) {
+      String lprincipal = evaluateProperty(principal);
+      String lkeytabPath = evaluateProperty(keytabPath);
+      UserGroupInformation.loginUserFromKeytab(lprincipal, lkeytabPath);
+      doRelogin = true;
+      loginRenewer = new Thread(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          logger.debug("Renewer starting");
+          try {
+            while (doRelogin) {
+              Thread.sleep(reloginCheckInterval);
+              try {
+                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+              } catch (IOException e) {
+                logger.error("Error trying to relogin from keytab", e);
+              }
+            }
+          } catch (InterruptedException e) {
+            if (doRelogin) {
+              logger.warn("Renewer interrupted... stopping");
+            }
+          }
+          logger.debug("Renewer ending");
+        }
+      });
+      loginRenewer.start();
+    }
+    configuration = HBaseConfiguration.create();
+    // The default configuration is loaded from resources in classpath, the following parameters can be optionally set
+    // to override defaults
+    if (zookeeperQuorum != null) {
+      configuration.set("hbase.zookeeper.quorum", zookeeperQuorum);
+    }
+    if (zookeeperClientPort != 0) {
+      configuration.set("hbase.zookeeper.property.clientPort", "" + zookeeperClientPort);
+    }
+    table = new HTable(configuration, tableName);
+    table.setAutoFlushTo(false);
+
+  }
+
+  private String evaluateProperty(String property) throws IOException
+  {
+    if (property.contains(USER_NAME_SPECIFIER)) {
+     property = property.replaceAll(USER_NAME_SPECIFIER, UserGroupInformation.getLoginUser().getShortUserName());
+    }
+    return property;
+  }
+
+  @Override
+  public void disconnect() throws IOException {
+    if (loginRenewer != null) {
+      doRelogin = false;
+      loginRenewer.interrupt();
+      try {
+        loginRenewer.join();
+      } catch (InterruptedException e) {
+        logger.warn("Unsuccessful waiting for renewer to finish. Proceeding to shutdown", e);
+      }
+    }
+  }
+
+  @Override
+  public boolean isConnected() {
+    // not applicable to hbase
+    return false;
+  }
 
 }

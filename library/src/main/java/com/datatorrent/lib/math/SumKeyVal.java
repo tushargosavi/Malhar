@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,29 +20,32 @@ import java.util.Map;
 
 import org.apache.commons.lang.mutable.MutableDouble;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.StreamCodec;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 import com.datatorrent.lib.util.KeyValPair;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.StreamCodec;
+import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
+
 /**
- *
- * Emits the sum of values for each key at the end of window. <p> This is an end window operator. Default unifier works as this operator follows sticky partition.<br> <br> <b>Ports</b>:<br>
+ * Emits the sum of values for each key at the end of window.
+ * <p>
+ * This is an end window operator. Default unifier works as this operator follows sticky partition.<br> <br> <b>Ports</b>:<br>
  * <b>data</b>: expects KeyValPair&lt;K,V extends Number&gt;<br> <b>sum</b>: emits KeyValPair&lt;K,V extends Number&gt;<br> <br> <b>Properties</b>:<br> <b>inverse</b>: If set to true the key in the
  * filter will block tuple<br> <b>filterBy</b>: List of keys to filter on<br>
  * <b>cumulative</b>: boolean flag, if set the sum is not cleared at the end of window, <br>
  * hence generating cumulative sum
  * across streaming windows. Default is false.<br>
  * <br>
- *
+ * @displayName Sum Key Value
+ * @category Math
+ * @tags  numeric, sum, key value
  * @since 0.3.2
  */
 public class SumKeyVal<K, V extends Number> extends BaseNumberKeyValueOperator<K, V>
 {
-  protected class SumEntry
+  protected static class SumEntry
   {
     public MutableDouble sum;
     public boolean changed = true;
@@ -63,16 +66,15 @@ public class SumKeyVal<K, V extends Number> extends BaseNumberKeyValueOperator<K
    * Sums key map.
    */
   protected HashMap<K, SumEntry> sums = new HashMap<K, SumEntry>();
-  
+
   /**
    * Cumulative sum flag.
    */
   protected boolean cumulative = false;
-  
+
   /**
-   * Input port to receive data.
+   * Input port that takes key value pairs and adds the values for each key.
    */
-  @InputPortFieldAnnotation(name = "data")
   public final transient DefaultInputPort<KeyValPair<K, V>> data = new DefaultInputPort<KeyValPair<K, V>>()
   {
     /**
@@ -100,47 +102,47 @@ public class SumKeyVal<K, V extends Number> extends BaseNumberKeyValueOperator<K
      * Stream codec used for partitioning.
      */
     @Override
-    public Class<? extends StreamCodec<KeyValPair<K, V>>> getStreamCodec()
+    public StreamCodec<KeyValPair<K, V>> getStreamCodec()
     {
       return getKeyValPairStreamCodec();
     }
 
   };
-  
+
   /**
    * Output sum port.
    */
-  @OutputPortFieldAnnotation(name = "sum", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, V>> sum = new DefaultOutputPort<KeyValPair<K, V>>();
-  
+
   /**
    * Output double sum port.
    */
-  @OutputPortFieldAnnotation(name = "sumDouble", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, Double>> sumDouble = new DefaultOutputPort<KeyValPair<K, Double>>();
-  
-  /** 
+
+  /**
    * Output integer sum port.
    */
-  @OutputPortFieldAnnotation(name = "sumInteger", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, Integer>> sumInteger = new DefaultOutputPort<KeyValPair<K, Integer>>();
-  
+
   /**
    * Output long sum port.
    */
-  @OutputPortFieldAnnotation(name = "sumLong", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, Long>> sumLong = new DefaultOutputPort<KeyValPair<K, Long>>();
-  
+
   /**
    * Output short sum port.
    */
-  @OutputPortFieldAnnotation(name = "sumShort", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, Short>> sumShort = new DefaultOutputPort<KeyValPair<K, Short>>();
-  
+
   /**
    * Output float sum port.
    */
-  @OutputPortFieldAnnotation(name = "sumFloat", optional = true)
+  @OutputPortFieldAnnotation(optional = true)
   public final transient DefaultOutputPort<KeyValPair<K, Float>> sumFloat = new DefaultOutputPort<KeyValPair<K, Float>>();
 
   /**
@@ -153,7 +155,7 @@ public class SumKeyVal<K, V extends Number> extends BaseNumberKeyValueOperator<K
   }
 
   /**
-   * 
+   *
    * @param cumulative
    */
   public void setCumulative(boolean cumulative)

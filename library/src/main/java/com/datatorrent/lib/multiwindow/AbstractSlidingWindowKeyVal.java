@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,15 +22,14 @@ import java.util.Map;
 import javax.validation.constraints.Min;
 
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
  *
- * A sliding window class that lets users access past N-1 window states
+ * Provides a sliding window class that lets users access past N-1 window states where N is a property.
  * <p>
- * N is a property. The default behavior is just a pass through, i.e. the
+ * The default behavior is just a pass through, i.e. the
  * operator does not do any processing on its own. Users are expected to extend
  * this class and add their specific processing. Users have to define their own
  * output port(s). The tuples are KeyValue pair. This is an abstract class. The
@@ -44,10 +43,12 @@ import com.datatorrent.lib.util.KeyValPair;
  * <b>Properties</b>:<br>
  * <b>windowSize i.e. N</b>: Number of windows to keep state on<br>
  * <br>
- *
+ * @displayName Abstract Sliding Window Key Value
+ * @category Stats and Aggregations
+ * @tags sliding window, numeric, key value, average
  * @since 0.3.3
  */
-public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends SlidingWindowObject>
+public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends SimpleMovingAverageObject>
 		extends BaseNumberKeyValueOperator<K, V>
 {
 	/**
@@ -61,7 +62,7 @@ public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends
 
 	/**
 	 * Concrete class has to implement how they want the tuple to be processed.
-	 * 
+	 *
 	 * @param tuple
 	 *          a keyVal pair of tuple.
 	 */
@@ -69,7 +70,7 @@ public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends
 
 	/**
 	 * Concrete class has to implement what to emit at the end of window.
-	 * 
+	 *
 	 * @param key
 	 * @param obj
 	 */
@@ -84,7 +85,7 @@ public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends
 
 	/**
 	 * Getter function for windowSize (number of previous window buffer).
-	 * 
+	 *
 	 * @return windowSize
 	 */
 	public int getWindowSize()
@@ -103,7 +104,6 @@ public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends
 	/**
 	 * Input port for getting incoming data.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<KeyValPair<K, V>> data = new DefaultInputPort<KeyValPair<K, V>>()
 	{
 		@Override
@@ -117,7 +117,7 @@ public abstract class AbstractSlidingWindowKeyVal<K, V extends Number, S extends
 	 * Moves buffer by 1 and clear contents of current. If you override
 	 * beginWindow, you must call super.beginWindow(windowId) to ensure proper
 	 * operator behavior.
-	 * 
+	 *
 	 * @param windowId
 	 */
 	@Override

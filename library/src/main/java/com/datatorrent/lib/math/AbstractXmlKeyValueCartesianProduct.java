@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * This operator extends the AbstractXmlCartesianProduct operator and implements the node value
- * as a key value pair of node name and the node's text value
- *
+ * This operator extends the AbstractXmlCartesianProduct operator and implements the node value 
+ * as a key value pair of node name and the node's text value.
+ * 
+ * @displayName Abstract XML Key Value Cartesian Product
+ * @category Math
+ * @tags cartesian product, xml, multiple products, key value
  * @since 1.0.1
  */
 public abstract class AbstractXmlKeyValueCartesianProduct<T> extends AbstractXmlCartesianProduct<T>

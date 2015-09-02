@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,16 +23,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- * Combiner for an output port that emits object with Map<K,V> interface and has the processing done
- * with sticky key partition, i.e. each one key belongs only to one partition. The final output of the
- * combiner is a simple merge into a single object that implements Map
- *
+ * This unifier combines all the maps it receives within an application window,
+ * and emits the combined map at the end of the application window.
+ * <p>
+ * This unifier uses round robin partitioning.
+ * </p>
+ * @displayName Unifier Map
+ * @category Algorithmic
+ * @tags key value
  * @since 0.3.4
  */
 public class UnifierMap<K, V> implements Unifier<Map<K, V>>
 {
   public Map<K, V> mergedTuple = new HashMap<K, V>();
+  /**
+   * This is the output port which emits a merged map.
+   */
   public final transient DefaultOutputPort<Map<K, V>> mergedport = new DefaultOutputPort<Map<K, V>>();
 
   /**

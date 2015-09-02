@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,35 +15,47 @@
  */
 package com.datatorrent.contrib.kafka;
 
+import java.io.Closeable;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import kafka.message.Message;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Pattern.Flag;
 
-import com.datatorrent.api.Context.Counters;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import com.datatorrent.api.Context;
+import com.esotericsoftware.kryo.serializers.FieldSerializer.Bind;
+import com.esotericsoftware.kryo.serializers.JavaSerializer;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 
 /**
  * Base Kafka Consumer class used by kafka input operator
  *
  * @since 0.9.0
  */
-public abstract class KafkaConsumer
+public abstract class KafkaConsumer implements Closeable
 {
   protected final static String HIGHLEVEL_CONSUMER_ID_SUFFIX = "_stream_";
 
   protected final static String SIMPLE_CONSUMER_ID_SUFFIX = "_partition_";
-
+  private String zookeeper;
 
   public KafkaConsumer()
   {
@@ -55,17 +67,17 @@ public abstract class KafkaConsumer
     this.topic = topic;
   }
 
-  public KafkaConsumer(Set<String> brokerSet, String topic)
+  public KafkaConsumer(String zks, String topic)
   {
     this.topic = topic;
-    this.brokerSet = brokerSet;
+    setZookeeper(zks);
   }
 
-  private int consumerBuffer = 1024 * 1024;
+  private int cacheSize = 1024;
 
   protected transient boolean isAlive = false;
 
-  private transient ArrayBlockingQueue<Message> holdingBuffer;
+  private transient ArrayBlockingQueue<KafkaMessage> holdingBuffer;
 
   /**
    * The topic that this consumer consumes
@@ -74,12 +86,14 @@ public abstract class KafkaConsumer
   protected String topic = "default_topic";
 
   /**
-   * A broker list to retrieve the metadata for the consumer
-   * This property could be null
-   * But it's mandatory for dynamic partition and fail-over
+   * A zookeeper map keyed by cluster id
+   * It's mandatory field
    */
   @NotNull
-  protected Set<String> brokerSet;
+  @Bind(JavaSerializer.class)
+  SetMultimap<String, String> zookeeperMap;
+
+  protected transient SetMultimap<String, String> brokers;
 
 
   /**
@@ -95,32 +109,53 @@ public abstract class KafkaConsumer
 
   protected transient SnapShot statsSnapShot = new SnapShot();
 
+  protected transient KafkaMeterStats stats = new KafkaMeterStats();
+
   /**
    * This method is called in setup method of the operator
    */
   public void create(){
-    holdingBuffer = new ArrayBlockingQueue<Message>(consumerBuffer);
-  };
+    initBrokers();
+    holdingBuffer = new ArrayBlockingQueue<KafkaMessage>(cacheSize);
+  }
+
+  public void initBrokers()
+  {
+    if(brokers!=null){
+      return ;
+    }
+    if(zookeeperMap !=null){
+      brokers = HashMultimap.create();
+      for (String clusterId: zookeeperMap.keySet()) {
+        try {
+          brokers.putAll(clusterId, KafkaMetadataUtil.getBrokers(zookeeperMap.get(clusterId)));
+        } catch (Exception e) {
+          // let the user know where we tried to connect to
+          throw new RuntimeException("Error resolving brokers for cluster " + clusterId + " " + zookeeperMap.get(clusterId), e);
+        }
+      }
+    }
+
+  }
 
   /**
    * This method is called in the activate method of the operator
    */
-  public void start(){
+  public void start()
+  {
     isAlive = true;
     statsSnapShot.start();
-  };
+  }
 
   /**
    * The method is called in the deactivate method of the operator
    */
-  public void stop(){
+  public void stop() {
     isAlive = false;
     statsSnapShot.stop();
     holdingBuffer.clear();
-    _stop();
+    IOUtils.closeQuietly(this);
   };
-
-  abstract protected void _stop();
 
   /**
    * This method is called in teardown method of the operator
@@ -140,6 +175,9 @@ public abstract class KafkaConsumer
     this.isAlive = isAlive;
   }
 
+  /**
+   * Set the Topic.
+   */
   public void setTopic(String topic)
   {
     this.topic = topic;
@@ -150,7 +188,7 @@ public abstract class KafkaConsumer
     return topic;
   }
 
-  public Message pollMessage()
+  public KafkaMessage pollMessage()
   {
     return holdingBuffer.poll();
   }
@@ -158,16 +196,6 @@ public abstract class KafkaConsumer
   public int messageSize()
   {
     return holdingBuffer.size();
-  }
-
-  public void setBrokerSet(Set<String> brokerSet)
-  {
-    this.brokerSet = brokerSet;
-  }
-
-  public Set<String> getBrokerSet()
-  {
-    return brokerSet;
   }
 
   public void setInitialOffset(String initialOffset)
@@ -180,69 +208,207 @@ public abstract class KafkaConsumer
     return initialOffset;
   }
 
+  public int getCacheSize()
+  {
+    return cacheSize;
+  }
 
-  final protected void putMessage(int partition, Message msg) throws InterruptedException{
+  public void setCacheSize(int cacheSize)
+  {
+    this.cacheSize = cacheSize;
+  }
+
+
+  final protected void putMessage(KafkaPartition partition, Message msg, long offset) throws InterruptedException{
     // block from receiving more message
-    holdingBuffer.put(msg);
+    holdingBuffer.put(new KafkaMessage(partition, msg, offset));
     statsSnapShot.mark(partition, msg.payloadSize());
-  };
-
-
-  protected abstract KafkaConsumer cloneConsumer(Set<Integer> partitionIds);
-
-  protected abstract KafkaConsumer cloneConsumer(Set<Integer> partitionIds, Map<Integer, Long> startOffset);
+  }
 
   protected abstract void commitOffset();
 
-  protected abstract Map<Integer, Long> getCurrentOffsets();
+  protected abstract Map<KafkaPartition, Long> getCurrentOffsets();
 
-  public final KafkaMeterStats getConsumerStats()
+  public KafkaMeterStats getConsumerStats()
   {
-    return statsSnapShot.getStats();
+    statsSnapShot.setupStats(stats);
+    return stats;
   }
 
-  static class KafkaMeterStats implements Counters, Serializable
+  protected abstract void resetPartitionsAndOffset(Set<KafkaPartition> partitionIds, Map<KafkaPartition, Long> startOffset);
+
+  /**
+   * Set the ZooKeeper quorum of the Kafka cluster(s) you want to consume data from.
+   * The operator will discover the brokers that it needs to consume messages from.
+   */
+  public void setZookeeper(String zookeeper)
+  {
+    this.zookeeper = zookeeper;
+    this.zookeeperMap = parseZookeeperStr(zookeeper);
+  }
+
+  public String getZookeeper()
+  {
+    return zookeeper;
+  }
+
+  /**
+   * Counter class which gives the statistic value from the consumer
+   */
+  public static class KafkaMeterStats implements Serializable
   {
 
     private static final long serialVersionUID = -2867402654990209006L;
 
-    private Map<Integer, double[]> _1minMovingAvgPerPartition = new HashMap<Integer, double[]>();
+    /**
+     * A compact partition counter. The data collected for each partition is 4bytes brokerId + 1byte connected + 8bytes msg/s + 8bytes bytes/s + 8bytes offset
+     */
+    public ConcurrentHashMap<KafkaPartition, PartitionStats> partitionStats = new ConcurrentHashMap<KafkaPartition, PartitionStats>();
 
-    private double[] _1minMovingAvg = new double[]{0,0};
+
+    /**
+     * A compact overall counter. The data collected is 4bytes connection number + 8bytes aggregate msg/s + 8bytes aggregate bytes/s
+     */
+    public long totalMsgPerSec;
+
+    public long totalBytesPerSec;
+
 
     public KafkaMeterStats()
     {
 
     }
 
-    public KafkaMeterStats(Map<Integer, double[]> _1minMovingAvgPerPartition, double[] _1minMovingRate)
+    public void set_1minMovingAvgPerPartition(KafkaPartition kp, long[] _1minAvgPar)
     {
-      super();
-      this.set_1minMovingAvgPerPartition(_1minMovingAvgPerPartition);
-      this.set_1minMovingAvg(_1minMovingRate);
+      PartitionStats ps = putPartitionStatsIfNotPresent(kp);
+      ps.msgsPerSec = _1minAvgPar[0];
+      ps.bytesPerSec = _1minAvgPar[1];
     }
 
-    public Map<Integer, double[]> get_1minMovingAvgPerPartition()
+    public void set_1minMovingAvg(long[] _1minAvg)
     {
-      return _1minMovingAvgPerPartition;
+      totalMsgPerSec = _1minAvg[0];
+      totalBytesPerSec = _1minAvg[1];
     }
 
-    public void set_1minMovingAvgPerPartition(Map<Integer, double[]> _1minMovingAvgPerPartition)
-    {
-      this._1minMovingAvgPerPartition = _1minMovingAvgPerPartition;
+    public void updateOffsets(Map<KafkaPartition, Long> offsets){
+      for (Entry<KafkaPartition, Long> os : offsets.entrySet()) {
+        PartitionStats ps = putPartitionStatsIfNotPresent(os.getKey());
+        ps.offset = os.getValue();
+      }
     }
 
-    public double[] get_1minMovingAvg()
+    public int getConnections()
     {
-      return _1minMovingAvg;
+      int r = 0;
+      for (PartitionStats ps : partitionStats.values()) {
+        if (!StringUtils.isEmpty(ps.brokerHost)) {
+          r++;
+        }
+      }
+      return r;
     }
 
-    public void set_1minMovingAvg(double[] _1minMovingAvg)
+    public void updatePartitionStats(KafkaPartition kp,int brokerId, String host)
     {
-      this._1minMovingAvg = _1minMovingAvg;
+      PartitionStats ps = putPartitionStatsIfNotPresent(kp);
+      ps.brokerHost = host;
+      ps.brokerId = brokerId;
     }
 
-}
+    private synchronized PartitionStats putPartitionStatsIfNotPresent(KafkaPartition kp){
+      PartitionStats ps = partitionStats.get(kp);
+
+      if (ps == null) {
+        ps = new PartitionStats();
+        partitionStats.put(kp, ps);
+      }
+      return ps;
+    }
+  }
+
+  public static class KafkaMessage
+  {
+    KafkaPartition kafkaPart;
+    Message msg;
+    long offSet;
+    public KafkaMessage(KafkaPartition kafkaPart, Message msg, long offset)
+    {
+      this.kafkaPart = kafkaPart;
+      this.msg = msg;
+      this.offSet = offset;
+    }
+
+  }
+
+  public static class KafkaMeterStatsUtil {
+
+    public static Map<KafkaPartition, Long> getOffsetsForPartitions(List<KafkaMeterStats> kafkaMeterStats)
+    {
+      Map<KafkaPartition, Long> result = Maps.newHashMap();
+      for (KafkaMeterStats kms : kafkaMeterStats) {
+        for (Entry<KafkaPartition, PartitionStats> item : kms.partitionStats.entrySet()) {
+          result.put(item.getKey(), item.getValue().offset);
+        }
+      }
+      return result;
+    }
+
+    public static Map<KafkaPartition, long[]> get_1minMovingAvgParMap(KafkaMeterStats kafkaMeterStats)
+    {
+      Map<KafkaPartition, long[]> result = Maps.newHashMap();
+      for (Entry<KafkaPartition, PartitionStats> item : kafkaMeterStats.partitionStats.entrySet()) {
+        result.put(item.getKey(), new long[]{item.getValue().msgsPerSec, item.getValue().bytesPerSec});
+      }
+      return result;
+    }
+
+  }
+
+  public static class KafkaMeterStatsAggregator implements Context.CountersAggregator, Serializable{
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 729987800215151678L;
+
+    @Override
+    public Object aggregate(Collection<?> countersList)
+    {
+      KafkaMeterStats kms = new KafkaMeterStats();
+      for (Object o : countersList) {
+        if (o instanceof KafkaMeterStats){
+          KafkaMeterStats subKMS = (KafkaMeterStats)o;
+          kms.partitionStats.putAll(subKMS.partitionStats);
+          kms.totalBytesPerSec += subKMS.totalBytesPerSec;
+          kms.totalMsgPerSec += subKMS.totalMsgPerSec;
+        }
+      }
+      return kms;
+    }
+
+  }
+
+  public static class PartitionStats implements Serializable {
+
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = -6572690643487689766L;
+
+    public int brokerId = -1;
+
+    public long msgsPerSec;
+
+    public long bytesPerSec;
+
+    public long offset;
+
+    public String brokerHost = "";
+
+  }
 
 
 
@@ -256,26 +422,26 @@ public abstract class KafkaConsumer
     /**
      * 1 min total msg number for each partition
      */
-    private final Map<Integer, long[]> _1_min_msg_sum_par = new HashMap<Integer, long[]>();
+    private final Map<KafkaPartition, long[]> _1_min_msg_sum_par = new HashMap<KafkaPartition, long[]>();
 
     /**
      * 1 min total byte number for each partition
      */
-    private final Map<Integer, long[]> _1_min_byte_sum_par = new HashMap<Integer, long[]>();
+    private final Map<KafkaPartition, long[]> _1_min_byte_sum_par = new HashMap<KafkaPartition, long[]>();
 
     private static int cursor = 0;
 
     /**
      * total msg for each sec, msgSec[60] is total msg for a min
      */
-    private long[] msgSec = new long[61];
+    private final long[] msgSec = new long[61];
 
     /**
      * total bytes for each sec, bytesSec[60] is total bytes for a min
      */
-    private long[] bytesSec = new long[61];
+    private final long[] bytesSec = new long[61];
 
-    private short last = 0;
+    private short last = 1;
 
     private ScheduledExecutorService service;
 
@@ -283,10 +449,10 @@ public abstract class KafkaConsumer
     {
       cursor = (cursor + 1) % 60;
       msgSec[60] -= msgSec[cursor];
-      bytesSec[60] -= msgSec[cursor];
+      bytesSec[60] -= bytesSec[cursor];
       msgSec[cursor] = 0;
       bytesSec[cursor] = 0;
-      for (Entry<Integer, long[]> item : _1_min_msg_sum_par.entrySet()) {
+      for (Entry<KafkaPartition, long[]> item : _1_min_msg_sum_par.entrySet()) {
         long[] msgv = item.getValue();
         long[] bytesv = _1_min_byte_sum_par.get(item.getKey());
         msgv[60] -= msgv[cursor];
@@ -319,7 +485,7 @@ public abstract class KafkaConsumer
       }
     }
 
-    public synchronized void mark(int partition, long bytes){
+    public synchronized void mark(KafkaPartition partition, long bytes){
       msgSec[cursor]++;
       msgSec[60]++;
       bytesSec[cursor] += bytes;
@@ -336,19 +502,41 @@ public abstract class KafkaConsumer
       msgv[60]++;
       bytev[cursor] += bytes;
       bytev[60] += bytes;
-    };
+    }
 
-    public synchronized KafkaMeterStats getStats(){
-      double[] _1minAvg = {(double)msgSec[60]/(double)last, (double)bytesSec[60]/(double)last};
-      Map<Integer, double[]> _1minAvgPartition = new HashMap<Integer, double[]>();
-      for (Entry<Integer, long[]> item : _1_min_msg_sum_par.entrySet()) {
+    public synchronized void setupStats(KafkaMeterStats stat){
+      long[] _1minAvg = {msgSec[60]/last, bytesSec[60]/last};
+      for (Entry<KafkaPartition, long[]> item : _1_min_msg_sum_par.entrySet()) {
         long[] msgv =item.getValue();
         long[] bytev = _1_min_byte_sum_par.get(item.getKey());
-        double[] _1minAvgPar = {(double)msgv[60]/(double)last, (double)bytev[60]/(double)last};
-        _1minAvgPartition.put(item.getKey(), _1minAvgPar);
+        long[] _1minAvgPar = {msgv[60]/last, bytev[60]/last};
+        stat.set_1minMovingAvgPerPartition(item.getKey(), _1minAvgPar);
       }
-      return new KafkaMeterStats(_1minAvgPartition, _1minAvg);
+      stat.set_1minMovingAvg(_1minAvg);
     }
   }
 
+  private SetMultimap<String, String> parseZookeeperStr(String zookeeper)
+  {
+    SetMultimap<String, String> theClusters = HashMultimap.create();
+    for (String zk : zookeeper.split(";")) {
+      String[] parts = zk.split("::");
+      String clusterId = parts.length == 1 ? KafkaPartition.DEFAULT_CLUSTERID : parts[0];
+      String[] hostNames = parts.length == 1 ? parts[0].split(",") : parts[1].split(",");
+      String portId = "";
+      for (int idx = hostNames.length - 1; idx >= 0; idx--) {
+        String[] zkParts = hostNames[idx].split(":");
+        if (zkParts.length == 2) {
+          portId = zkParts[1];
+        }
+        if (!portId.isEmpty() && portId != "") {
+          theClusters.put(clusterId, zkParts[0] + ":" + portId);
+        } else {
+          throw new IllegalArgumentException("Wrong zookeeper string: " + zookeeper + "\n"
+              + " Expected format should be cluster1::zookeeper1,zookeeper2:port1;cluster2::zookeeper3:port2 or zookeeper1:port1,zookeeper:port2");
+        }
+      }
+    }
+    return theClusters;
+  }
 }

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.*;
 
-import javax.validation.constraints.NotNull;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfigBean;
 import com.ning.http.client.websocket.WebSocket;
@@ -32,26 +30,25 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datatorrent.api.BaseOperator;
+import org.apache.commons.lang3.ClassUtils;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.ShipContainingJars;
 
 /**
- *
- * Reads via WebSocket from given URL as input stream<p>
- * <br>
- * Incoming data is interpreted as JSONObject and converted to {@link java.util.Map}.<br>
- * <br>
+ * Reads via WebSocket from given URL as input stream.&nbsp;Incoming data is interpreted as JSONObject and converted to {@link java.util.Map}.
+ * <p></p>
+ * @displayName JSON Map Output
+ * @category Output
+ * @tags http, websocket
  *
  * @param <T> tuple type
  * @since 0.3.2
  */
-@ShipContainingJars(classes = {com.ning.http.client.websocket.WebSocket.class})
 public class WebSocketOutputOperator<T> extends BaseOperator
 {
   private static final Logger LOG = LoggerFactory.getLogger(WebSocketOutputOperator.class);
-  @NotNull
+  //Do not make this @NotNull since null is a valid value for some child classes
   private URI uri;
   private transient AsyncHttpClient client;
   private transient final JsonFactory jsonFactory = new JsonFactory();
@@ -113,7 +110,7 @@ public class WebSocketOutputOperator<T> extends BaseOperator
   }
 
   /**
-   * Sets the IO Thread multiplier for AsyncWebSocket connection
+   * The number of threads to use for the websocket connection.
    *
    * @param ioThreadMultiplier
    */
@@ -195,7 +192,7 @@ public class WebSocketOutputOperator<T> extends BaseOperator
       public Thread newThread(Runnable r)
       {
         Thread t = new Thread(r);
-        t.setName(WebSocketOutputOperator.this.getName() + "-AsyncHttpClient-" + count++);
+        t.setName(ClassUtils.getShortClassName(this.getClass()) + "-AsyncHttpClient-" + count++);
         return t;
       }
 

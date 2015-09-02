@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.Transaction;
 
 import com.datatorrent.lib.db.TransactionableKeyValueStore;
@@ -44,9 +46,8 @@ public class RedisStore implements TransactionableKeyValueStore
   private transient int timeOut = 30000;
 
   /**
-   * Gets the host.
    *
-   * @return
+   * @return redis host.
    */
   public String getHost()
   {
@@ -56,7 +57,7 @@ public class RedisStore implements TransactionableKeyValueStore
   /**
    * Sets the host.
    *
-   * @param host
+   * @param host redis host.
    */
   public void setHost(String host)
   {
@@ -64,9 +65,8 @@ public class RedisStore implements TransactionableKeyValueStore
   }
 
   /**
-   * Gets the port.
    *
-   * @return
+   * @return redis port.
    */
   public int getPort()
   {
@@ -76,7 +76,7 @@ public class RedisStore implements TransactionableKeyValueStore
   /**
    * Sets the port.
    *
-   * @param port
+   * @param port redis port.
    */
   public void setPort(int port)
   {
@@ -84,9 +84,8 @@ public class RedisStore implements TransactionableKeyValueStore
   }
 
   /**
-   * Gets the DB index.
    *
-   * @return
+   * @return db index.
    */
   public int getDbIndex()
   {
@@ -96,7 +95,7 @@ public class RedisStore implements TransactionableKeyValueStore
   /**
    * Sets the DB index.
    *
-   * @param dbIndex
+   * @param dbIndex database index.
    */
   public void setDbIndex(int dbIndex)
   {
@@ -104,9 +103,8 @@ public class RedisStore implements TransactionableKeyValueStore
   }
 
   /**
-   * Gets the key expiry time.
    *
-   * @return
+   * @return expiry time of keys.
    */
   public int getKeyExpiryTime()
   {
@@ -116,7 +114,7 @@ public class RedisStore implements TransactionableKeyValueStore
   /**
    * Sets the key expiry time.
    *
-   * @param keyExpiryTime
+   * @param keyExpiryTime expiry time.
    */
   public void setKeyExpiryTime(int keyExpiryTime)
   {
@@ -138,7 +136,7 @@ public class RedisStore implements TransactionableKeyValueStore
   }
 
   @Override
-  public boolean connected()
+  public boolean isConnected()
   {
     return jedis != null && jedis.isConnected();
   }
@@ -174,7 +172,7 @@ public class RedisStore implements TransactionableKeyValueStore
    * Note that it does NOT work with hash values or list values
    *
    * @param key
-   * @return
+   * @return value of the key.
    */
   @Override
   public Object get(Object key)
@@ -185,12 +183,32 @@ public class RedisStore implements TransactionableKeyValueStore
     return jedis.get(key.toString());
   }
 
+  public String getType(String key)
+  {
+    return jedis.type(key);
+  }
+
+  /**
+   * Gets the stored Map for given the key, when the value data type is a map, stored with hmset  
+   *
+   * @param key
+   * @return hashmap stored for the key.
+   */
+  public Map<String, String> getMap(Object key)
+  {
+    if (isInTransaction()) {
+      throw new RuntimeException("Cannot call get when in redis transaction");
+    }
+    return jedis.hgetAll(key.toString());
+  }
+
+
   /**
    * Gets all the values given the keys.
    * Note that it does NOT work with hash values or list values
    *
    * @param keys
-   * @return
+   * @return values of all the keys.
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -257,6 +275,11 @@ public class RedisStore implements TransactionableKeyValueStore
     else {
       jedis.del(key.toString());
     }
+  }
+
+  public ScanResult<String> ScanKeys(Integer offset, ScanParams params)
+  {
+    return jedis.scan(offset.toString(), params);
   }
 
   /**

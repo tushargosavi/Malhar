@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,11 @@ import javax.validation.constraints.NotNull;
 
 
 /**
- * <p>ColumnIndex class.</p>
- *
+ * <p>An implementation of an index that overrides filter method on basis on columns. </p>
+ * <p>
+ * @displayName Column Index
+ * @category Stream Manipulators
+ * @tags alias
  * @since 0.3.4
  */
 public class ColumnIndex implements Index
@@ -36,7 +39,7 @@ public class ColumnIndex implements Index
   public ColumnIndex()
   {
   }
-  
+
   public ColumnIndex(@NotNull String column, String alias)
   {
     this.setColumn(column);

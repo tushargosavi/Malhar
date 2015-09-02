@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 package com.datatorrent.lib.testbench;
 
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.Context.OperatorContext;
@@ -28,13 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Developed for a demo. Stram now has this data for all streams via its web-service<br>
- * Expects incoming stream to be a HashMap<String, Integer> and add all integer values to compute throughput. These
- * values are throughput per window from upstream operators. On end of window this total and average is emitted<p>
- * <br>
- * <br>
+ * This operator expects incoming tuples to be of type HashMap&lt;String, Integer&gt;.&nbsp;
+ * These values are throughput per window from upstream operators.&nbsp;
+ * At the end of the application window, the total and average throughput are emitted.
+ * <p>
  * Benchmarks: This node has been benchmarked at over 5 million tuples/second in local/inline mode<br>
- *
  * <b>Tuple Schema</b>
  * Each input tuple is HashMap<String, Integer><br>
  * Output tuple is a HashMap<String, Integer>, where strings are throughputs, averages etc<br>
@@ -50,14 +48,19 @@ import org.slf4j.LoggerFactory;
  * <br>
  * <b>Benchmarks</b>: Blast as many tuples as possible in inline mode<br>
  * Benchmarked at over 17 million tuples/second in local/in-line mode<br>
- * <br>
- *
+ * </p>
+ * @displayName Throughput Counter
+ * @category Test Bench
+ * @tags count
  * @since 0.3.2
  */
 public class ThroughputCounter<K, V extends Number> extends BaseOperator
 {
   private static Logger log = LoggerFactory.getLogger(ThroughputCounter.class);
 
+  /**
+   * The input port which receives throughput information from upstream operators.
+   */
   public final transient DefaultInputPort<HashMap<K, V>> data = new DefaultInputPort<HashMap<K, V>>()
   {
     @Override
@@ -69,6 +72,9 @@ public class ThroughputCounter<K, V extends Number> extends BaseOperator
     }
   };
 
+  /**
+   * The output port which emits throughput statistics.
+   */
   public final transient DefaultOutputPort<HashMap<String,Number>> count = new DefaultOutputPort<HashMap<String, Number>>();
 
   public static final String OPORT_COUNT_TUPLE_AVERAGE = "avg";

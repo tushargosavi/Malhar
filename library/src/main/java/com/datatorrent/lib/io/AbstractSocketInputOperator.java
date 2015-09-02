@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.datatorrent.lib.io;
 
 import java.net.InetSocketAddress;
@@ -9,18 +24,23 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.datatorrent.api.ActivationListener;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
+import com.datatorrent.api.Operator.ActivationListener;
 
 /**
- * This is abstract class for socket input operator.</br>
- *
+ * This is the base implementation for an input operator which reads from a network socket.&nbsp;
+ * Subclasses must implement the method that is used to process incoming bytes from the socket.
+ * <p>
  * <b>Ports</b>:</br> <b>outputPort</b>: emits &lt;<T></T>&gt;<br>
  * <br>
  * <b>Properties</b>:<br>
  * <b>hostname</b></br> <b>port</b></br> <b>byteBufferSize</b></br> <b>scanIntervalInMilliSeconds</b></br>
+ * </p>
+ * @displayName Abstract Socket Input
+ * @category Input
+ * @tags socket, input operator
  *
  * @param <T>
  * @since 0.9.5
@@ -42,6 +62,10 @@ public abstract class AbstractSocketInputOperator<T> implements InputOperator, A
   private transient Thread scanThread = new Thread(new SelectorScanner());
   private transient ByteBuffer byteBuffer;
   private transient Lock lock;
+
+  /**
+   * This is the output port which emits tuples read from a socket.
+   */
   public final transient DefaultOutputPort<T> outputPort = new DefaultOutputPort<T>();
 
   public int getByteBufferSize()

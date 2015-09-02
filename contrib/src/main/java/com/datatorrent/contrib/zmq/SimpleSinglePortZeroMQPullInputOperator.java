@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,22 @@
  */
 package com.datatorrent.contrib.zmq;
 
-import com.datatorrent.lib.io.SimpleSinglePortInputOperator;
-import com.datatorrent.api.Context;
-import com.datatorrent.api.annotation.ShipContainingJars;
-
 import org.zeromq.ZMQ;
 
+import com.datatorrent.api.Context;
+import com.datatorrent.lib.io.SimpleSinglePortInputOperator;
+
 /**
- * <p>Abstract SimpleSinglePortZeroMQPullInputOperator class.</p>
- *
+ * This is the base implementation of a simple single port ZeroMQ input operator.&nbsp;
+ * This simple operator will automatically receive data from a pusher, convert the byte message into a tuple,
+ * the emit the tuple.&nbsp;
+ * Subclasses should implement the method which converts ZeroMQ byte messages into tuples.
+ * <p></p>
+ * @displayName Simple Single Port ZeroMQ Pull Input
+ * @category Messaging
+ * @tags input operator
  * @since 0.3.2
  */
-@ShipContainingJars(classes={ZMQ.class})
 public abstract class SimpleSinglePortZeroMQPullInputOperator<T> extends SimpleSinglePortInputOperator<T> implements Runnable
 {
   private transient ZMQ.Context context;

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,27 +15,32 @@
  */
 package com.datatorrent.lib.util;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 
 import javax.validation.constraints.NotNull;
 
 /**
- *
- * Base class for splitting lines into tokens and tokens into sub-tokens. Base class for line split operators.<br>
- * processToken, and processSubToken are called for each token. Users should override calls backs to intercept at any level.<p>
- * This operator is a base class for pass through operators<br>
- * <br>
+ * This is an operator which consumes strings and splits them into tokens and sub-tokens.
+ * <p>
+ * processToken, and processSubToken are called for each token. Users should override calls backs to intercept at any level.
+ * This operator is a base class for pass through operators
+ * </p>
+ * <p>
  * Ideal for applications like word count
  * Ports:<br>
  * <b>data</b>: expects String<br>
- *
+ * </p>
+ * @displayName Base Line Tokenizer
+ * @category Stream Manipulators
+ * @tags string
  * @since 0.3.2
  */
-public class BaseLineTokenizer extends BaseOperator
+public abstract class BaseLineTokenizer extends BaseOperator
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * This is the input port, which receives strings.
+   */
   public final transient DefaultInputPort<String> data = new DefaultInputPort<String>()
   {
     /**

@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,18 @@
  */
 package com.datatorrent.lib.db;
 
+import java.io.IOException;
+
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.InputOperator;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import java.io.IOException;
 
 /**
- * This abstract class is for any implementation of an input adapter of a store {@link Connectable}
+ * This is the base implementation of an input adapter which reads from a store.&nbsp;
+ * A concrete operator should be created from this skeleton implementation.
+ * <p></p>
+ * @displayName Abstract Store Input
+ * @category Input
  *
  * @param <T> The tuple type
  * @param <S> The store type
@@ -31,9 +35,8 @@ import java.io.IOException;
 public abstract class AbstractStoreInputOperator<T, S extends Connectable> implements InputOperator
 {
   /**
-   * The output port.
+   * The output port on which tuples read form a store are emitted.
    */
-  @OutputPortFieldAnnotation(name = "out")
   final public transient DefaultOutputPort<T> outputPort = new DefaultOutputPort<T>();
   protected S store;
   /**

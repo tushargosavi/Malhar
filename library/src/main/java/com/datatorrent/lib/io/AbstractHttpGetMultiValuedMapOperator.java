@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.sun.jersey.api.client.WebResource;
 
 /**
- * Abstract Http get operator to get multi valued map from incoming tuple and create the web resource with query params
+ * This is the base implementation of an HTTP get operator,
+ * which extracts query parameters from an incoming tuple and places the parameters in a multivalued map.&nbsp;
+ * Subclasses should implement the method used to convert tuples into query parameters.
+ * <p></p>
+ * @displayName Abstract HTTP Multivalued Query Input
+ * @category Input
+ * @tags http, input operator
  *
  * @param <INPUT>
  * @param <OUTPUT>

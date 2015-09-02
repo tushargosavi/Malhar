@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,8 @@
 package com.datatorrent.lib.math;
 
 import com.datatorrent.api.Context;
-import com.datatorrent.lib.xml.XmlDOMOperator;
+import com.datatorrent.netlet.util.DTThrowable;
+import com.datatorrent.lib.xml.AbstractXmlDOMOperator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -28,6 +29,7 @@ import java.util.List;
 
 /**
  * An operator that performs a cartesian product between different elements in a xml document.
+ * <p>
  * The cartesian product is performed between two sets of elements. The elements are specified
  * using xpath. The resultant product contains the values of the elements, Multiple
  * cartesian products can be specified in a single operator.
@@ -121,9 +123,12 @@ import java.util.List;
  *
  *    a1,a2:b1,b2|c1,c2:d1,d2|e1,e2,e3:f1
  *
+ * @displayName Abstract XML Cartesian Product
+ * @category Math
+ * @tags cartesian product, xml, multiple products, dom operator
  * @since 1.0.1
  */
-public abstract class AbstractXmlCartesianProduct<T> extends XmlDOMOperator<T>
+public abstract class AbstractXmlCartesianProduct<T> extends AbstractXmlDOMOperator<T>
 {
   @NotNull
   private String config;
@@ -142,7 +147,7 @@ public abstract class AbstractXmlCartesianProduct<T> extends XmlDOMOperator<T>
       }
       processResult(result, tuple);
     } catch (XPathExpressionException e) {
-      e.printStackTrace();
+      DTThrowable.rethrow(e);
     }
   }
 
@@ -474,5 +479,5 @@ public abstract class AbstractXmlCartesianProduct<T> extends XmlDOMOperator<T>
 
   protected abstract String getValue(Node node);
 
-  private CartesianProduct[] cartesianProducts;
+  private transient CartesianProduct[] cartesianProducts;
 }

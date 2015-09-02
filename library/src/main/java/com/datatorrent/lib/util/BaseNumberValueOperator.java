@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +18,15 @@ package com.datatorrent.lib.util;
 import javax.validation.constraints.NotNull;
 
 /**
- *
- * Base class for operators that take in V extends Number. Provides basic methods for value conversion<p>
+ * This is an abstract operator, which provides a base implementation for operators which work with numbers.
+ * <p>
+ * Provides basic methods for value conversion.
  * <br>
  * <b>Benchmarks</b>: Not done as there is emit tuple is done by sub-classes<br>
- * <br>
- * <br>
- * <br>
- *
+ * </p>
+ * @displayName Base Number Value
+ * @category Algorithmic
+ * @tags numeric
  * @since 0.3.2
  */
 public class BaseNumberValueOperator<V extends Number> extends BaseKeyOperator<V>
@@ -38,7 +39,7 @@ public class BaseNumberValueOperator<V extends Number> extends BaseKeyOperator<V
   @NotNull
   protected V_TYPE type = V_TYPE.DOUBLE;
 
-  public V_TYPE getType()
+  public V_TYPE getVType()
   {
     return type;
   }
@@ -46,6 +47,16 @@ public class BaseNumberValueOperator<V extends Number> extends BaseKeyOperator<V
   public void setVType(V_TYPE type)
   {
     this.type = type;
+  }
+
+  /**
+   * Gets the type.
+   * @omitFromUI
+   * @return The type.
+   */
+  public V_TYPE getType()
+  {
+    return type;
   }
 
   /**

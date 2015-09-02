@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,21 +15,26 @@
  */
 package com.datatorrent.lib.algo;
 
-import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.api.annotation.Stateless;
-import com.datatorrent.lib.util.BaseKeyOperator;
 import java.util.Random;
+
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
+import com.datatorrent.api.DefaultInputPort;
+import com.datatorrent.api.DefaultOutputPort;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+import com.datatorrent.api.annotation.Stateless;
+
+import com.datatorrent.lib.util.BaseKeyOperator;
+
 /**
- *
- * Emits sample percentage tuples. <br>
+ * This operator takes a stream of tuples as input, and emits each tuple with a specified probability.
+ * <p>
  * Emits the tuple as per probability of pass rate out of total rate. <br>
  * <br>
- * An efficient filter to allow sample analysis of a stream. Very useful is the incoming stream has high throughput<p>
+ * An efficient filter to allow sample analysis of a stream. Very useful is the incoming stream has high throughput.
+ * </p>
+ * <p>
  * <br>
  * <b> StateFull : No, </b> tuple is processed in current window. <br>
  * <b> Partitions : Yes. </b> No state dependency among input tuples. <br>
@@ -48,74 +53,64 @@ import javax.validation.constraints.Min;
  * <br>
  * <b>Specific run time checks are</b>: None<br>
  * <br>
+ * </p>
+ *
+ * @displayName Sampler
+ * @category Stats and Aggregations
+ * @tags filter
  *
  * @since 0.3.2
  */
 @Stateless
+@OperatorAnnotation(partitionable = true)
 public class Sampler<K> extends BaseKeyOperator<K>
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * This is the input port which receives tuples.
+   */
   public final transient DefaultInputPort<K> data = new DefaultInputPort<K>()
   {
     /**
-     * Emits the tuple as per probability of passrate out of totalrate
+     * Emits tuples at a rate corresponding to the given samplingPercentage.
      */
     @Override
     public void process(K tuple)
     {
-      int fval = random.nextInt(totalrate);
-      if (fval >= passrate) {
+      double val = random.nextDouble();
+      if (val > samplingPercentage) {
         return;
       }
       sample.emit(cloneKey(tuple));
     }
   };
-  @OutputPortFieldAnnotation(name = "sample")
+
+  /**
+   * This is the output port which emits the sampled tuples.
+   */
   public final transient DefaultOutputPort<K> sample = new DefaultOutputPort<K>();
 
-  @Min(1)
-  int passrate = 1;
-  @Min(1)
-  int totalrate = 100;
+  @Min(0)
+  @Max(1)
+  private double samplingPercentage = 1.0;
+
   private transient Random random = new Random();
 
   /**
-   * getter function for pass rate
-   * @return passrate
+   * Gets the samplingPercentage.
+   * @return the samplingPercentage
    */
-  @Min(1)
-  public int getPassrate()
+  public double getSamplingPercentage()
   {
-    return passrate;
+    return samplingPercentage;
   }
 
   /**
-   * getter function for total rate
-   * @return totalrate
+   * The percentage of tuples to allow to pass through this operator. This percentage should be
+   * a number between 0 and 1 inclusive.
+   * @param samplingPercentage the samplingPercentage to set
    */
-  @Min(1)
-  public int getTotalrate()
+  public void setSamplingPercentage(double samplingPercentage)
   {
-    return totalrate;
-  }
-
-  /**
-   * Sets pass rate
-   *
-   * @param val passrate is set to val
-   */
-  public void setPassrate(int val)
-  {
-    passrate = val;
-  }
-
-  /**
-   * Sets total rate
-   *
-   * @param val total rate is set to val
-   */
-  public void setTotalrate(int val)
-  {
-    totalrate = val;
+    this.samplingPercentage = samplingPercentage;
   }
 }

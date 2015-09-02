@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2014 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,29 +18,35 @@ package com.datatorrent.lib.io;
 import javax.validation.constraints.NotNull;
 
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.ShipContainingJars;
 
 /**
- * Abstract http operator that creates client at setup and destroy at teardown
- * and provides the process tuple method to be implemented to process each incoming tuple
+ * This is the base implementation for HTTP operators.&nbsp;
+ * This operator handles the creation and destruction of client connections.&nbsp;
+ * Subclasses must implement the method which processes incoming tuples.
+ * <p></p>
+ * @displayName Abstract HTTP
+ * @category Input
+ * @tags http, input operator
  *
  * @param <T>
  * @since 1.0.2
  */
-@ShipContainingJars(classes = {com.sun.jersey.api.client.ClientHandler.class})
 public abstract class AbstractHttpOperator<T> extends BaseOperator
 {
   @NotNull
   protected String url;
   protected transient Client wsClient;
+
+  /**
+   * The input port which receives tuples for processing.
+   */
   public final transient DefaultInputPort<T> input = new DefaultInputPort<T>()
   {
     @Override

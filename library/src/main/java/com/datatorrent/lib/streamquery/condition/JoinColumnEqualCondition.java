@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,32 +22,34 @@ import javax.validation.constraints.NotNull;
 
 
 /**
+ * An implementation of equal join condition class.
  * <p>
- * Equal join condition class.
  * This compares values of given keys in both row data.
  * <br>
  * <b> Properties : </b> <br>
  * <b. equalkeys : </b> Keys for which value must be compared. <br>
  * <br>
- *
+ * @displayName Join Column Equal Condition
+ * @category Stream Manipulators
+ * @tags sql condition, equal join
  * @since 0.3.3
  */
 public class JoinColumnEqualCondition  extends Condition
 {
 
   /**
-   * column names to be compared. 
+   * column names to be compared.
    */
   @NotNull
   private String column1;
   @NotNull
   private String column2;
-  
+
   public JoinColumnEqualCondition(@NotNull String column1,@NotNull String column2) {
     this.column1 = column1;
     this.column2 = column2;
   }
-  
+
   /**
    * Must never be called.
    */
@@ -59,7 +61,7 @@ public class JoinColumnEqualCondition  extends Condition
   }
 
   /**
-   * 
+   *
    */
   @Override
   public boolean isValidJoin(Map<String, Object> row1, Map<String, Object> row2)

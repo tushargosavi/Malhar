@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,28 +19,31 @@ import java.util.ArrayList;
 
 import javax.validation.constraints.Min;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
 
 /**
  *
- * <p>A sliding window class that lets users access both states of all streaming window in CURRENT sliding window
- * and state of the expired streaming window from LAST sliding windows</p><br>
- *
+ * <p>Provides a sliding window class that lets users access both states of all streaming window in current sliding window
+ * and state of the expired streaming window from last sliding windows. </p>
+ * <p>
  * <b>Properties</b>:<br>
  * <b>T</b> is the tuple object the operator accept <br>
  * <b>S</b> is the state object kept in the sliding window <br>
  * <b>windowSize</b>: Number of streaming window in this sliding window<br>
  * <br>
  *
+ * @displayName Abstract Sliding Window
+ * @category Stats and Aggregations
+ * @tags sliding window, state
  * @since 0.3.3
  */
 public abstract class AbstractSlidingWindow<T, S> extends BaseOperator
 {
-  
-	@InputPortFieldAnnotation(name = "data")
+        /**
+         * Input port for getting incoming data.
+         */
 	public final transient DefaultInputPort<T> data = new DefaultInputPort<T>()
 	{
 		@Override
@@ -51,14 +54,14 @@ public abstract class AbstractSlidingWindow<T, S> extends BaseOperator
 	};
 
 	protected ArrayList<S> states = null;
-	
+
 	protected S lastExpiredWindowState = null;
-	
+
 	protected int currentCursor = -1;
 
 	@Min(2)
 	int windowSize = 2;
-	
+
 	/**
 	 * getter function for n (number of previous window states
 	 *
@@ -75,15 +78,15 @@ public abstract class AbstractSlidingWindow<T, S> extends BaseOperator
 	 *
 	 * @param i
 	 */
-	void setWindowSize(int windowSize)
+	public void setWindowSize(int windowSize)
 	{
 		this.windowSize = windowSize;
 	}
 
-	abstract void processDataTuple(T tuple);
+	abstract protected void processDataTuple(T tuple);
 
 	/**
-	 * Implement this method to create the state object needs to be kept in the sliding window 
+	 * Implement this method to create the state object needs to be kept in the sliding window
 	 *
 	 * @return the state of current streaming window
 	 */
@@ -92,9 +95,9 @@ public abstract class AbstractSlidingWindow<T, S> extends BaseOperator
 	/**
 	 * Get the Streaming window state in it's coming the order start from 0
 	 *
-	 * @param i 
-	 *   0 the state of the first coming streaming window 
-	 *   -1 the state of the last expired streaming window 
+	 * @param i
+	 *   0 the state of the first coming streaming window
+	 *   -1 the state of the last expired streaming window
 	 * @return State of the streaming window
 	 * @throws ArrayIndexOutOfBoundsException if i >= sliding window size
 	 */
@@ -122,11 +125,11 @@ public abstract class AbstractSlidingWindow<T, S> extends BaseOperator
 	{
 	  // move currentCursor 1 position
 		currentCursor = (currentCursor + 1) % windowSize;
-		// expire the state at the first position which is the state of the streaming window moving out of the current application window 
+		// expire the state at the first position which is the state of the streaming window moving out of the current application window
 		lastExpiredWindowState = states.get(currentCursor);
-		
+
 		states.set(currentCursor, createWindowState());
-		
+
 	}
 
 	/**

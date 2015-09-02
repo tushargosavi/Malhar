@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,18 @@
  */
 package com.datatorrent.lib.math;
 
-import com.datatorrent.api.BaseOperator;
+import com.datatorrent.common.util.BaseOperator;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
 
 /**
- *  Abstract base operator defining optional double/float/long/integer output ports.  <br>
- *  Duplicate port declaration in operators. <br>
+ * Abstract base operator defining optional double/float/long/integer output port.
+ *  <p>
+ *  Common port declaration in operators.
  *
+ * @displayName Abstract Output
+ * @category Math
+ * @tags output operator, multiple datatype
  * @since 0.3.3
  */
 public abstract class AbstractOutput extends BaseOperator
@@ -30,24 +34,24 @@ public abstract class AbstractOutput extends BaseOperator
 	/**
 	 * Double type output.
 	 */
-	@OutputPortFieldAnnotation(name = "doubleResult", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Double> doubleResult = new DefaultOutputPort<Double>();
 
 	/**
 	 * Float type output.
 	 */
-	@OutputPortFieldAnnotation(name = "floatResult", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Float> floatResult = new DefaultOutputPort<Float>();
 
 	/**
 	 * Long type output.
 	 */
-	@OutputPortFieldAnnotation(name = "longResult", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Long> longResult = new DefaultOutputPort<Long>();
 
 	/**
 	 * Integer type output.
 	 */
-	@OutputPortFieldAnnotation(name = "integerResult", optional = true)
+	@OutputPortFieldAnnotation(optional = true)
 	public final transient DefaultOutputPort<Integer> integerResult = new DefaultOutputPort<Integer>();
 }

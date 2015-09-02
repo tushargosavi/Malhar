@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,18 +23,12 @@ import org.apache.commons.lang.mutable.MutableDouble;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
-import com.datatorrent.api.annotation.ShipContainingJars;
 import com.datatorrent.lib.util.BaseNumberKeyValueOperator;
 import com.datatorrent.lib.util.KeyValPair;
 
 /**
+ * Operator compares consecutive values arriving at input port mapped by keys, emits &lt;key,percent change&gt; pair on output alert port if percent change exceeds percentage threshold set in operator.
  * <p>
- * Operator compare consecutive values arriving at input port mapped by keys,
- * this emits key/percent change pair on output alert port if percent change
- * exceeds percentage thresh hold set in operator. <br>
- *
  * StateFull : Yes, current key/value is stored in operator for comparison in
  * next successive windows. <br>
  * Partition(s): No, base comparison value will be inconsistent across
@@ -49,10 +43,11 @@ import com.datatorrent.lib.util.KeyValPair;
  * same key that triggers an alert tuple<br>
  * <b>inverse</b>: if set to true the key in the filter will block tuple<br>
  * <b>filterBy</b>: List of keys to filter on<br>
- *
+ * @displayName Change Alert Key Value
+ * @category Rules and Alerts
+ * @tags change, key value, numeric, percentage
  * @since 0.3.3
  */
-@ShipContainingJars(classes = { MutableDouble.class })
 public class ChangeAlertKeyVal<K, V extends Number> extends
 		BaseNumberKeyValueOperator<K, V>
 {
@@ -62,9 +57,8 @@ public class ChangeAlertKeyVal<K, V extends Number> extends
 	private HashMap<K, MutableDouble> basemap = new HashMap<K, MutableDouble>();
 
 	/**
-	 * Input port, key/value pair.
+	 * Input data port that takes a key value pair.
 	 */
-	@InputPortFieldAnnotation(name = "data")
 	public final transient DefaultInputPort<KeyValPair<K, V>> data = new DefaultInputPort<KeyValPair<K, V>>()
 	{
 		/**
@@ -99,11 +93,10 @@ public class ChangeAlertKeyVal<K, V extends Number> extends
 			val.setValue(tval);
 		}
 	};
-	
+
 	/**
-	 * Key/Percent Change output port.
+	 * Key,Percent Change output port.
 	 */
-	@OutputPortFieldAnnotation(name = "alert")
 	public final transient DefaultOutputPort<KeyValPair<K, KeyValPair<V, Double>>> alert = new DefaultOutputPort<KeyValPair<K, KeyValPair<V, Double>>>();
 
 	/**
@@ -114,7 +107,7 @@ public class ChangeAlertKeyVal<K, V extends Number> extends
 
 	/**
 	 * getter function for threshold value
-	 * 
+	 *
 	 * @return threshold value
 	 */
 	@Min(1)

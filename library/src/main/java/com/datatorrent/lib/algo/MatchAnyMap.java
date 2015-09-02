@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,16 +19,23 @@ import java.util.Map;
 
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
-import com.datatorrent.api.annotation.InputPortFieldAnnotation;
-import com.datatorrent.api.annotation.OutputPortFieldAnnotation;
+import com.datatorrent.api.annotation.OperatorAnnotation;
+
 import com.datatorrent.lib.util.BaseMatchOperator;
 import com.datatorrent.lib.util.UnifierBooleanOr;
 
 /**
- *
+ * This operator filters the incoming stream of key value pairs by obtaining the values corresponding to a specified key,
+ * and comparing those values to a specified number.&nbsp;
+ * If the comparison returns true for any of the key value pairs within a window,
+ * then a true is emitted at the end of the window.&nbsp;
+ * Otherwise a false is emitted at the end of the window.
+ * <p>
  * Each tuple is tested for the compare function. The function is given by
  * "key", "value", and "compare". If any tuple passes a Boolean(true) is emitted, else a Boolean(false) is emitted on the output port "any".
- * The comparison is done by getting double value from the Number.<p>
+ * The comparison is done by getting double value from the Number.
+ * </p>
+ * <p>
  * This module is a pass through as it emits the moment the condition is met<br>
  * <br>
  * <b>StateFull : Yes, </b> tuple are compared across application window(s). <br>
@@ -49,12 +56,21 @@ import com.datatorrent.lib.util.UnifierBooleanOr;
  * Compare string, if specified, must be one of "lte", "lt", "eq", "neq", "gt", "gte"<br>
  * <b>Specific run time checks</b>: None<br>
  * <br>
+ * </p>
+ *
+ * @displayName Emit Boolean For Match (Number)
+ * @category Rules and Alerts
+ * @tags filter, key value
  *
  * @since 0.3.2
  */
+
+@OperatorAnnotation(partitionable = true)
 public class MatchAnyMap<K, V extends Number> extends BaseMatchOperator<K,V>
 {
-  @InputPortFieldAnnotation(name = "data")
+  /**
+   * The input port which receives key value pairs.
+   */
   public final transient DefaultInputPort<Map<K, V>> data = new DefaultInputPort<Map<K, V>>()
   {
     /**
@@ -73,7 +89,10 @@ public class MatchAnyMap<K, V extends Number> extends BaseMatchOperator<K,V>
       }
     }
   };
-  @OutputPortFieldAnnotation(name = "any")
+
+  /**
+   * The output port that emits true at the end of an application window if any tuple satisfies the comparison.
+   */
   public final transient DefaultOutputPort<Boolean> any = new DefaultOutputPort<Boolean>()
   {
     @Override
@@ -85,10 +104,6 @@ public class MatchAnyMap<K, V extends Number> extends BaseMatchOperator<K,V>
 
   protected boolean result = false;
 
-  /**
-   * Resets match flag
-   * @param windowId
-   */
   @Override
   public void beginWindow(long windowId)
   {

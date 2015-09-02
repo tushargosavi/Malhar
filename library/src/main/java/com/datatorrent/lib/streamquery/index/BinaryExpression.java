@@ -1,11 +1,11 @@
-/*
- * Copyright (c) 2013 DataTorrent, Inc. ALL Rights Reserved.
+/**
+ * Copyright (C) 2015 DataTorrent, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,12 @@ import javax.validation.constraints.NotNull;
 
 
 /**
- * Abstract class to filter row by expression index.
+ * Abstract class to filter row by binary expression index.
+ * <p>
  * Sub class will implement filter/getExpressionName functions.
- *
+ * @displayName Binary Expression
+ * @category Stream Manipulators
+ * @tags alias
  * @since 0.3.4
  */
 abstract public class BinaryExpression  implements Index
@@ -31,13 +34,13 @@ abstract public class BinaryExpression  implements Index
    */
   @NotNull
   protected String left;
-  
+
   /**
    * Right column name argument for expression.
    */
   @NotNull
   protected String right;
-  
+
   /**
    *  Alias name for output field.
    */
@@ -48,7 +51,7 @@ abstract public class BinaryExpression  implements Index
    * @param Right column name argument for expression.
    * @param Alias name for output field.
    */
-  public BinaryExpression(@NotNull String left, @NotNull String right, String alias) 
+  public BinaryExpression(@NotNull String left, @NotNull String right, String alias)
   {
     this.left = left;
     this.right = right;
