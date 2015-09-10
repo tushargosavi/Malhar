@@ -19,6 +19,7 @@ import com.datatorrent.api.annotation.ApplicationAnnotation
 import com.datatorrent.api.Context.OperatorContext
 import com.datatorrent.api._
 import java.util.Random
+import com.datatorrent.common.util.BaseOperator
 import org.apache.hadoop.conf.Configuration
 ;
 
