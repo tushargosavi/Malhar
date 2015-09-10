@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 import javax.validation.constraints.Min;
@@ -31,6 +32,7 @@ import com.google.common.cache.*;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,6 +228,17 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
   protected long currentWindow;
 
   /**
+   * The stream is expired (closed and evicted from cache) after the specified duration has passed since it was last
+   * accessed by a read or write.
+   * <p/>
+   * https://code.google.com/p/guava-libraries/wiki/CachesExplained <br/>
+   * Caches built with CacheBuilder do not perform cleanup and evict values "automatically," or instantly after a value expires, or anything of the sort.
+   * Instead, it performs small amounts of maintenance during write operations, or during occasional read operations if writes are rare.<br/>
+   * This isn't the most effective way but adds a little bit of optimization.
+   */
+  private Long expireStreamAfterAcessMillis;
+
+  /**
    * This input port receives incoming tuples.
    */
   public final transient DefaultInputPort<INPUT> input = new DefaultInputPort<INPUT>()
@@ -286,6 +299,9 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
   public void setup(Context.OperatorContext context)
   {
     LOG.debug("setup initiated");
+    if (expireStreamAfterAcessMillis == null) {
+      expireStreamAfterAcessMillis = (long)(context.getValue(OperatorContext.SPIN_MILLIS) * context.getValue(Context.DAGContext.CHECKPOINT_WINDOW_COUNT));
+    }
     rollingFile = (maxLength < Long.MAX_VALUE) || (rotationWindows > 0);
 
     //Getting required file system instance.
@@ -416,13 +432,13 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
       }
     };
 
-    streamsCache = CacheBuilder.newBuilder().maximumSize(maxOpenFiles).removalListener(removalListener).build(loader);
+    streamsCache = CacheBuilder.newBuilder().maximumSize(maxOpenFiles).expireAfterAccess(expireStreamAfterAcessMillis, TimeUnit.MILLISECONDS).removalListener(removalListener).build(loader);
 
     try {
       LOG.debug("File system class: {}", fs.getClass());
       LOG.debug("end-offsets {}", endOffsets);
 
-      //Restore the files in case they were corrupted and the operator
+      //Restore the files in case they were corrupted and the operator was re-deployed.
       Path writerPath = new Path(filePath);
       if (fs.exists(writerPath)) {
         for (String seenFileName : endOffsets.keySet()) {
@@ -473,6 +489,13 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
                 fileContext.rename(recoveryFilePath, status.getPath(), Options.Rename.OVERWRITE);
               }
             } else {
+              if (alwaysWriteToTmp) {
+                String currentTmp = seenFileNamePart + '.' + System.currentTimeMillis() + TMP_EXTENSION;
+                FSDataOutputStream outputStream = fs.create(new Path(filePath + Path.SEPARATOR + currentTmp));
+                IOUtils.copy(inputStream, outputStream);
+                outputStream.close();
+                fileNameToTmpName.put(seenFileNamePart, currentTmp);
+              }
               inputStream.close();
             }
           }
@@ -484,34 +507,40 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
         //of this operator.
         for(String seenFileName: endOffsets.keySet()) {
           try {
-            Integer part = openPart.get(seenFileName).getValue() + 1;
+            Integer fileOpenPart = this.openPart.get(seenFileName).getValue();
+            int nextPart = fileOpenPart + 1;
             String seenPartFileName;
             while (true) {
-              seenPartFileName = getPartFileName(seenFileName, part);
-              Path activePath;
+              seenPartFileName = getPartFileName(seenFileName, nextPart);
+              Path activePath = null;
               if (alwaysWriteToTmp) {
                 String tmpFileName = fileNameToTmpName.get(seenPartFileName);
-                activePath = new Path(filePath + Path.SEPARATOR + tmpFileName);
+                if (tmpFileName != null) {
+                  activePath = new Path(filePath + Path.SEPARATOR + tmpFileName);
+                }
               } else {
                 activePath = new Path(filePath + Path.SEPARATOR + seenPartFileName);
               }
-              if (!fs.exists(activePath)) {
+              if (activePath == null || !fs.exists(activePath)) {
                 break;
               }
 
               fs.delete(activePath, true);
-              part = part + 1;
+              nextPart++;
             }
 
-            seenPartFileName = getPartFileName(seenFileName, openPart.get(seenFileName).intValue());
-            Path activeFilePath;
+            seenPartFileName = getPartFileName(seenFileName, fileOpenPart);
+            Path activePath = null;
             if (alwaysWriteToTmp) {
-              activeFilePath = new Path(filePath + Path.SEPARATOR + fileNameToTmpName.get(seenPartFileName));
+              String tmpFileName = fileNameToTmpName.get(seenPartFileName);
+              if (tmpFileName != null) {
+                activePath = new Path(filePath + Path.SEPARATOR + fileNameToTmpName.get(seenPartFileName));
+              }
             } else {
-              activeFilePath = new Path(filePath + Path.SEPARATOR + seenPartFileName);
+              activePath = new Path(filePath + Path.SEPARATOR + seenPartFileName);
             }
 
-            if (fs.getFileStatus(activeFilePath).getLen() > maxLength) {
+            if (activePath != null && fs.getFileStatus(activePath).getLen() > maxLength) {
               //Handle the case when restoring to a checkpoint where the current rolling file
               //already has a length greater than max length.
               LOG.debug("rotating file at setup.");
@@ -839,9 +868,9 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
       if (++rotationCount == rotationWindows) {
         rotationCount = 0;
         // Rotate the files
-        Iterator<String> iterator = streamsCache.asMap().keySet().iterator();
+        Iterator<Map.Entry<String, MutableInt>> iterator = openPart.entrySet().iterator();
         while (iterator.hasNext()) {
-          String filename = iterator.next();
+          String filename = iterator.next().getKey();
           // Rotate the file if the following conditions are met
           // 1. The file is not already rotated during this period for other reasons such as max length is reached
           //     or rotate was explicitly called externally
@@ -1143,8 +1172,12 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
     for (FileStatus status : statuses) {
       String statusName = status.getPath().getName();
       if (statusName.endsWith(TMP_EXTENSION) && statusName.startsWith(fileName)) {
-        LOG.debug("deleting vagrant file {}", statusName);
-        fs.delete(status.getPath(), true);
+        //a tmp file has tmp extension always preceded by timestamp
+        String actualFileName = statusName.substring(0, statusName.lastIndexOf('.', statusName.lastIndexOf('.') - 1));
+        if (fileName.equals(actualFileName)) {
+          LOG.debug("deleting vagrant file {}", statusName);
+          fs.delete(status.getPath(), true);
+        }
       }
     }
   }
@@ -1178,6 +1211,23 @@ public abstract class AbstractFileOutputOperator<INPUT> extends BaseOperator imp
   {
     return finalizedFiles;
   }
+
+  public Long getExpireStreamAfterAccessMillis()
+  {
+    return expireStreamAfterAcessMillis;
+  }
+
+  /**
+   * Sets the duration after which the stream is expired (closed and removed from the cache) since it was last accessed
+   * by a read or write.
+   *
+   * @param millis time in millis.
+   */
+  public void setExpireStreamAfterAccessMillis(Long millis)
+  {
+    this.expireStreamAfterAcessMillis = millis;
+  }
+
 /**
    * Return the filter to use. If this method returns a filter the filter is applied to data before the data is stored
    * in the file. If it returns null no filter is applied and data is written as is. Override this method to provide
