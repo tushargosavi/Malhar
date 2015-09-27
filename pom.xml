@@ -31,7 +31,7 @@
   </repositories>
 
   <prerequisites>
-    <maven>3.0.0</maven>
+    <maven>3.0.5</maven>
   </prerequisites>
 
   <properties>
@@ -80,6 +80,9 @@
                 <onlyBinaryIncompatible>false</onlyBinaryIncompatible>
                 <includeSynthetic>false</includeSynthetic>
                 <ignoreMissingClasses>true</ignoreMissingClasses>
+                <excludes>
+                  <exclude>*POJO*</exclude>
+                </excludes>
               </parameter>
               <skip>${semver.plugin.skip}</skip>
             </configuration>
