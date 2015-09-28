@@ -16,12 +16,11 @@
 package com.datatorrent.demos.scala.pi
 
 import com.datatorrent.api.annotation.ApplicationAnnotation
-import com.datatorrent.api.Context.OperatorContext
 import com.datatorrent.api._
 import java.util.Random
 import com.datatorrent.common.util.BaseOperator
 import org.apache.hadoop.conf.Configuration
-;
+import scala.beans.BeanProperty
 
 /**
  * Class Point represent a point in 2D space.
@@ -42,33 +41,32 @@ class Point(val x : Int, val y: Int) {
 }
 
 /**
- * Generate random points in 100x100 grid and sends them on
+ * Generate random points in square grid and sends them on
  * output port.
  *
  * you can control the speed of generation with tuppleBlast and
  * sleepTime parameters.
+ *
+ * The grid size is specified as width parameter.
  */
-class RandomIntGenerator extends InputOperator {
-
-  override def teardown(): Unit = {}
-
-  override def setup(p1: OperatorContext): Unit = {}
-
-  override def endWindow(): Unit = {}
-
-  override def beginWindow(p1: Long): Unit = {}
+class RandomIntGenerator extends BaseOperator with InputOperator {
 
   @transient
   val out : DefaultOutputPort[Point] = new DefaultOutputPort[Point]();
 
+  @BeanProperty
   var tupleBlast = 100
+  @BeanProperty
   var sleepTime = 10
-  val r = new Random()
+  @BeanProperty
+  var width = 100;
+
+  private val r = new Random()
 
   override def emitTuples(): Unit = {
     for (i <- 1 to tupleBlast) {
-      val x = r.nextInt(100)
-      val y = r.nextInt(100)
+      val x = r.nextInt(width)
+      val y = r.nextInt(width)
 
       out.emit(new Point(x, y))
     }
@@ -79,12 +77,14 @@ class RandomIntGenerator extends InputOperator {
 
 /**
  * Calculate value of over life time of the application,
- * It emits new value of PI at end window.
+ * It emits new value of PI at every end window.
  */
 class PiCalculator extends BaseOperator {
-  val base = 100 * 100
-  var inArea = 0
-  var totalArea = 0
+  @BeanProperty
+  var base = 100 * 100
+
+  private var inArea = 0
+  private var totalArea = 0
 
   @transient
   val in : DefaultInputPort[Point] = new DefaultInputPort[Point] {
@@ -105,9 +105,7 @@ class PiCalculator extends BaseOperator {
 }
 
 /**
- * Write value on the console For some reason I am not able
- * to reuse ConsoleOutputOperator from Malhar contrib directly
- * because of type difference.
+ * Write value on the console
  * @tparam T
  */
 class ConsoleOutOperator[T] extends BaseOperator {
@@ -128,6 +126,6 @@ class PiApplication extends StreamingApplication {
     val out = dag.addOperator("out", new ConsoleOutOperator[Double])
 
     dag.addStream[Point]("data", gen.out, cal.in);
-    dag.addStream[Double]("result", cal.out, out.in)
+    dag.addStream[Double]("result", cal.out, out.in);
   }
 }
